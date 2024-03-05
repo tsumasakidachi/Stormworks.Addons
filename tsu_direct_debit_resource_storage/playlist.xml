@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_direct_debit_resource_storage" file_store="4" name="TSU Direct Debit Resource Storage">
+	<locations location_id_counter="4">
+		<locations>
+			<l id="1" tile="data/tiles/mega_island_2_6.xml" name="SAWYER 2_6" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="2" tile="data/tiles/mega_island_9_8.xml" name="SAWYER 9_8" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="3" tile="data/tiles/mega_island_12_6.xml" name="SAWYER 12_6" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_15_2.xml" name="SAWYER 15_2" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

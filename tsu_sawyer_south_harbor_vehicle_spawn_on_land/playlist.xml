@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_sawyer_south_harbor_vehicle_spawn_on_land" file_store="4" name="TSU Sawyer South Harbor Vehicle Spawn On Land">
+	<locations location_id_counter="1" component_id_counter="3">
+		<locations>
+			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="1" display_name="sawyer_south_harbor_vehicle_on_land_selector" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_1.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
+						<spawn_transform 00="0.497216" 02="-0.867627" 20="0.867627" 22="0.497216" 30="172.883179" 31="7.953561" 32="-400.241058"/>
+						<spawn_bounds>
+							<min x="-0.875" y="-0.625" z="-0.125"/>
+							<max x="0.375" y="2.875" z="0.125"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.25" y="-1.125"/>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="2" display_name="vehicle_spawn_zone_land" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.483798" 02="-0.87518" 20="0.87518" 22="0.483798" 30="186.333527" 31="10.541994" 32="-385.909943"/>
+						<spawn_bounds>
+							<min x="-8.512435" y="-3.867395" z="-12.232444"/>
+							<max x="8.512435" y="3.867395" z="12.232444"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="3" display_name="vehicle_spawn_zone_sea" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.491501" 02="0.870877" 20="-0.870877" 22="-0.491501" 30="178.231934" 31="0.875628" 32="-413.970886"/>
+						<spawn_bounds>
+							<min x="-11.094606" y="-18.446447" z="-29.076422"/>
+							<max x="11.094606" y="18.446447" z="29.076422"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

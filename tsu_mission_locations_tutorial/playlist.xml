@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_mission_foundation_tutorial" file_store="4" name="TSU Mission Location Tutorial">
+	<locations location_id_counter="4" component_id_counter="10">
+		<locations>
+			<l id="3" tile="data/tiles/mega_island_8_7.xml" name="SAWYER 8_7" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="1" cargo_zone_import_cargo_type="id_1,landscape=hospital" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.962856" 02="-0.270014" 20="0.270014" 22="0.962856" 30="-3.810066" 31="9.881248" 32="239.265869"/>
+						<spawn_bounds>
+							<min x="-9.15055" y="-1.310536" z="-5"/>
+							<max x="9.15055" y="1.310536" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_9_8.xml" name="mission:Container_house_on_fire!" env_mod_spawn_num="1">
+				<components>
+					<c component_type="2" id="2" name="id_2,tracker=rescuee" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="210.418823" 31="7.720824" 32="256.632507"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="3" name="id_3,tracker=rescuee" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="210.854767" 31="7.720824" 32="257.792419"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="4" name="id_4,tracker=rescuee" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="209.944931" 31="7.720824" 32="257.428925"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="5" name="id_5" dynamic_object_type="2" character_outfit_category="7" character_type="2" vehicle_file_store="1">
+						<spawn_transform 30="221.505859" 31="7.628822" 32="254.498367"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="6" name="id_6" dynamic_object_type="2" character_outfit_category="11" character_type="2" vehicle_file_store="1">
+						<spawn_transform 30="222.692886" 31="7.628822" 32="257.713776"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="7" name="id_7" dynamic_object_type="2" character_outfit_category="11" character_type="2" vehicle_file_store="1">
+						<spawn_transform 30="222.795212" 31="7.628822" 32="260.744873"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="8" name="id_8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="209.181046" 31="7.920825" 32="253.350693"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="9" name="id_9" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="209.757004" 31="7.920825" 32="261.545135"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="10" name="id_10" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="208.265335" 31="7.920825" 32="256.628662"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
