@@ -7,7 +7,7 @@ g_savedata = {
         wind = {
             level = 0,
             level_target = 0,
-            level_max = 75,
+            level_max = 50,
             remaining = 0
         },
         rain = {
@@ -19,7 +19,7 @@ g_savedata = {
         fog = {
             level = 0,
             level_target = 0,
-            level_max = 25,
+            level_max = 50,
             remaining = 0
         }
     }
