@@ -168,8 +168,36 @@ location_properties = {{
 }, {
     pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
-    suitable_zones = {"road", "tunnel"},
+    suitable_zones = {"tunnel"},
     is_main_location = true,
+    sub_locations = {"^mission:tunnel_fire$", "^mission:car_stuck_%d+"},
+    sub_location_min = 3,
+    sub_location_max = 5,
+    is_unique_sub_location = false,
+    range_max = 6000,
+    search_radius = 500,
+    nortification_type = 0,
+    report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる。",
+    note = "民間人からの通報"
+}, {
+    pattern = "^mission:tunnel_fire$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = false,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = true,
+    range_max = 6000,
+    search_radius = 100,
+    nortification_type = 0,
+    report = "",
+    note = "トンネル火災"
+}, {
+    pattern = "^mission:car_stuck_%d+$",
+    tracker = "sar",
+    suitable_zones = {"tunnel"},
+    is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
     sub_location_max = 0,
@@ -177,8 +205,8 @@ location_properties = {{
     range_max = 6000,
     search_radius = 100,
     nortification_type = 0,
-    report = "交通事故\n複数の車が衝突しけが人が多数いる。中に取り残された人もいる。",
-    note = "民間人からの通報"
+    report = "",
+    note = "スタックした自動車"
 }, {
     pattern = "^mission:aircraft_down_%d+$",
     tracker = "sar",
@@ -463,6 +491,7 @@ objective_trackers = {
 
             server.setCharacterData(objective.id, objective.vital.hp, true, false)
             server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
+            server.setCharacterItem(objective.id, 4, 24, true, 0, 100)
             server.setCharacterTooltip(objective.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d",
                 self.progress, objective.mission, objective.id))
 
@@ -486,7 +515,7 @@ objective_trackers = {
             local is_in_hospital = is_in_landscape(transform, "hospital") or objective.vital.risk == 0 and
                                        is_in_landscape(transform, "base")
             local risk = objective.vital.risk
-            local nearby = nearby_players(transform, 250)
+            local nearby = nearby_players(transform, 50)
 
             if not is_in_hospital and vital_update.hp >= 95 then
                 risk = math.max(0, risk - 0.05)
@@ -531,7 +560,7 @@ objective_trackers = {
             return not objective.exists or objective.is_in_hospital
         end,
         reward = function(self, objective)
-            local value = math.ceil(2500 * (math.floor(objective.vital.hp / 25) / 4))
+            local value = math.ceil(self.reward_base * (math.floor(objective.vital.hp / 25) / 4))
 
             if objective.vital.is_dead then
                 value = 0
@@ -539,6 +568,7 @@ objective_trackers = {
 
             return value
         end,
+        reward_base = 2500,
         progress = "要救助者を発見し医療機関へ移送\nまたは安定化して基地へ収容"
     },
     -- vehicle = {
@@ -574,8 +604,9 @@ objective_trackers = {
             return not is_lit
         end,
         reward = function(self, objective)
-            return 1000
+            return self.reward_base
         end,
+        reward_base = 1000,
         progress = "炎を発見し鎮火"
     },
     lost_property = {
@@ -594,8 +625,9 @@ objective_trackers = {
             return objective.is_in_freight_terminal
         end,
         reward = function(self, objective)
-            return 25000
+            return self.reward_base
         end,
+        reward_base = 25000,
         progress = "落下物を回収し貨物駅へ輸送"
     },
     headquarter = {
@@ -643,8 +675,9 @@ objective_trackers = {
             return false
         end,
         reward = function(self, objective)
-            return 0
+            return self.reward_base
         end,
+        reward_base = 0,
         progress = ""
     }
 }
@@ -1299,6 +1332,8 @@ function nearby_players(transform, distance)
     local result = false
 
     for i = 1, #g_savedata.players do
+        local d = matrix.distance(g_savedata.players[i].transform, transform)
+
         result = result or matrix.distance(g_savedata.players[i].transform, transform) <= distance
     end
 
@@ -1346,7 +1381,7 @@ function onTick(tick)
         g_savedata.players = server.getPlayers()
 
         for i = 1, #g_savedata.players do
-            local transform, is_success = server.getPlayerPos(g_savedata.players[i].peer_id)
+            local transform, is_success = server.getPlayerPos(g_savedata.players[i].id)
 
             if is_success then
                 g_savedata.players[i].transform = transform
