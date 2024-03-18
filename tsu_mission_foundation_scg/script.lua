@@ -1465,8 +1465,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mission_timer_tickrate = 0
         elseif verb == "init" and is_admin then
             local location, zone = ...
+            local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(start_tile_transform(), g_savedata.mission_range_max,
+            local location = random_location(center, g_savedata.mission_range_max,
                 g_savedata.mission_range_min, {location}, {zone}, true, nil)
 
             if location == nil then
