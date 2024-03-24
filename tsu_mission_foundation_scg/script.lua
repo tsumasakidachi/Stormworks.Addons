@@ -1,5 +1,4 @@
 -- properties
-
 g_savedata = {
     mode = "prod",
     missions = {},
@@ -10,15 +9,18 @@ g_savedata = {
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) * 3600,
+    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) *
+        3600,
+    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) *
+        3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 100, 1, 1) * 1000,
     mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 5, 100, 1, 10) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
     mission_mapped = true,
-    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
+    mission_spawn_when_players_x = property.slider(
+        "New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
     objective_mapped = false,
     location_overlap_criteria = "pattern",
     zone_mapped = false,
@@ -511,11 +513,15 @@ objective_trackers = {
             end
 
             local on_board = server.getCharacterVehicle(objective.id)
+            local get_on = on_board ~= 0 and objective.on_board == 0
+            local get_off = on_board == 0 and objective.on_board ~= 0
             local vital_update = server.getCharacterData(objective.id)
             local is_in_hospital = is_in_landscape(transform, "hospital") or objective.vital.risk == 0 and
                                        is_in_landscape(transform, "base")
             local risk = objective.vital.risk
-            local nearby = nearby_players(transform, 50)
+            local nearby = nearby_players(transform, 200)
+            local arrived = nearby and not objective.nearby_player
+            local leaved = not nearby and objective.nearby_player
 
             if not is_in_hospital and vital_update.hp >= 95 then
                 risk = math.max(0, risk - 0.05)
@@ -529,11 +535,11 @@ objective_trackers = {
                 vital_update.hp = math.max(vital_update.hp - 0.25 * math.ceil(risk), 0)
             end
 
-            if on_board ~= 0 and objective.on_board == 0 or not nearby and objective.nearby_player then
+            if leaved or get_on then 
                 server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
             end
 
-            if on_board == 0 and objective.on_board ~= 0 or nearby and not objective.nearby_player then
+            if (arrived and on_board == 0) or (get_off and nearby) then
                 server.setCharacterItem(objective.id, 2, 23, true, 0, 100)
             end
 
@@ -1467,8 +1473,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local location, zone = ...
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max,
-                g_savedata.mission_range_min, {location}, {zone}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min,
+                {location}, {zone}, true, nil)
 
             if location == nil then
                 return
