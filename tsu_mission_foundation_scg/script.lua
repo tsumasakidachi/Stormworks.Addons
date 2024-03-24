@@ -523,15 +523,15 @@ objective_trackers = {
             local arrived = nearby and not objective.nearby_player
             local leaved = not nearby and objective.nearby_player
 
-            if not is_in_hospital and vital_update.hp >= 95 then
+            if #g_savedata.players > 1 and not is_in_hospital and vital_update.hp >= 95 then
                 risk = math.max(0, risk - 0.05)
             end
 
-            if not is_in_hospital and objective.vital.hp >= 1 and vital_update.hp < 1 then
+            if #g_savedata.players > 1 and not is_in_hospital and objective.vital.hp >= 1 and vital_update.hp < 1 then
                 risk = risk * 2 + 1
             end
 
-            if not is_in_hospital and risk > 0 then
+            if #g_savedata.players > 1 and not is_in_hospital and risk > 0 then
                 vital_update.hp = math.max(vital_update.hp - 0.25 * math.ceil(risk), 0)
             end
 
