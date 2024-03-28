@@ -52,7 +52,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         local player = get_player(peer_id)
         local x, y, z = matrix.position(transform)
         local marker = server.getMapID()
-        
+
         server.addMapObject(-1, marker, 0, 9, x, z, 0, 0, nil, nil, target, 0, "By " .. player.name, 0, 255, 255, 255)
         server.notify(-1, target, "By " .. player.name, 0)
         table.insert(g_savedata.pins, {
@@ -66,9 +66,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     -- list vehicles
     if command == "?liv" and is_admin then
         for i = 1, #g_savedata.vehicles do
-            server.announce("liv",
-                string.format("%s #%d.%d, $%d", g_savedata.vehicles[i].player.name, g_savedata.vehicles[i].group_id,
-                    g_savedata.vehicles[i].vehicle_id, g_savedata.vehicles[i].cost), peer_id)
+            server.announce("liv", string.format("%s #%d.%d, $%d", g_savedata.vehicles[i].player.name, g_savedata.vehicles[i].group_id, g_savedata.vehicles[i].vehicle_id, g_savedata.vehicles[i].cost), peer_id)
         end
     end
 
@@ -222,8 +220,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
             cost = cost,
             player = player
         })
-        server.setVehicleTooltip(vehicle_id, string.format("Owner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d",
-            player.name, group_id, vehicle_id, cost))
+        server.setVehicleTooltip(vehicle_id, string.format("Owner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", player.name, group_id, vehicle_id, cost))
     end
 end
 
@@ -231,7 +228,7 @@ function onVehicleDespawn(vehicle_id, peer_id)
     if peer_id < 0 then
         return
     end
-    
+
     for i = #g_savedata.vehicles, 1, -1 do
         if g_savedata.vehicles[i].vehicle_id == vehicle_id then
             table.remove(g_savedata.vehicles, i)

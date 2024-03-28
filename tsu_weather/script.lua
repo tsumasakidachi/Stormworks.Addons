@@ -63,9 +63,7 @@ function onTick(tick)
     if g_savedata.active and hour ~= hour_updated then
         for k, v in pairs(g_savedata.meteorologicals) do
             if g_savedata.meteorologicals[k].remaining <= 0 then
-                g_savedata.meteorologicals[k].level_target =
-                weather(g_savedata.probability_of_clear_today, math.min(
-                        100 - g_savedata.probability_of_clear_today, g_savedata.meteorologicals[k].level_max))
+                g_savedata.meteorologicals[k].level_target = weather(g_savedata.probability_of_clear_today, math.min(100 - g_savedata.probability_of_clear_today, g_savedata.meteorologicals[k].level_max))
                 g_savedata.meteorologicals[k].remaining = math.random(2, 8)
             else
                 g_savedata.meteorologicals[k].remaining = g_savedata.meteorologicals[k].remaining - 1
@@ -76,19 +74,15 @@ function onTick(tick)
     if g_savedata.active and minute ~= minute_updated then
         for k, v in pairs(g_savedata.meteorologicals) do
             if g_savedata.meteorologicals[k].level < g_savedata.meteorologicals[k].level_target then
-                g_savedata.meteorologicals[k].level = math.min(g_savedata.meteorologicals[k].level + 5,
-                    g_savedata.meteorologicals[k].level_target)
+                g_savedata.meteorologicals[k].level = math.min(g_savedata.meteorologicals[k].level + 5, g_savedata.meteorologicals[k].level_target)
             elseif g_savedata.meteorologicals[k].level > g_savedata.meteorologicals[k].level_target then
-                g_savedata.meteorologicals[k].level = math.max(g_savedata.meteorologicals[k].level - 5,
-                    g_savedata.meteorologicals[k].level_target)
+                g_savedata.meteorologicals[k].level = math.max(g_savedata.meteorologicals[k].level - 5, g_savedata.meteorologicals[k].level_target)
             end
         end
 
-        server.setWeather(g_savedata.meteorologicals.fog.level / 100, g_savedata.meteorologicals.rain.level / 100,
-            g_savedata.meteorologicals.wind.level / 100)
+        server.setWeather(g_savedata.meteorologicals.fog.level / 100, g_savedata.meteorologicals.rain.level / 100, g_savedata.meteorologicals.wind.level / 100)
 
-        notice(string.format("Rain: %d; Wind; %d, Fog: %d", g_savedata.meteorologicals.rain.level,
-            g_savedata.meteorologicals.wind.level, g_savedata.meteorologicals.fog.level))
+        notice(string.format("Rain: %d; Wind; %d, Fog: %d", g_savedata.meteorologicals.rain.level, g_savedata.meteorologicals.wind.level, g_savedata.meteorologicals.fog.level))
     end
 
     day = day_updated

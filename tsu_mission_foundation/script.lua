@@ -1,5 +1,4 @@
 -- properties
-
 g_savedata = {
     mode = "prod",
     missions = {},
@@ -132,7 +131,7 @@ mission_trackers = {
                 for i = 1, #mission.locations do
                     spawn_location(mission.locations[i], mission.id)
                 end
-                
+
                 local c, x, y, z = 0, 0, 0, 0
 
                 for i = 1, #g_savedata.objectives do
@@ -160,7 +159,7 @@ mission_trackers = {
                 if objective.mission == mission.id then
                     completed = completed and objective_trackers[objective.tracker]:completed(objective)
                 end
-                
+
             end
             return completed or mission.closed
         end,
@@ -247,8 +246,7 @@ objective_trackers = {
             objective.nearby_player = false
 
             server.setCharacterData(objective.id, objective.vital.hp, true, false)
-            server.setCharacterTooltip(objective.id, string.format("Rescuee\n%s\n\nMission ID: %d\nObject ID: %d",
-                self.progress, objective.mission, objective.id))
+            server.setCharacterTooltip(objective.id, string.format("Rescuee\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, objective.mission, objective.id))
         end,
         clear = function(self, objective)
             server.setCharacterData(objective.id, objective.vital.hp, false, false)
@@ -307,7 +305,7 @@ objective_trackers = {
             return 1000
         end,
         progress = "Extinguish fires"
-    },
+    }
 }
 
 -- main logics
@@ -352,8 +350,7 @@ function initialize_mission(center, range_min, tracker, location, zone_name)
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
     for i = 1, sub_location_count do
-        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0,
-            mission.locations[1].sub_locations, {}, false, mission.id)
+        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, mission.id)
 
         if sub_location then
             table.insert(mission.locations, sub_location)
@@ -425,8 +422,7 @@ function clear_objective(index)
     end
 
     server.removeMapID(-1, g_savedata.objectives[index].marker)
-    console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker,
-        g_savedata.objectives[index].id))
+    console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker, g_savedata.objectives[index].id))
 
     table.remove(g_savedata.objectives, index)
 end
@@ -525,8 +521,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and
-            is_location_overlap(g_savedata.locations[i]) then
+        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_overlap(g_savedata.locations[i]) then
             goto continue_location
         end
 
@@ -550,15 +545,13 @@ function random_location(center, range_max, range_min, location_names, zone_name
                     goto continue_zone
                 end
 
-                if (not is_main_location or g_savedata.mission_range_limited) and
-                    not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
+                if (not is_main_location or g_savedata.mission_range_limited) and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
                     goto continue_zone
                 end
 
                 for k = 1, #g_savedata.missions do
                     for l = 1, #g_savedata.missions[k].locations do
-                        if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id ==
-                            g_savedata.zones[j].id then
+                        if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
                             goto continue_zone
                         end
                     end
@@ -572,8 +565,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
 
             zone_candidate_types = table.distinct(zone_candidate_types)
 
-            if (#zone_names > 0 and table.contains(zone_names, "offshore")) or
-                (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
+            if (#zone_names > 0 and table.contains(zone_names, "offshore")) or (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
                 table.insert(zone_candidate_types, "offshore")
             end
 
@@ -618,8 +610,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
     end
 
     if #location_candidates == 0 then
-        console.error(
-            "No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+        console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
         return nil
     end
 
@@ -645,8 +636,7 @@ function is_location_overlap(location)
 
     for i = 1, #g_savedata.missions do
         for j = 1, #g_savedata.missions[i].locations do
-            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_overlap_criteria] ==
-                             location[g_savedata.location_overlap_criteria])
+            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_overlap_criteria] == location[g_savedata.location_overlap_criteria])
         end
     end
 
@@ -675,8 +665,7 @@ function spawn_location(location, mission_id)
     end
 
     if location.zone then
-        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.name,
-            location.zone.id))
+        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.name, location.zone.id))
     else
         console.notify(string.format("Spawning fixed location %s", location.name))
     end
@@ -705,8 +694,7 @@ function spawn_component(component, transform, mission_id)
         parent_object_id = parent_object.main_body_id
     end
 
-    local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index,
-        component.component_index, parent_object_id)
+    local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
     local tracker = nil
 
     if component.type == "character" and component.tags.tracker and component.tags.tracker == "rescuee" then
@@ -1033,17 +1021,13 @@ function onTick(tick)
                 local r, g, b, a = 127, 127, 127, 255
                 local label = string.format("%s #%d", g_savedata.objectives[i].tracker, g_savedata.objectives[i].id)
 
-                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, 1, x, z, 0, 0, nil, nil, label, 0,
-                    string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
+                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, 1, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
             end
 
-            if g_savedata.objectives[i].mission and
-                objective_trackers[g_savedata.objectives[i].tracker]:completed(g_savedata.objectives[i]) then
+            if g_savedata.objectives[i].mission and objective_trackers[g_savedata.objectives[i].tracker]:completed(g_savedata.objectives[i]) then
                 for j = 1, #g_savedata.missions do
                     if g_savedata.missions[j].id == g_savedata.objectives[i].mission then
-                        g_savedata.missions[j].reward = g_savedata.missions[j].reward +
-                                                            objective_trackers[g_savedata.objectives[i].tracker]:reward(
-                                g_savedata.objectives[i])
+                        g_savedata.missions[j].reward = g_savedata.missions[j].reward + objective_trackers[g_savedata.objectives[i].tracker]:reward(g_savedata.objectives[i])
                     end
                 end
 
@@ -1063,8 +1047,7 @@ function onTick(tick)
                 local label_hover = mission_trackers[g_savedata.missions[i].tracker]:status(g_savedata.missions[i])
                 local x, y, z = matrix.position(g_savedata.missions[i].search_center)
 
-                server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label,
-                    g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
+                server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label, g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
             end
 
             if mission_trackers[g_savedata.missions[i].tracker]:completed(g_savedata.missions[i]) then
@@ -1092,8 +1075,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "init" and is_admin then
             local location, zone = ...
             location = "^" .. location .. "$"
-            local location = random_location(start_tile_transform(), g_savedata.mission_range_max,
-                g_savedata.mission_range_min, {location}, {zone}, true, nil)
+            local location = random_location(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {zone}, true, nil)
 
             if location == nil then
                 return

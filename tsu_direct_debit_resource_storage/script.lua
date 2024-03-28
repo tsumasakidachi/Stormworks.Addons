@@ -80,8 +80,7 @@ function display_storage_level(transform, peer_id)
     local data = get_storage_level(transform)
     local peer_id = peer_id or -1
 
-    server.announce("[Storage Foundation]", string.format(
-        "Coal: %.0f\nUranium: %.0f\nDiesel: %.0f\nJet: %.0f\nSolid: %.0f", data.coal, data.uranium, data.diesel, data.jet, data.solid), peer_id)
+    server.announce("[Storage Foundation]", string.format("Coal: %.0f\nUranium: %.0f\nDiesel: %.0f\nJet: %.0f\nSolid: %.0f", data.coal, data.uranium, data.diesel, data.jet, data.solid), peer_id)
 end
 
 -- bases

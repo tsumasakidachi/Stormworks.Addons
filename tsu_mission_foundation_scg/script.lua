@@ -9,18 +9,15 @@ g_savedata = {
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) *
-        3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) *
-        3600,
+    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
+    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) * 3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 100, 1, 1) * 1000,
     mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 5, 100, 1, 10) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
     mission_mapped = true,
-    mission_spawn_when_players_x = property.slider(
-        "New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
+    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
     objective_mapped = false,
     location_overlap_criteria = "pattern",
     zone_mapped = false,
@@ -353,8 +350,7 @@ mission_trackers = {
                     end
                 elseif g_savedata.objectives[i].mission == mission.id and g_savedata.objectives[i].tracker == "fire" then
                     fire_count = fire_count + 1
-                elseif g_savedata.objectives[i].mission == mission.id and g_savedata.objectives[i].tracker ==
-                    "lost_property" then
+                elseif g_savedata.objectives[i].mission == mission.id and g_savedata.objectives[i].tracker == "lost_property" then
                     flotsam_count = flotsam_count + 1
                 end
             end
@@ -494,8 +490,7 @@ objective_trackers = {
             server.setCharacterData(objective.id, objective.vital.hp, true, false)
             server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
             server.setCharacterItem(objective.id, 4, 24, true, 0, 100)
-            server.setCharacterTooltip(objective.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d",
-                self.progress, objective.mission, objective.id))
+            server.setCharacterTooltip(objective.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, objective.mission, objective.id))
 
             if objective.vital.hp == 0 then
                 server.setCharacterItem(objective.id, 3, 72, false, 0, 0)
@@ -516,8 +511,7 @@ objective_trackers = {
             local get_on = on_board ~= 0 and objective.on_board == 0
             local get_off = on_board == 0 and objective.on_board ~= 0
             local vital_update = server.getCharacterData(objective.id)
-            local is_in_hospital = is_in_landscape(transform, "hospital") or objective.vital.risk == 0 and
-                                       is_in_landscape(transform, "base")
+            local is_in_hospital = is_in_landscape(transform, "hospital") or objective.vital.risk == 0 and is_in_landscape(transform, "base")
             local risk = objective.vital.risk
             local nearby = nearby_players(transform, 200)
             local arrived = nearby and not objective.nearby_player
@@ -535,7 +529,7 @@ objective_trackers = {
                 vital_update.hp = math.max(vital_update.hp - 0.25 * math.ceil(risk), 0)
             end
 
-            if leaved or get_on then 
+            if leaved or get_on then
                 server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
             end
 
@@ -618,8 +612,7 @@ objective_trackers = {
     lost_property = {
         init = function(self, objective)
             objective.is_in_freight_terminal = false
-            server.setVehicleTooltip(objective.main_body_id, string.format(
-                "落下物\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, objective.mission, objective.id))
+            server.setVehicleTooltip(objective.main_body_id, string.format("落下物\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, objective.mission, objective.id))
         end,
         clear = function(self, objective)
         end,
@@ -651,17 +644,12 @@ objective_trackers = {
                     server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_id", index), mission.id)
                     server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_x", index), x)
                     server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_y", index), z)
-                    server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_r", index),
-                        mission.search_radius)
+                    server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_r", index), mission.search_radius)
 
-                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_sar", index),
-                        mission.units.sar)
-                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_med", index),
-                        mission.units.med)
-                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_fire", index),
-                        mission.units.fire)
-                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_spc", index),
-                        mission.units.spc)
+                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_sar", index), mission.units.sar)
+                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_med", index), mission.units.med)
+                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_fire", index), mission.units.fire)
+                    toggle_vehicle_button(objective.main_body_id, string.format("mission_%d_spc", index), mission.units.spc)
                 else
                     server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_id", index), 0)
                     server.setVehicleKeypad(objective.main_body_id, string.format("mission_%d_x", index), 0)
@@ -730,8 +718,7 @@ function initialize_mission(center, range_min, tracker, location, zone_name)
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
     for i = 1, sub_location_count do
-        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0,
-            mission.locations[1].sub_locations, {}, false, mission.id)
+        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, mission.id)
 
         if sub_location then
             table.insert(mission.locations, sub_location)
@@ -803,8 +790,7 @@ function clear_objective(index)
     end
 
     server.removeMapID(-1, g_savedata.objectives[index].marker)
-    console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker,
-        g_savedata.objectives[index].id))
+    console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker, g_savedata.objectives[index].id))
 
     table.remove(g_savedata.objectives, index)
 end
@@ -903,8 +889,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and
-            is_location_overlap(g_savedata.locations[i]) then
+        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_overlap(g_savedata.locations[i]) then
             goto continue_location
         end
 
@@ -928,15 +913,13 @@ function random_location(center, range_max, range_min, location_names, zone_name
                     goto continue_zone
                 end
 
-                if (not is_main_location or g_savedata.mission_range_limited) and
-                    not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
+                if (not is_main_location or g_savedata.mission_range_limited) and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
                     goto continue_zone
                 end
 
                 for k = 1, #g_savedata.missions do
                     for l = 1, #g_savedata.missions[k].locations do
-                        if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id ==
-                            g_savedata.zones[j].id then
+                        if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
                             goto continue_zone
                         end
                     end
@@ -950,8 +933,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
 
             zone_candidate_types = table.distinct(zone_candidate_types)
 
-            if (#zone_names > 0 and table.contains(zone_names, "offshore")) or
-                (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
+            if (#zone_names > 0 and table.contains(zone_names, "offshore")) or (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
                 table.insert(zone_candidate_types, "offshore")
             end
 
@@ -996,8 +978,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
     end
 
     if #location_candidates == 0 then
-        console.error(
-            "No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+        console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
         return nil
     end
 
@@ -1023,8 +1004,7 @@ function is_location_overlap(location)
 
     for i = 1, #g_savedata.missions do
         for j = 1, #g_savedata.missions[i].locations do
-            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_overlap_criteria] ==
-                             location[g_savedata.location_overlap_criteria])
+            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_overlap_criteria] == location[g_savedata.location_overlap_criteria])
         end
     end
 
@@ -1053,8 +1033,7 @@ function spawn_location(location, mission_id)
     end
 
     if location.zone then
-        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.name,
-            location.zone.id))
+        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.name, location.zone.id))
     else
         console.notify(string.format("Spawning fixed location %s", location.name))
     end
@@ -1083,8 +1062,7 @@ function spawn_component(component, transform, mission_id)
         parent_object_id = parent_object.main_body_id
     end
 
-    local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index,
-        component.component_index, parent_object_id)
+    local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
     local tracker = nil
 
     if component.type == "character" and component.tags.tracker and component.tags.tracker == "rescuee" then
@@ -1413,17 +1391,13 @@ function onTick(tick)
                 local r, g, b, a = 127, 127, 127, 255
                 local label = string.format("%s #%d", g_savedata.objectives[i].tracker, g_savedata.objectives[i].id)
 
-                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, 1, x, z, 0, 0, nil, nil, label, 0,
-                    string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
+                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, 1, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
             end
 
-            if g_savedata.objectives[i].mission and
-                objective_trackers[g_savedata.objectives[i].tracker]:completed(g_savedata.objectives[i]) then
+            if g_savedata.objectives[i].mission and objective_trackers[g_savedata.objectives[i].tracker]:completed(g_savedata.objectives[i]) then
                 for j = 1, #g_savedata.missions do
                     if g_savedata.missions[j].id == g_savedata.objectives[i].mission then
-                        g_savedata.missions[j].reward = g_savedata.missions[j].reward +
-                                                            objective_trackers[g_savedata.objectives[i].tracker]:reward(
-                                g_savedata.objectives[i])
+                        g_savedata.missions[j].reward = g_savedata.missions[j].reward + objective_trackers[g_savedata.objectives[i].tracker]:reward(g_savedata.objectives[i])
                     end
                 end
 
@@ -1443,8 +1417,7 @@ function onTick(tick)
                 local label_hover = mission_trackers[g_savedata.missions[i].tracker]:status(g_savedata.missions[i])
                 local x, y, z = matrix.position(g_savedata.missions[i].search_center)
 
-                server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label,
-                    g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
+                server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label, g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
             end
 
             if mission_trackers[g_savedata.missions[i].tracker]:completed(g_savedata.missions[i]) then
@@ -1473,8 +1446,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local location, zone = ...
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min,
-                {location}, {zone}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {zone}, true, nil)
 
             if location == nil then
                 return
