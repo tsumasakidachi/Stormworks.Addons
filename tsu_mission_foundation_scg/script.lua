@@ -220,6 +220,20 @@ location_properties = {{
     nortification_type = 0,
     report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
     note = "民間人からの通報"
+}, {
+    pattern = "^mission:marina_fire_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    range_max = 6000,
+    search_radius = 100,
+    nortification_type = 0,
+    report = "火災\nマリーナでボートが燃えて周りの船にも燃え移っている。",
+    note = "民間人からの通報"
 }}
 
 zone_properties = {{
