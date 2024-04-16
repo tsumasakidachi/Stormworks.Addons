@@ -36,7 +36,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "行方不明者\n探検隊との連絡が3日前から途絶している。要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ。",
+    report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ.",
     note = "警察署からの通報"
 }, {
     pattern = "^mission:passenger_fallen_land_%d+$",
@@ -120,7 +120,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "メーデー\n本船は何らかの物体と接触、浸水し沈没しかかっている。乗員乗客はほとんど脱出に成功したが漂流している。至急救援を求む。",
+    report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
     note = "乗組員からの通報"
 }, {
     pattern = "^mission:diver_yacht_%d+$",
@@ -134,7 +134,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 500,
     nortification_type = 0,
-    report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる。もう1時間以上経っているので捜索してほしい。",
+    report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
     note = "民間人からの通報"
 }, {
     pattern = "^mission:diver_missing_%d+$",
@@ -162,7 +162,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "火災\n操業中の事故により海上油田で爆発が発生。油井が激しく炎上し我々の手には負えない。職員は脱出を開始している。",
+    report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し我々の手には負えない. 職員は脱出を開始している.",
     note = "職員からの通報"
 }, {
     pattern = "^mission:car_collision_%d+$",
@@ -176,7 +176,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 500,
     nortification_type = 0,
-    report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる。",
+    report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる.",
     note = "民間人からの通報"
 }, {
     pattern = "^mission:tunnel_fire$",
@@ -232,7 +232,7 @@ location_properties = {{
     range_max = 6000,
     search_radius = 100,
     nortification_type = 0,
-    report = "火災\nマリーナでボートが燃えて周りの船にも燃え移っている。",
+    report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている. 何隻かはもやいが切れて漂流してしまった.",
     note = "民間人からの通報"
 }}
 
