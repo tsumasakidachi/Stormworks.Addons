@@ -28,6 +28,12 @@ end
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, target, ...)
     -- kill
     if command == "?kill" then
+        for i = #g_savedata.vehicles, 1, -1 do
+            if g_savedata.vehicles[i].player.id == peer_id then
+                server.despawnVehicle(g_savedata.vehicles[i].vehicle_id, true)
+            end
+        end
+
         local object_id, is_success = server.getPlayerCharacterID(peer_id)
         server.killCharacter(object_id)
     end
