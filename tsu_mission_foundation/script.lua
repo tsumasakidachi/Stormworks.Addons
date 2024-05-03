@@ -842,7 +842,9 @@ function random_offshore_zone(center, range_max, range_min)
     return zone
 end
 
-function map_zone(zone)
+function map_zone(zone, peer_id)
+    local peer_id = peer_id or -1
+
     if g_savedata.zone_mapped or zone.mapped then
         local x, y, z = matrix.position(zone.transform)
         local color = zone.icon == 8 and 255 or 0
@@ -852,7 +854,7 @@ function map_zone(zone)
             name = zone.landscape
         end
 
-        server.addMapLabel(-1, zone.marker, zone.icon, name, x, z, color, color, color, 255)
+        server.addMapLabel(peer_id, zone.marker, zone.icon, name, x, z, color, color, color, 255)
     end
 end
 
@@ -1026,8 +1028,17 @@ function onTick(tick)
                 local x, y, z = matrix.position(transform)
                 local r, g, b, a = 127, 127, 127, 255
                 local label = string.format("%s #%d", g_savedata.objectives[i].tracker, g_savedata.objectives[i].id)
+                local marker_type = 2
 
-                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, 1, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
+                if g_savedata.objectives[i].tracker == "fire" then
+                    marker_type = 5
+                elseif g_savedata.objectives[i].tracker == "rescuee" then
+                    marker_type = 1
+                elseif g_savedata.objectives[i].tracker == "headquarter" then
+                    marker_type = 11
+                end
+
+                server.addMapObject(-1, g_savedata.objectives[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
             end
 
             if g_savedata.objectives[i].mission and objective_trackers[g_savedata.objectives[i].tracker]:completed(g_savedata.objectives[i]) then
@@ -1164,7 +1175,7 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
     end
 
     for i = 1, #g_savedata.zones do
-        map_zone(g_savedata.zones[i])
+        map_zone(g_savedata.zones[i], peer_id)
     end
 
     local transform = server.getPlayerPos(peer_id)
