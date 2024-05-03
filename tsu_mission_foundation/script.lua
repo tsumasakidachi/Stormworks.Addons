@@ -238,10 +238,10 @@ objective_trackers = {
             local hp_max = 100
 
             objective.exists = true
+            objective.completion_timer = 300
             objective.vital = {}
             objective.vital.hp = tonumber(objective.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
             objective.vital.is_dead = false
-            objective.is_in_hospital = false
             objective.on_board = 0
             objective.nearby_player = false
 
@@ -267,14 +267,17 @@ objective_trackers = {
             objective.vital.hp = vital_update.hp
             objective.vital.is_dead = vital_update.dead
 
-            server.setCharacterData(objective.id, vital_update.hp, not is_in_hospital, false)
+            if is_in_hospital then
+                objective.completion_timer = math.max(objective.completion_timer - tick, 0)
+            end
 
-            objective.is_in_hospital = is_in_hospital
+            server.setCharacterData(objective.id, vital_update.hp, not is_in_hospital, vital_update.ai)
+
             objective.on_board = on_board
             objective.nearby_player = nearby
         end,
         completed = function(self, objective)
-            return not objective.exists or objective.is_in_hospital
+            return not objective.exists or objective.completion_timer == 0
         end,
         reward = function(self, objective)
             local value = math.ceil(1000 * (math.floor(objective.vital.hp / 25) / 4))
@@ -413,6 +416,8 @@ function clear_objective(index)
 
     objective_trackers[g_savedata.objectives[index].tracker]:clear(g_savedata.objectives[index])
 
+    server.removeMapID(-1, g_savedata.objectives[index].marker)
+
     if g_savedata.objectives[index].type == "character" then
         server.despawnObject(g_savedata.objectives[index].id, true)
     elseif g_savedata.objectives[index].type == "vehicle" then
@@ -421,7 +426,6 @@ function clear_objective(index)
         server.despawnObject(g_savedata.objectives[index].id, true)
     end
 
-    server.removeMapID(-1, g_savedata.objectives[index].marker)
     console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker, g_savedata.objectives[index].id))
 
     table.remove(g_savedata.objectives, index)
@@ -948,6 +952,8 @@ function nearby_players(transform, distance)
     local result = false
 
     for i = 1, #g_savedata.players do
+        local d = matrix.distance(g_savedata.players[i].transform, transform)
+
         result = result or matrix.distance(g_savedata.players[i].transform, transform) <= distance
     end
 
@@ -995,7 +1001,7 @@ function onTick(tick)
         g_savedata.players = server.getPlayers()
 
         for i = 1, #g_savedata.players do
-            local transform, is_success = server.getPlayerPos(g_savedata.players[i].peer_id)
+            local transform, is_success = server.getPlayerPos(g_savedata.players[i].id)
 
             if is_success then
                 g_savedata.players[i].transform = transform
@@ -1074,8 +1080,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mission_timer_tickrate = 0
         elseif verb == "init" and is_admin then
             local location, zone = ...
+            local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {zone}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {zone}, true, nil)
 
             if location == nil then
                 return
@@ -1186,7 +1193,13 @@ function onCreate(is_world_create)
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, equipment_id)
-    server.despawnObject(object_id_target, false)
+    local is_npc = false
+
+    for i = #g_savedata.objectives, 1, -1 do
+        is_npc = is_npc or g_savedata.objectives[i].type == "character" and g_savedata.objectives[i].id == object_id_actor
+    end
+
+    server.despawnObject(object_id_target, is_npc)
 end
 
 -- utils

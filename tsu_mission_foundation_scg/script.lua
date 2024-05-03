@@ -232,8 +232,22 @@ location_properties = {{
     range_max = 6000,
     search_radius = 100,
     nortification_type = 0,
-    report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている. 何隻かはもやいが切れて漂流してしまった.",
+    report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている.",
     note = "民間人からの通報"
+}, {
+    pattern = "^mission:campsite_fire_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {"mission:expedition_missing_%d+"},
+    sub_location_min = 3,
+    sub_location_max = 5,
+    is_unique_sub_location = false,
+    range_max = 6000,
+    search_radius = 1000,
+    nortification_type = 0,
+    report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっているためこの周辺に避難命令を発出した. 森などで遊んでいたレジャー客がいまだ残っているとみられ, この範囲を捜索する必要がある.",
+    note = "キャンプ場からの通報"
 }}
 
 zone_properties = {{
@@ -493,11 +507,11 @@ objective_trackers = {
             local hp_max = 100
 
             objective.exists = true
+            objective.completion_timer = 300
             objective.vital = {}
             objective.vital.hp = tonumber(objective.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
             objective.vital.is_dead = false
             objective.vital.risk = objective.vital.hp > 0 and 0 or 2
-            objective.is_in_hospital = false
             objective.on_board = 0
             objective.nearby_player = false
 
@@ -531,24 +545,32 @@ objective_trackers = {
             local arrived = nearby and not objective.nearby_player
             local leaved = not nearby and objective.nearby_player
 
-            if #g_savedata.players > 1 and not is_in_hospital and vital_update.hp >= 95 then
-                risk = math.max(0, risk - 0.05)
-            end
+            if #g_savedata.players > 1 then
+                if not is_in_hospital and vital_update.hp >= 95 then
+                    risk = math.max(0, risk - 0.05)
+                end
 
-            if #g_savedata.players > 1 and not is_in_hospital and objective.vital.hp >= 1 and vital_update.hp < 1 then
-                risk = risk * 2 + 1
-            end
+                if not is_in_hospital and objective.vital.hp >= 1 and vital_update.hp < 1 then
+                    risk = risk * 2 + 1
+                end
 
-            if #g_savedata.players > 1 and not is_in_hospital and risk > 0 then
-                vital_update.hp = math.max(vital_update.hp - 0.25 * math.ceil(risk), 0)
-            end
-
-            if leaved or get_on then
-                server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
+                if not is_in_hospital and risk > 0 then
+                    vital_update.hp = math.max(vital_update.hp - 0.25 * math.ceil(risk), 0)
+                end
             end
 
             if (arrived and on_board == 0) or (get_off and nearby) then
                 server.setCharacterItem(objective.id, 2, 23, true, 0, 100)
+                server.setCharacterItem(objective.id, 4, 24, true, 0, 100)
+            end
+
+            if get_on then
+                server.setCharacterItem(objective.id, 2, 23, false, 0, 100)
+                server.setCharacterItem(objective.id, 4, 24, false, 0, 100)
+            end
+
+            if objective.id == 2862 then
+                console.notify(objective.vital.risk)
             end
 
             if risk > 0 and objective.vital.risk == 0 then
@@ -561,9 +583,12 @@ objective_trackers = {
             objective.vital.is_dead = vital_update.dead
             objective.vital.risk = risk
 
-            server.setCharacterData(objective.id, vital_update.hp, not is_in_hospital, false)
+            if is_in_hospital then
+                objective.completion_timer = math.max(objective.completion_timer - tick, 0)
+            end
 
-            objective.is_in_hospital = is_in_hospital
+            server.setCharacterData(objective.id, vital_update.hp, not is_in_hospital, vital_update.ai)
+
             objective.on_board = on_board
             objective.nearby_player = nearby
         end,
@@ -571,7 +596,7 @@ objective_trackers = {
             server.pressVehicleButton(objective.main_body_id, "Alert")
         end,
         completed = function(self, objective)
-            return not objective.exists or objective.is_in_hospital
+            return not objective.exists or objective.completion_timer == 0
         end,
         reward = function(self, objective)
             local value = math.ceil(self.reward_base * (math.floor(objective.vital.hp / 25) / 4))
@@ -795,6 +820,8 @@ function clear_objective(index)
 
     objective_trackers[g_savedata.objectives[index].tracker]:clear(g_savedata.objectives[index])
 
+    server.removeMapID(-1, g_savedata.objectives[index].marker)
+
     if g_savedata.objectives[index].type == "character" then
         server.despawnObject(g_savedata.objectives[index].id, true)
     elseif g_savedata.objectives[index].type == "vehicle" then
@@ -803,7 +830,6 @@ function clear_objective(index)
         server.despawnObject(g_savedata.objectives[index].id, true)
     end
 
-    server.removeMapID(-1, g_savedata.objectives[index].marker)
     console.notify(string.format("Objective %s#%d cleared.", g_savedata.objectives[index].tracker, g_savedata.objectives[index].id))
 
     table.remove(g_savedata.objectives, index)
@@ -1571,7 +1597,13 @@ function onCreate(is_world_create)
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, equipment_id)
-    server.despawnObject(object_id_target, false)
+    local is_npc = false
+
+    for i = #g_savedata.objectives, 1, -1 do
+        is_npc = is_npc or g_savedata.objectives[i].type == "character" and g_savedata.objectives[i].id == object_id_actor
+    end
+
+    server.despawnObject(object_id_target, is_npc)
 end
 
 -- utils
