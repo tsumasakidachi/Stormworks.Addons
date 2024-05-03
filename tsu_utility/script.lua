@@ -149,7 +149,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     if command == "?thp" and is_admin then
         local target_peer_id = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
-        transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
+        transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
         if not is_success then
             return
@@ -162,7 +162,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     if command == "?tho" and is_admin then
         local target_object_id = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
-        transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
+        transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
         if not is_success then
             return
@@ -175,7 +175,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     if command == "?thv" and is_admin then
         local target_vehicle_id = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
-        transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
+        transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
         if not is_success then
             return
