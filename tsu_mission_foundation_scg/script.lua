@@ -12,7 +12,7 @@ g_savedata = {
     mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
     mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) * 3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 100, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 5, 100, 1, 10) * 1000,
+    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 6, 100, 1, 10) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
@@ -55,7 +55,7 @@ location_properties = {{
 }, {
     pattern = "^mission:passenger_fallen_water_%d+$",
     tracker = "sar",
-    suitable_zones = {"offshore", "channel"},
+    suitable_zones = {"offshore", "channel", "shallow"},
     is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
@@ -69,7 +69,7 @@ location_properties = {{
 }, {
     pattern = "^mission:lifeboat_%d+$",
     tracker = "sar",
-    suitable_zones = {"offshore", "channel"},
+    suitable_zones = {"offshore", "channel", "shallow"},
     is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
@@ -248,6 +248,20 @@ location_properties = {{
     nortification_type = 0,
     report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっているためこの周辺に避難命令を発出した. 森などで遊んでいたレジャー客がいまだ残っているとみられ, この範囲を捜索する必要がある.",
     note = "キャンプ場からの通報"
+}, {
+    pattern = "^mission:train_crash_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {"mission:passenger_fallen_water_%d+"},
+    sub_location_min = 3,
+    sub_location_max = 5,
+    is_unique_sub_location = false,
+    range_max = 8000,
+    search_radius = 1000,
+    nortification_type = 0,
+    report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 大量のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
+    note = "運転士からの通報"
 }}
 
 zone_properties = {{
