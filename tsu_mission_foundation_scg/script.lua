@@ -83,7 +83,7 @@ location_properties = {{
 }, {
     pattern = "^mission:raft_%d+$",
     tracker = "sar",
-    suitable_zones = {"offshore"},
+    suitable_zones = {"offshore", "shallow"},
     is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
@@ -246,7 +246,7 @@ location_properties = {{
     range_max = 8000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっているためこの周辺に避難命令を発出した. 森などで遊んでいたレジャー客がいまだ残っているとみられ, この範囲を捜索する必要がある.",
+    report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
     note = "キャンプ場からの通報"
 }, {
     pattern = "^mission:train_crash_%d+$",
