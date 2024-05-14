@@ -869,8 +869,6 @@ function initialize_object(object, mission)
     end
 
     table.insert(g_savedata.objects, object)
-
-    console.notify(string.format("Initializing objective %s#%d.", object.type, object.id))
 end
 
 function clear_object(index, object)
@@ -883,8 +881,6 @@ function clear_object(index, object)
     end
 
     table.remove(g_savedata.objects, index)
-
-    console.notify(string.format("Objective %s#%d cleared.", object.type, object.id))
 end
 
 function find_parent_object(vehicle_parent_component_id, mission_id)
@@ -1106,11 +1102,6 @@ function spawn_location(location, mission_id)
     for k, v in pairs(others) do
         spawn_component(v, location.transform, mission_id)
     end
-
-    -- local strobe_trandform = matrix.multiply(location.transform, matrix.translation(0, 10, 0))
-    -- local strobe = spawn_equipment(strobe_trandform, 24, 1, 100)
-
-    -- initialize_object(strobe, mission_id)
 end
 
 function spawn_component(component, transform, mission_id)
@@ -1132,12 +1123,6 @@ function spawn_component(component, transform, mission_id)
             break
         end
     end
-
-    -- local st, en, custom_tracker, option = string.find(object.display_name, "^([a-zA-Z0-9_]+)[:]?(.*)$")
-
-    -- if st ~= nil then
-    --     tracker = custom_tracker
-    -- end
 
     object.tags = parse_tags(object.tags_full)
     object.component_id = component.id
