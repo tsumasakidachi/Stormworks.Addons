@@ -33,7 +33,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 7,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ.",
@@ -47,7 +47,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "",
@@ -61,7 +61,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "",
@@ -75,7 +75,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "",
@@ -89,7 +89,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "",
@@ -103,7 +103,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
@@ -117,7 +117,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 7,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
@@ -145,7 +145,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 500,
     nortification_type = 0,
     report = "",
@@ -173,7 +173,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 500,
     nortification_type = 0,
     report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる.",
@@ -187,7 +187,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = true,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 100,
     nortification_type = 0,
     report = "",
@@ -201,7 +201,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 100,
     nortification_type = 0,
     report = "",
@@ -215,7 +215,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 7,
     is_unique_sub_location = true,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
@@ -229,7 +229,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 100,
     nortification_type = 0,
     report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている.",
@@ -243,7 +243,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
@@ -257,7 +257,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
     report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 大量のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
@@ -516,6 +516,9 @@ mission_trackers = {
 
 objective_trackers = {
     rescuee = {
+        test_type = function(self, component)
+            return component.type == "character" and component.tags.tracker and component.tags.tracker == "rescuee"
+        end,
         init = function(self, objective)
             local hp_min = -20
             local hp_max = 100
@@ -542,7 +545,7 @@ objective_trackers = {
             server.setCharacterData(objective.id, objective.vital.hp, false, false)
         end,
         tick = function(self, objective, tick)
-            local transform, is_success = server.getObjectPos(objective.id)
+            local transform, is_success = self:position(objective)
             objective.exists = is_success
 
             if not objective.exists then
@@ -606,8 +609,8 @@ objective_trackers = {
             objective.on_board = on_board
             objective.nearby_player = nearby
         end,
-        alert = function(self, objective)
-            server.pressVehicleButton(objective.main_body_id, "Alert")
+        position = function(self, objective)
+            return server.getObjectPos(objective.id)
         end,
         completed = function(self, objective)
             return not objective.exists or objective.completion_timer == 0
@@ -622,27 +625,13 @@ objective_trackers = {
             return value
         end,
         reward_base = 2500,
-        progress = "要救助者を発見し医療機関へ移送\nまたは安定化して基地へ収容"
+        progress = "要救助者を発見し医療機関へ移送\nまたは安定化して基地へ収容",
+        marker_type = 1
     },
-    -- vehicle = {
-    --     init = function(self, objective)
-    --         objective.fire_count = 0
-    --     end,
-    --     clear = function(self, objective)
-    --     end,
-    --     tick = function(self, objective, tick)
-    --         local fire_count, is_success = server.getVehicleFireCount(objective.id)
-    --         objective.fire_count = fire_count
-    --     end,
-    --     completed = function(self, objective)
-    --         return objective.fire_count == 0
-    --     end,
-    --     reward = function(self, objective)
-    --         return 1000
-    --     end,
-    --     progress = "%d/%d 乗り物への延焼を鎮火"
-    -- },
     fire = {
+        test_type = function(self, component)
+            return component.type == "fire"
+        end,
         init = function(self, objective)
             objective.is_lit = server.getFireData(objective.id)
         end,
@@ -652,6 +641,9 @@ objective_trackers = {
             local is_lit, is_success = server.getFireData(objective.id)
             objective.is_lit = is_success and is_lit
         end,
+        position = function(self, objective)
+            return server.getObjectPos(objective.id)
+        end,
         completed = function(self, objective)
             local is_lit, is_success = server.getFireData(objective.object_id)
             return not is_lit
@@ -660,9 +652,13 @@ objective_trackers = {
             return self.reward_base
         end,
         reward_base = 1000,
-        progress = "炎を発見し鎮火"
+        progress = "炎を発見し鎮火",
+        marker_type = 5
     },
     lost_property = {
+        test_type = function(self, component)
+            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "lost_property"
+        end,
         init = function(self, objective)
             objective.is_in_freight_terminal = false
             server.setVehicleTooltip(objective.main_body_id, string.format("落下物\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, objective.mission, objective.id))
@@ -673,6 +669,9 @@ objective_trackers = {
             local transform, is_success = server.getVehiclePos(objective.main_body_id)
             objective.is_in_freight_terminal = not is_success or is_in_landscape(transform, "freight_terminal")
         end,
+        position = function(self, objective)
+            return server.getVehiclePos(objective.main_body_id)
+        end,
         completed = function(self, objective)
             return objective.is_in_freight_terminal
         end,
@@ -680,9 +679,13 @@ objective_trackers = {
             return self.reward_base
         end,
         reward_base = 25000,
-        progress = "落下物を回収し貨物駅へ輸送"
+        progress = "落下物を回収し貨物駅へ輸送",
+        marker_type = 2
     },
     headquarter = {
+        test_type = function(self, component)
+            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "headquarter"
+        end,
         init = function(self, objective)
         end,
         clear = function(self, objective)
@@ -718,6 +721,9 @@ objective_trackers = {
         alert = function(self, objective)
             server.pressVehicleButton(objective.main_body_id, "Alert")
         end,
+        position = function(self, objective)
+            return server.getVehiclePos(objective.main_body_id)
+        end,
         completed = function(self, objective)
             return false
         end,
@@ -725,7 +731,8 @@ objective_trackers = {
             return self.reward_base
         end,
         reward_base = 0,
-        progress = ""
+        progress = "",
+        marker_type = 11
     }
 }
 
@@ -1119,12 +1126,11 @@ function spawn_component(component, transform, mission_id)
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
     local tracker = nil
 
-    if component.type == "character" and component.tags.tracker and component.tags.tracker == "rescuee" then
-        tracker = "rescuee"
-    elseif component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "lost_property" then
-        tracker = "lost_property"
-    elseif component.type == "fire" then
-        tracker = "fire"
+    for k, v in pairs(objective_trackers) do
+        if v:test_type(component) then
+            tracker = k
+            break
+        end
     end
 
     -- local st, en, custom_tracker, option = string.find(object.display_name, "^([a-zA-Z0-9_]+)[:]?(.*)$")
@@ -1136,7 +1142,7 @@ function spawn_component(component, transform, mission_id)
     object.tags = parse_tags(object.tags_full)
     object.component_id = component.id
 
-    if table.contains(obj_types, tracker) then
+    if tracker ~= nil then
         initialize_objective(object, tracker, mission_id)
     else
         initialize_object(object, mission_id)
@@ -1435,26 +1441,11 @@ function onTick(tick)
             server.removeMapID(-1, g_savedata.objectives[i].marker)
 
             if g_savedata.objective_mapped then
-                local transform = nil
-
-                if g_savedata.objectives[i].type == "vehicle" then
-                    transform = server.getVehiclePos(g_savedata.objectives[i].main_body_id)
-                else
-                    transform = server.getObjectPos(g_savedata.objectives[i].id)
-                end
-
+                local transform =  objective_trackers[g_savedata.objectives[i].tracker]:position(g_savedata.objectives[i])
                 local x, y, z = matrix.position(transform)
                 local r, g, b, a = 127, 127, 127, 255
                 local label = string.format("%s #%d", g_savedata.objectives[i].tracker, g_savedata.objectives[i].id)
-                local marker_type = 2
-
-                if g_savedata.objectives[i].tracker == "fire" then
-                    marker_type = 5
-                elseif g_savedata.objectives[i].tracker == "rescuee" then
-                    marker_type = 1
-                elseif g_savedata.objectives[i].tracker == "headquarter" then
-                    marker_type = 11
-                end
+                local marker_type = objective_trackers[g_savedata.objectives[i].tracker].marker_type
 
                 server.addMapObject(-1, g_savedata.objectives[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
             end
