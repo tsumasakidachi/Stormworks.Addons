@@ -555,7 +555,7 @@ object_trackers = {
             local get_on = on_board ~= 0 and object.on_board == 0
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
-            local is_in_hospital = is_in_landscape(transform, "hospital") or object.vital.risk == 0 and is_in_landscape(transform, "base")
+            local is_in_hospital = (vital_update.is_dead or object.vital.risk == 0) and (is_in_landscape(transform, "hospital") or is_in_landscape(transform, "base"))
             local risk = object.vital.risk
             local nearby = nearby_players(transform, 200)
             local arrived = nearby and not object.nearby_player
@@ -1394,18 +1394,18 @@ function onTick(tick)
     for i = #g_savedata.objects, 1, -1 do
         if i % timing_default == timing and g_savedata.objects[i].tracker ~= nil then
             object_trackers[g_savedata.objects[i].tracker]:tick(g_savedata.objects[i], tick * timing_default)
-            -- server.removeMapID(-1, g_savedata.objects[i].marker)
+            server.removeMapID(-1, g_savedata.objects[i].marker)
 
-            -- if g_savedata.object_mapped then
-            --     local transform = object_trackers[g_savedata.objects[i].tracker]:position(g_savedata.objects[i])
-            --     local x, y, z = matrix.position(transform)
-            --     local r, g, b, a = 127, 127, 127, 255
-            --     local label = string.format("%s #%d", g_savedata.objects[i].tracker, g_savedata.objects[i].id)
-            --     local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
-            --     local marker_type = object_trackers[g_savedata.objects[i].tracker].marker_type
+            if g_savedata.object_mapped then
+                local transform = object_trackers[g_savedata.objects[i].tracker]:position(g_savedata.objects[i])
+                local x, y, z = matrix.position(transform)
+                local r, g, b, a = 127, 127, 127, 255
+                local label = string.format("%s #%d", g_savedata.objects[i].tracker, g_savedata.objects[i].id)
+                local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+                local marker_type = object_trackers[g_savedata.objects[i].tracker].marker_type
 
-            --     server.addMapObject(-1, g_savedata.objects[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
-            -- end
+                server.addMapObject(-1, g_savedata.objects[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
+            end
 
             if g_savedata.objects[i].mission and object_trackers[g_savedata.objects[i].tracker]:completed(g_savedata.objects[i]) then
                 for j = 1, #g_savedata.missions do
