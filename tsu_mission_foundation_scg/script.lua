@@ -561,7 +561,7 @@ object_trackers = {
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if #g_savedata.players > 1 then
+            if #players > 1 then
                 if not is_in_hospital and vital_update.hp >= 95 then
                     risk = math.max(0, risk - 0.05)
                 end
@@ -1326,10 +1326,10 @@ end
 function nearby_players(transform, distance)
     local result = false
 
-    for i = 1, #g_savedata.players do
-        local d = matrix.distance(g_savedata.players[i].transform, transform)
+    for i = 1, #players do
+        local d = matrix.distance(players[i].transform, transform)
 
-        result = result or matrix.distance(g_savedata.players[i].transform, transform) <= distance
+        result = result or matrix.distance(players[i].transform, transform) <= distance
     end
 
     return result
@@ -1355,6 +1355,11 @@ function teleport_to_spawn_points(peer_id)
     server.setPlayerPos(peer_id, g_savedata.zones[spawn_zone_key].transform)
 end
 
+-- players
+
+players = {}
+players_map = {}
+
 -- callbacks
 
 timing_default = 60
@@ -1372,32 +1377,35 @@ function onTick(tick)
         end
     end
 
-    if timing % 30 == 0 then
-        g_savedata.players = server.getPlayers()
+    if timing % 10 == 0 then
+        players = server.getPlayers()
 
-        for i = 1, #g_savedata.players do
-            local transform, is_success = server.getPlayerPos(g_savedata.players[i].id)
+        for k, v in pairs(players) do
+            local transform, is_success = server.getPlayerPos(v.id)
 
             if is_success then
-                g_savedata.players[i].transform = transform
+                v.transform = transform
             end
+
+            v.open_map = players_map[k] or false
         end
     end
 
     for i = #g_savedata.objects, 1, -1 do
         if i % timing_default == timing and g_savedata.objects[i].tracker ~= nil then
             object_trackers[g_savedata.objects[i].tracker]:tick(g_savedata.objects[i], tick * timing_default)
-            server.removeMapID(-1, g_savedata.objects[i].marker)
+            -- server.removeMapID(-1, g_savedata.objects[i].marker)
 
-            if g_savedata.object_mapped then
-                local transform = object_trackers[g_savedata.objects[i].tracker]:position(g_savedata.objects[i])
-                local x, y, z = matrix.position(transform)
-                local r, g, b, a = 127, 127, 127, 255
-                local label = string.format("%s #%d", g_savedata.objects[i].tracker, g_savedata.objects[i].id)
-                local marker_type = object_trackers[g_savedata.objects[i].tracker].marker_type
+            -- if g_savedata.object_mapped then
+            --     local transform = object_trackers[g_savedata.objects[i].tracker]:position(g_savedata.objects[i])
+            --     local x, y, z = matrix.position(transform)
+            --     local r, g, b, a = 127, 127, 127, 255
+            --     local label = string.format("%s #%d", g_savedata.objects[i].tracker, g_savedata.objects[i].id)
+            --     local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+            --     local marker_type = object_trackers[g_savedata.objects[i].tracker].marker_type
 
-                server.addMapObject(-1, g_savedata.objects[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z), r, g, b, a)
-            end
+            --     server.addMapObject(-1, g_savedata.objects[i].marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
+            -- end
 
             if g_savedata.objects[i].mission and object_trackers[g_savedata.objects[i].tracker]:completed(g_savedata.objects[i]) then
                 for j = 1, #g_savedata.missions do
@@ -1560,6 +1568,10 @@ function onPlayerRespawn(peer_id)
     teleport_to_spawn_points(peer_id)
 end
 
+function onToggleMap(peer_id, is_open)
+    players_map[peer_id] = is_open
+end
+
 function onCreate(is_world_create)
     load_zones()
     load_locations()
@@ -1592,7 +1604,7 @@ function toggle_vehicle_button(vehicle_id, button_name, value)
 end
 
 function missions_less_than_limit()
-    return #g_savedata.missions < math.min(#g_savedata.players / g_savedata.mission_spawn_when_players_x, 48)
+    return #g_savedata.missions < math.min(#players / g_savedata.mission_spawn_when_players_x, 48)
 end
 
 function despawn_vehicle_group(group_id, is_instant)
