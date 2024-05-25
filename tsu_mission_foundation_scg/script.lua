@@ -36,6 +36,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "警察署からの通報"
 }, {
     pattern = "^mission:passenger_fallen_land_%d+$",
@@ -50,6 +52,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "落水者"
 }, {
     pattern = "^mission:passenger_fallen_water_%d+$",
@@ -64,6 +68,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "落水者"
 }, {
     pattern = "^mission:lifeboat_%d+$",
@@ -78,6 +84,7 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "",
+    report_timer = 0,
     note = "救命ボート"
 }, {
     pattern = "^mission:raft_%d+$",
@@ -92,6 +99,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "救命ボート"
 }, {
     pattern = "^mission:vessel_fire_%d+$",
@@ -106,6 +115,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "乗組員からの通報"
 }, {
     pattern = "^mission:vessel_sink_%d+$",
@@ -120,6 +131,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "乗組員からの通報"
 }, {
     pattern = "^mission:diver_yacht_%d+$",
@@ -134,6 +147,8 @@ location_properties = {{
     search_radius = 500,
     nortification_type = 0,
     report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "民間人からの通報"
 }, {
     pattern = "^mission:diver_missing_%d+$",
@@ -148,6 +163,8 @@ location_properties = {{
     search_radius = 500,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "民間人"
 }, {
     pattern = "^mission:oil_platform_fire_%d+$",
@@ -162,6 +179,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し我々の手には負えない. 職員は脱出を開始している.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "職員からの通報"
 }, {
     pattern = "^mission:car_collision_%d+$",
@@ -176,6 +195,8 @@ location_properties = {{
     search_radius = 500,
     nortification_type = 0,
     report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "民間人からの通報"
 }, {
     pattern = "^mission:tunnel_fire$",
@@ -190,6 +211,8 @@ location_properties = {{
     search_radius = 100,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "トンネル火災"
 }, {
     pattern = "^mission:car_stuck_%d+$",
@@ -204,6 +227,8 @@ location_properties = {{
     search_radius = 100,
     nortification_type = 0,
     report = "",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "スタックした自動車"
 }, {
     pattern = "^mission:aircraft_down_%d+$",
@@ -218,6 +243,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "民間人からの通報"
 }, {
     pattern = "^mission:marina_fire_%d+$",
@@ -232,6 +259,8 @@ location_properties = {{
     search_radius = 100,
     nortification_type = 0,
     report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "民間人からの通報"
 }, {
     pattern = "^mission:campsite_fire_%d+$",
@@ -246,6 +275,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "キャンプ場からの通報"
 }, {
     pattern = "^mission:train_crash_%d+$",
@@ -260,6 +291,8 @@ location_properties = {{
     search_radius = 1000,
     nortification_type = 0,
     report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 大量のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
+    report_timer_min = 0,
+    report_timer_max = 0,
     note = "運転士からの通報"
 }}
 
@@ -561,9 +594,9 @@ object_trackers = {
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if #players > 1 then
+            if #players > 1 or true then
                 if not is_in_hospital and vital_update.hp >= 95 then
-                    risk = math.max(0, risk - 0.05)
+                    risk = math.max(0, risk - 0.01)
                 end
 
                 if not is_in_hospital and object.vital.hp >= 1 and vital_update.hp < 1 then
@@ -571,7 +604,7 @@ object_trackers = {
                 end
 
                 if not is_in_hospital and risk > 0 then
-                    vital_update.hp = math.max(vital_update.hp - 0.5 * math.ceil(risk), 0)
+                    vital_update.hp = math.max(vital_update.hp - 1 * math.ceil(risk), 0)
                 end
             end
 
@@ -617,14 +650,14 @@ object_trackers = {
         reward = function(self, object)
             local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
 
-            if object.vital.is_dead then
+            if object.vital.is_dead or object.vital.risk > 0 then
                 value = 0
             end
 
             return value
         end,
         reward_base = 2500,
-        progress = "要救助者を発見し医療機関へ移送\nまたは安定化して基地へ収容",
+        progress = "要救助者を発見し病院または基地へ移送",
         marker_type = 1
     },
     fire = {
@@ -748,7 +781,7 @@ function random_mission(center, range_max, range_min)
     initialize_mission(center, range_min, location.tracker, location)
 end
 
-function initialize_mission(center, range_min, tracker, location, zone_name)
+function initialize_mission(center, range_min, tracker, location, report_timer)
     local mission = {}
     mission.id = g_savedata.mission_count + 1
 
@@ -759,6 +792,8 @@ function initialize_mission(center, range_min, tracker, location, zone_name)
     mission.locations = {location}
     mission.search_center = nil
     mission.search_radius = mission.locations[1].search_radius
+    mission.reported = false
+    mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
     mission.spawned = false
     mission.closed = false
     mission.marker = server.getMapID()
@@ -783,9 +818,6 @@ function initialize_mission(center, range_min, tracker, location, zone_name)
             table.insert(mission.locations, sub_location)
         end
     end
-
-    alert_headquarter()
-    server.notify(-1, mission_trackers[mission.tracker]:report(mission), mission.locations[1].note, 0)
 end
 
 function clear_mission(index)
@@ -1137,6 +1169,8 @@ function load_locations()
                         location.search_radius = location_properties[i].search_radius or 0
                         location.nortification_type = location_properties[i].nortification_type or 0
                         location.report = location_properties[i].report or ""
+                        location.report_timer_min = location_properties[i].report_timer_min or 0
+                        location.report_timer_max = location_properties[i].report_timer_max or 0
                         location.note = location_properties[i].note or ""
 
                         table.insert(g_savedata.locations, location)
@@ -1433,6 +1467,14 @@ function onTick(tick)
                 server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label, g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
             end
 
+            g_savedata.missions[i].report_timer = math.max(g_savedata.missions[i].report_timer - tick * timing_default, 0)
+
+            if not g_savedata.missions[i].reported and g_savedata.missions[i].report_timer == 0 then
+                alert_headquarter()
+                server.notify(-1, mission_trackers[g_savedata.missions[i].tracker]:report(g_savedata.missions[i]), g_savedata.missions[i].locations[1].note, 0)
+                g_savedata.missions[i].reported = true
+            end
+
             if mission_trackers[g_savedata.missions[i].tracker]:completed(g_savedata.missions[i]) then
                 reward_mission(i)
                 clear_mission(i)
@@ -1456,16 +1498,17 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "stop" and is_admin then
             g_savedata.mission_timer_tickrate = 0
         elseif verb == "init" and is_admin then
-            local location, zone = ...
+            local location, report_timer = ...
+            local report_timer = tonumber(report_timer)
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {zone}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, nil)
 
             if location == nil then
                 return
             end
 
-            initialize_mission(center, g_savedata.mission_range_min, location.tracker, location)
+            initialize_mission(center, g_savedata.mission_range_min, location.tracker, location, report_timer)
         elseif verb == "clear-all" and is_admin then
             for i = #g_savedata.missions, 1, -1 do
                 clear_mission(i)
