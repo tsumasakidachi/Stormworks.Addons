@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<playlist file_store="4" name="TSU Mission Foundation">
-	<locations>
-		<locations/>
+<playlist folder_path="data/missions/tsu_mission_foundation" file_store="4" name="TSU Mission Foundation">
+	<locations location_id_counter="1">
+		<locations>
+			<l id="1" name="海洋" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+		</locations>
 	</locations>
 </playlist>
 

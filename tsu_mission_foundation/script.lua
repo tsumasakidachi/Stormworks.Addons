@@ -308,6 +308,24 @@ objective_trackers = {
             return 1000
         end,
         progress = "Extinguish fires"
+    },
+    headquarter = {
+        init = function(self, objective)
+        end,
+        clear = function(self, objective)
+        end,
+        tick = function(self, objective, tick)
+        end,
+        completed = function(self, objective)
+            return false
+        end,
+        reward = function(self, objective)
+            return 0
+        end,
+        progress = "",
+        alert = function(self, object)
+            server.pressVehicleButton(object.main_body_id, "Alert")
+        end,
     }
 }
 
