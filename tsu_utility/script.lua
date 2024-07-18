@@ -1,6 +1,7 @@
 g_savedata = {
     vehicles = {},
-    pins = {}
+    pins = {},
+    tooltip = true,
 }
 
 timing_default = 60
@@ -196,16 +197,18 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             server.setCurrency(amount)
         end
     end
-end
 
-function get_player(peer_id)
-    for k, player in pairs(server.getPlayers()) do
-        if player.id == peer_id then
-            return table.copy(player)
+    if command == "?tooltip" and is_admin then
+        g_savedata.tooltip = not g_savedata.tooltip
+
+        for i = 1, #g_savedata.vehicles do
+            if g_savedata.tooltip then
+                set_vehicle_tooltip(g_savedata.vehicles[i])
+            else
+                clear_vehicle_tooltip(g_savedata.vehicles[i])
+            end
         end
     end
-
-    return nil
 end
 
 function onGroupSpawn(group_id, peer_id, x, y, z, cost)
@@ -220,13 +223,24 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
     end
 
     for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
+        local data, s = server.getVehicleData(vehicle_id)
+
+        if data.name == "" then
+            data.name = "Vehicle"
+        end
+
         table.insert(g_savedata.vehicles, {
+            id = vehicle_id,
+            name = data.name,
             group_id = group_id,
             vehicle_id = vehicle_id,
             cost = cost,
             player = player
         })
-        server.setVehicleTooltip(vehicle_id, string.format("Owner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", player.name, group_id, vehicle_id, cost))
+
+        if g_savedata.tooltip then
+            server.setVehicleTooltip(vehicle_id, string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", data.name, player.name, group_id, vehicle_id, cost))
+        end
     end
 end
 
@@ -242,12 +256,30 @@ function onVehicleDespawn(vehicle_id, peer_id)
     end
 end
 
+function get_player(peer_id)
+    for k, player in pairs(server.getPlayers()) do
+        if player.id == peer_id then
+            return table.copy(player)
+        end
+    end
+
+    return nil
+end
+
 function despawn_vehicle_group(group_id, is_instant)
     local vehicle_ids = server.getVehicleGroup(group_id)
 
     for k, v in pairs(vehicle_ids) do
         server.despawnVehicle(v, is_instant or false)
     end
+end
+
+function set_vehicle_tooltip(vehicle)
+    server.setVehicleTooltip(vehicle.id, string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, vehicle.player.name, vehicle.group_id, vehicle.id, vehicle.cost))
+end
+
+function clear_vehicle_tooltip(vehicle)
+    server.setVehicleTooltip(vehicle.id, nil)
 end
 
 function table.copy(t)

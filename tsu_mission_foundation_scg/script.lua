@@ -5,6 +5,7 @@ g_savedata = {
     objects = {},
     players = {},
     locations = {},
+    locations_history = {},
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
@@ -18,9 +19,10 @@ g_savedata = {
     mission_mapped = true,
     mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
     object_mapped = false,
-    location_overlap_criteria = "pattern",
+    location_comparer = "pattern",
     zone_mapped = false,
-    zone_marker_id = nil
+    zone_marker_id = nil,
+    cpa_recurrence = true
 }
 
 location_properties = {{
@@ -29,8 +31,8 @@ location_properties = {{
     suitable_zones = {"forest", "island", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
-    sub_location_min = 3,
-    sub_location_max = 7,
+    sub_location_min = 1,
+    sub_location_max = 3,
     is_unique_sub_location = false,
     range_max = 5000,
     search_radius = 1000,
@@ -108,7 +110,7 @@ location_properties = {{
     suitable_zones = {"offshore", "channel"},
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$"},
-    sub_location_min = 3,
+    sub_location_min = 2,
     sub_location_max = 5,
     is_unique_sub_location = false,
     range_max = 5000,
@@ -124,8 +126,8 @@ location_properties = {{
     suitable_zones = {"offshore", "channel"},
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$"},
-    sub_location_min = 3,
-    sub_location_max = 7,
+    sub_location_min = 2,
+    sub_location_max = 5,
     is_unique_sub_location = false,
     range_max = 5000,
     search_radius = 1000,
@@ -140,7 +142,7 @@ location_properties = {{
     suitable_zones = {"diving_spot"},
     is_main_location = true,
     sub_locations = {"^mission:diver_missing_%d+$"},
-    sub_location_min = 3,
+    sub_location_min = 2,
     sub_location_max = 5,
     is_unique_sub_location = false,
     range_max = 8000,
@@ -188,8 +190,8 @@ location_properties = {{
     suitable_zones = {"tunnel"},
     is_main_location = true,
     sub_locations = {"^mission:tunnel_fire$", "^mission:car_stuck_%d+"},
-    sub_location_min = 3,
-    sub_location_max = 5,
+    sub_location_min = 1,
+    sub_location_max = 3,
     is_unique_sub_location = false,
     range_max = 5000,
     search_radius = 500,
@@ -604,24 +606,18 @@ object_trackers = {
             local get_on = on_board ~= 0 and object.on_board == 0
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
-            local is_in_hospital = (vital_update.is_dead or object.vital.risk == 0) and (is_in_landscape(transform, "hospital") or is_in_landscape(transform, "base"))
+            local is_in_hospital = is_in_landscape(transform, "hospital")
             local risk = object.vital.risk
             local nearby = nearby_players(transform, 200)
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if #players > 1 or true then
-                if not is_in_hospital and vital_update.hp >= 95 then
-                    risk = math.max(0, risk - 0.01)
-                end
+            if object.vital.hp >= 1 and vital_update.hp == 0 then
+                risk = risk + 2
+            end
 
-                if not is_in_hospital and object.vital.hp >= 1 and vital_update.hp < 1 then
-                    risk = risk * 2 + 1
-                end
-
-                if not is_in_hospital and risk > 0 then
-                    vital_update.hp = math.max(vital_update.hp - 1 * math.ceil(risk), 0)
-                end
+            if g_savedata.cpa_recurrence then
+                vital_update.hp = math.max(vital_update.hp - math.ceil(risk), 0)
             end
 
             if (arrived and on_board == 0) or (get_off and nearby) then
@@ -666,8 +662,12 @@ object_trackers = {
         reward = function(self, object)
             local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
 
-            if object.vital.is_dead or object.vital.risk > 0 then
+            if object.vital.is_dead then
                 value = 0
+            end
+
+            if g_savedata.cpa_recurrence and object.vital.risk > 1 then
+                value = value - object.vital.risk * 1000
             end
 
             return value
@@ -822,6 +822,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.reward = 0
     mission_trackers[mission.tracker]:init(mission)
 
+    record_location_history(location)
     table.insert(g_savedata.missions, mission)
     g_savedata.mission_count = g_savedata.mission_count + 1
 
@@ -962,7 +963,11 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_overlap(g_savedata.locations[i]) then
+        if is_main_location and used_widthin_a_rotation(g_savedata.locations[i]) then
+            goto continue_location
+        end
+
+        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
             goto continue_location
         end
 
@@ -1072,12 +1077,12 @@ function is_location_free(location, mission)
     return location.id ~= mission.locations[1].id;
 end
 
-function is_location_overlap(location)
+function is_location_duplicated(location)
     local is_overlap = false
 
     for i = 1, #g_savedata.missions do
         for j = 1, #g_savedata.missions[i].locations do
-            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_overlap_criteria] == location[g_savedata.location_overlap_criteria])
+            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
         end
     end
 
@@ -1205,6 +1210,22 @@ function list_locations(peer_id)
     for i = 1, #g_savedata.locations do
         server.announce("[Mission Foundation]", g_savedata.locations[i].name, peer_id)
     end
+
+    server.announce("[Mission Foundation]", string.format("%d all locations", #g_savedata.locations), peer_id)
+end
+
+function record_location_history(location)
+    table.insert(g_savedata.locations_history, location.id)
+end
+
+function used_widthin_a_rotation(location)
+    local used = false
+
+    for i = #g_savedata.locations_history, math.max(#g_savedata.locations_history - #g_savedata.locations + 1, 1), -1 do
+        used = used or location.id == g_savedata.locations_history
+    end
+
+    return used
 end
 
 -- zones
@@ -1600,6 +1621,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                     server.setObjectPos(g_savedata.objects[i].id, transform)
                 end
             end
+        elseif verb == "cpa-recurrence" and is_admin then
+            g_savedata.cpa_recurrence = not g_savedata.cpa_recurrence
+
+            console.notify(string.format("CPA Recurrence: %s", g_savedata.cpa_recurrence))
         end
     end
 end
