@@ -175,7 +175,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 7,
     is_unique_sub_location = false,
-    range_max = 8000,
+    range_max = 10000,
     search_radius = 1000,
     nortification_type = 0,
     report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し我々の手には負えない. 職員は脱出を開始している.",
@@ -274,7 +274,7 @@ location_properties = {{
     range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "火災\nキャンプ場で火事. たき火が森に燃え移ってどんどん広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
+    report = "火災\nキャンプ場で火事. たき火が森に移って燃え広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -290,10 +290,26 @@ location_properties = {{
     range_max = 5000,
     search_radius = 1000,
     nortification_type = 0,
-    report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 大量のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
+    report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 多数のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "運転士からの通報"
+}, {
+    pattern = "^mission:power_plant_fire_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    range_max = 10000,
+    search_radius = 500,
+    nortification_type = 0,
+    report = "火災\n原子力発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる. なお放射性物質の漏洩は確認されていない.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "職員からの通報"
 }}
 
 zone_properties = {{
@@ -1622,7 +1638,6 @@ function onCreate(is_world_create)
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
-    console.notify(string.format("Active objectives: %d", #g_savedata.objects))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
 end
 
