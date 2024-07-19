@@ -73,7 +73,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     -- list vehicles
     if command == "?liv" and is_admin then
         for i = 1, #g_savedata.vehicles do
-            server.announce("liv", string.format("%s #%d.%d, $%d", g_savedata.vehicles[i].player.name, g_savedata.vehicles[i].group_id, g_savedata.vehicles[i].vehicle_id, g_savedata.vehicles[i].cost), peer_id)
+            server.announce("liv", vehicle_spec_table(g_savedata.vehicles[i]), peer_id)
         end
     end
 
@@ -229,17 +229,19 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
             data.name = "Vehicle"
         end
 
-        table.insert(g_savedata.vehicles, {
+        local vehicle = {
             id = vehicle_id,
             name = data.name,
             group_id = group_id,
             vehicle_id = vehicle_id,
             cost = cost,
             player = player
-        })
+        }
+
+        table.insert(g_savedata.vehicles, vehicle)
 
         if g_savedata.tooltip then
-            server.setVehicleTooltip(vehicle_id, string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", data.name, player.name, group_id, vehicle_id, cost))
+            set_vehicle_tooltip(vehicle)
         end
     end
 end
@@ -275,11 +277,15 @@ function despawn_vehicle_group(group_id, is_instant)
 end
 
 function set_vehicle_tooltip(vehicle)
-    server.setVehicleTooltip(vehicle.id, string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, vehicle.player.name, vehicle.group_id, vehicle.id, vehicle.cost))
+    server.setVehicleTooltip(vehicle.id, vehicle_spec_table(vehicle))
 end
 
 function clear_vehicle_tooltip(vehicle)
     server.setVehicleTooltip(vehicle.id, nil)
+end
+
+function vehicle_spec_table(vehicle)
+    return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, vehicle.player.name, vehicle.group_id, vehicle.id, vehicle.cost)
 end
 
 function table.copy(t)
