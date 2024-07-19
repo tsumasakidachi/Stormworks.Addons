@@ -1,25 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_headquarter_oneil" file_store="4" name="TSU Headquarter Oneil">
-	<locations location_id_counter="1" component_id_counter="2">
+	<locations location_id_counter="1" component_id_counter="3">
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_12_6.xml" name="SAWYER 12_6" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="3" id="1" name="id_1" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_1.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="-0.707004" 02="0.70721" 20="-0.70721" 22="-0.707004" 30="140.654785" 31="9.421816" 32="101.261467"/>
+					<c component_type="3" id="3" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_3.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.710279" 02="0.70392" 20="-0.70392" 22="0.710279" 30="132.612564" 31="9.722347" 32="95.919914"/>
 						<spawn_bounds>
-							<min x="-0.125" y="-60.125" z="-9.875"/>
-							<max x="3.625" y="-58.625" z="-6.625"/>
+							<min x="-12.125" y="-3.375" z="-3.875"/>
+							<max x="0.625" y="-0.625" z="1.125"/>
 						</spawn_bounds>
-						<spawn_local_offset x="-1.75" y="59.375" z="8.25"/>
-						<graph_links/>
-					</c>
-					<c component_type="3" id="2" name="id_2" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_2.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="0.703019" 02="-0.711171" 20="0.711171" 22="0.703019" 30="135.343399" 31="9.04523" 32="96.453957"/>
-						<spawn_bounds>
-							<min x="0.625" y="-60.625" z="-5.125"/>
-							<max x="5.375" y="-58.875" z="-0.125"/>
-						</spawn_bounds>
-						<spawn_local_offset x="-3" y="59.75" z="2.625"/>
+						<spawn_local_offset x="5.75" y="2" z="1.375"/>
 						<graph_links/>
 					</c>
 				</components>
