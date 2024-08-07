@@ -582,10 +582,6 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if is_main_location and used_widthin_a_rotation(g_savedata.locations[i]) then
-            goto continue_location
-        end
-
         if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
             goto continue_location
         end
@@ -594,7 +590,6 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        local range_max = math.min(range_max, g_savedata.locations[i].range_max)
         local location_candidate = table.copy(g_savedata.locations[i])
 
         if g_savedata.locations[i].tile == "" then
@@ -697,15 +692,31 @@ function is_location_free(location, mission)
 end
 
 function is_location_duplicated(location)
-    local is_overlap = false
+    local dupe = false
+    local l = {}
+    local unique = 0
 
     for i = 1, #g_savedata.missions do
         for j = 1, #g_savedata.missions[i].locations do
-            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
+            dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
+        end
+    end
+    
+    for i = 1, #g_savedata.locations do
+        if g_savedata.locations[i].is_main_location then
+            l[g_savedata.locations[i][g_savedata.location_comparer]] = true
         end
     end
 
-    return is_overlap
+    for _, v in pairs(l) do
+        unique = unique + 1
+    end
+
+    for i = #g_savedata.locations_history, #g_savedata.locations_history - math.floor(unique * 0.75) + 1, -1 do
+        dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
+    end
+
+    return dupe
 end
 
 function spawn_location(location, mission_id)
@@ -805,9 +816,8 @@ function load_locations()
                         location.sub_location_min = location_properties[i].sub_location_min or 0
                         location.sub_location_max = location_properties[i].sub_location_max or 0
                         location.is_unique_sub_location = location_properties[i].is_unique_sub_location or false
-                        location.range_max = location_properties[i].range_max or g_savedata.mission_range_max
                         location.search_radius = location_properties[i].search_radius or 0
-                        location.nortification_type = location_properties[i].nortification_type or 0
+                        location.notification_type = location_properties[i].notification_type or 0
                         location.report = location_properties[i].report or ""
                         location.report_timer_min = location_properties[i].report_timer_min or 0
                         location.report_timer_max = location_properties[i].report_timer_max or 0
@@ -834,17 +844,15 @@ function list_locations(peer_id)
 end
 
 function record_location_history(location)
-    table.insert(g_savedata.locations_history, location.id)
+    table.insert(g_savedata.locations_history, table.copy(location))
 end
 
-function used_widthin_a_rotation(location)
-    local used = false
+function list_location_history(peer_id)
+    local peer_id = peer_id
 
-    for i = #g_savedata.locations_history, math.max(#g_savedata.locations_history - #g_savedata.locations + 1, 1), -1 do
-        used = used or location.id == g_savedata.locations_history
+    for i = 1, #g_savedata.locations_history do
+        server.announce("[Mission Foundation]", string.format("%d %s", i, g_savedata.locations_history[i].name), peer_id)
     end
-
-    return used
 end
 
 -- zones
@@ -1127,7 +1135,7 @@ function onTick(tick)
 
             if not g_savedata.missions[i].reported and g_savedata.missions[i].report_timer == 0 then
                 alert_headquarter()
-                server.notify(-1, mission_trackers[g_savedata.missions[i].tracker]:report(g_savedata.missions[i]), g_savedata.missions[i].locations[1].note, 0)
+                server.notify(-1, mission_trackers[g_savedata.missions[i].tracker]:report(g_savedata.missions[i]), g_savedata.missions[i].locations[1].note, g_savedata.missions[i].locations[1].notification_type)
                 g_savedata.missions[i].reported = true
             end
 
@@ -1149,6 +1157,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     if command == "?mission" then
         if verb == "list" and is_admin then
             list_locations(peer_id)
+        elseif verb == "history" then
+            list_location_history(peer_id)
         elseif verb == "start" and is_admin then
             g_savedata.mission_timer_tickrate = 1
         elseif verb == "stop" and is_admin then
