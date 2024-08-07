@@ -1196,14 +1196,36 @@ function list_locations(peer_id)
 end
 
 function record_location_history(location)
-    table.insert(g_savedata.locations_history, location.id)
+    table.insert(g_savedata.locations_history, location)
+end
+
+function location_histories(peer_id)
+    local peer_id = peer_id
+
+    for i = 1, #g_savedata.locations_history do
+        server.announce("[Mission Foundation]", string.format("%d %s", i, g_savedata.locations_history[i].name), peer_id)
+    end
 end
 
 function used_widthin_a_rotation(location)
+    local location_unique = {}
+
+    for i = 1, #g_savedata.locations do
+        local dupe = false
+
+        for i = 1, #location_unique do
+            dupe = dupe or location_unique[i] == g_savedata.locations[i][g_savedata.location_comparer]
+        end
+
+        if not dupe then
+            table.insert(location_unique, g_savedata.locations[i][g_savedata.location_comparer])
+        end
+    end
+
     local used = false
 
-    for i = #g_savedata.locations_history, math.max(#g_savedata.locations_history - #g_savedata.locations + 1, 1), -1 do
-        used = used or location.id == g_savedata.locations_history
+    for i = #g_savedata.locations_history, math.max(#g_savedata.locations_history - #location_unique + 1, 1), -1 do
+        used = used or location[g_savedata.location_comparer] == g_savedata.locations_history[i][g_savedata.location_comparer]
     end
 
     return used
@@ -1511,6 +1533,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     if command == "?mission" then
         if verb == "list" and is_admin then
             list_locations(peer_id)
+        elseif verb == "history" then
+            location_histories(peer_id)
         elseif verb == "start" and is_admin then
             g_savedata.mission_timer_tickrate = 1
         elseif verb == "stop" and is_admin then
