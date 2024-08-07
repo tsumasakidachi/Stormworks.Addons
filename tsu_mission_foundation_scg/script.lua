@@ -946,10 +946,6 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if is_main_location and used_widthin_a_rotation(g_savedata.locations[i]) then
-            goto continue_location
-        end
-
         if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
             goto continue_location
         end
@@ -1060,15 +1056,31 @@ function is_location_free(location, mission)
 end
 
 function is_location_duplicated(location)
-    local is_overlap = false
+    local dupe = false
+    local l = {}
+    local unique = 0
 
     for i = 1, #g_savedata.missions do
         for j = 1, #g_savedata.missions[i].locations do
-            is_overlap = is_overlap or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
+            dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
+        end
+    end
+    
+    for i = 1, #g_savedata.locations do
+        if g_savedata.locations[i].is_main_location then
+            l[g_savedata.locations[i][g_savedata.location_comparer]] = true
         end
     end
 
-    return is_overlap
+    for _, v in pairs(l) do
+        unique = unique + 1
+    end
+
+    for i = #g_savedata.locations_history, #g_savedata.locations_history - math.floor(unique * 0.75) + 1, -1 do
+        dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
+    end
+
+    return dupe
 end
 
 function spawn_location(location, mission_id)
@@ -1196,39 +1208,15 @@ function list_locations(peer_id)
 end
 
 function record_location_history(location)
-    table.insert(g_savedata.locations_history, location)
+    table.insert(g_savedata.locations_history, table.copy(location))
 end
 
-function location_histories(peer_id)
+function list_location_history(peer_id)
     local peer_id = peer_id
 
     for i = 1, #g_savedata.locations_history do
         server.announce("[Mission Foundation]", string.format("%d %s", i, g_savedata.locations_history[i].name), peer_id)
     end
-end
-
-function used_widthin_a_rotation(location)
-    local location_unique = {}
-
-    for i = 1, #g_savedata.locations do
-        local dupe = false
-
-        for i = 1, #location_unique do
-            dupe = dupe or location_unique[i] == g_savedata.locations[i][g_savedata.location_comparer]
-        end
-
-        if not dupe then
-            table.insert(location_unique, g_savedata.locations[i][g_savedata.location_comparer])
-        end
-    end
-
-    local used = false
-
-    for i = #g_savedata.locations_history, math.max(#g_savedata.locations_history - #location_unique + 1, 1), -1 do
-        used = used or location[g_savedata.location_comparer] == g_savedata.locations_history[i][g_savedata.location_comparer]
-    end
-
-    return used
 end
 
 -- zones
@@ -1534,7 +1522,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         if verb == "list" and is_admin then
             list_locations(peer_id)
         elseif verb == "history" then
-            location_histories(peer_id)
+            list_location_history(peer_id)
         elseif verb == "start" and is_admin then
             g_savedata.mission_timer_tickrate = 1
         elseif verb == "stop" and is_admin then
