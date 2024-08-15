@@ -1,7 +1,8 @@
 g_savedata = {
     vehicles = {},
     pins = {},
-    tooltip = true,
+    vehicle_tooltip = property.checkbox("Display custom vehicle tooltip", false),
+    vehicle_clearing = property.checkbox("Clear players vehicle on die", false),
 }
 
 timing_default = 60
@@ -29,13 +30,10 @@ end
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, target, ...)
     -- kill
     if command == "?kill" then
-        for i = #g_savedata.vehicles, 1, -1 do
-            if g_savedata.vehicles[i].player.id == peer_id then
-                server.despawnVehicle(g_savedata.vehicles[i].vehicle_id, true)
-            end
-        end
-
+        local player = get_player(peer_id)
         local object_id, is_success = server.getPlayerCharacterID(peer_id)
+
+        despawn_players_vehicle(player)
         server.killCharacter(object_id)
     end
 
@@ -98,12 +96,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             return
         end
 
-        for i = #g_savedata.vehicles, 1, -1 do
-            if g_savedata.vehicles[i].player.steam_id == player.steam_id then
-                server.despawnVehicle(g_savedata.vehicles[i].vehicle_id, true)
-            end
-        end
-
+        despawn_players_vehicle(player)
         server.announce("clpv", string.format("Removed %s's vehicle", player.name), peer_id)
     end
 
@@ -199,15 +192,23 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     end
 
     if command == "?tooltip" and is_admin then
-        g_savedata.tooltip = not g_savedata.tooltip
+        g_savedata.vehicle_tooltip = not g_savedata.vehicle_tooltip
 
         for i = 1, #g_savedata.vehicles do
-            if g_savedata.tooltip then
+            if g_savedata.vehicle_tooltip then
                 set_vehicle_tooltip(g_savedata.vehicles[i])
             else
                 clear_vehicle_tooltip(g_savedata.vehicles[i])
             end
         end
+
+        server.announce("[Utility]", string.format("Vehicle detail tooltip: %s", g_savedata.vehicle_tooltip))
+    end
+
+    if command == "?clearing" and is_admin then
+        g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
+
+        server.announce("[Utility]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
     end
 end
 
@@ -240,7 +241,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
 
         table.insert(g_savedata.vehicles, vehicle)
 
-        if g_savedata.tooltip then
+        if g_savedata.vehicle_tooltip then
             set_vehicle_tooltip(vehicle)
         end
     end
@@ -254,6 +255,24 @@ function onVehicleDespawn(vehicle_id, peer_id)
     for i = #g_savedata.vehicles, 1, -1 do
         if g_savedata.vehicles[i].vehicle_id == vehicle_id then
             table.remove(g_savedata.vehicles, i)
+        end
+    end
+end
+
+function onVehicleLoad()
+end
+
+function onPlayerRespawn(peer_id)
+    if g_savedata.vehicle_clearing then
+        local player = get_player(peer_id)
+        despawn_players_vehicle(player)
+    end
+end
+
+function despawn_players_vehicle(player)
+    for i = #g_savedata.vehicles, 1, -1 do
+        if g_savedata.vehicles[i].player.steam_id == player.steam_id then
+            server.despawnVehicle(g_savedata.vehicles[i].vehicle_id, true)
         end
     end
 end
