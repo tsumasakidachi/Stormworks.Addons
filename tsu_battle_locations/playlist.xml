@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_battle_locations" file_store="4" name="TSU Battle Locations">
+	<locations location_id_counter="6" component_id_counter="5">
+		<locations>
+			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="1" cargo_zone_import_cargo_type="map=holt_bridge,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.711391" 02="0.702797" 20="-0.702797" 22="0.711391" 30="107.811073" 31="18.072144" 32="-99.854485"/>
+						<spawn_bounds>
+							<min x="-28.908768" y="-5.980917" z="-29.367678"/>
+							<max x="28.908768" y="5.980917" z="29.367678"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="3" tile="data/tiles/mega_island_12_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="5" cargo_zone_import_cargo_type="map=holt_bridge,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.705879" 02="0.708333" 20="-0.708333" 22="-0.705879" 30="106.816902" 31="13.519076" 32="101.429436"/>
+						<spawn_bounds>
+							<min x="-28.871116" y="-5" z="-28.320754"/>
+							<max x="28.871116" y="5" z="28.320754"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_8_7.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="2" cargo_zone_import_cargo_type="map=holt_bridge,landscape=objective,value=1" display_name="ALPHA" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.962216" 02="-0.272286" 20="0.272286" 22="0.962216" 30="12.327394" 31="13.613266" 32="215.60817"/>
+						<spawn_bounds>
+							<min x="-95.852902" y="-5" z="-87.676295"/>
+							<max x="95.852902" y="5" z="87.676295"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="5" tile="data/tiles/mega_island_7_7.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="3" cargo_zone_import_cargo_type="map=holt_bridge,landscape=objective,value=2" display_name="BLAVO" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.502339" 02="0.864671" 20="-0.864671" 22="0.502339" 30="365.282837" 31="20.517998" 32="18.804949"/>
+						<spawn_bounds>
+							<min x="-215.986852" y="-9.17074" z="-69.79697"/>
+							<max x="215.986852" y="9.17074" z="69.79697"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="6" tile="data/tiles/mega_island_7_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="4" cargo_zone_import_cargo_type="map=holt_bridge,landscape=objective,value=1" display_name="CHARLIE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.847838" 02="-0.530255" 20="0.530255" 22="0.847838" 30="136.785965" 31="52.566891" 32="-96.151375"/>
+						<spawn_bounds>
+							<min x="-173.869919" y="-27.307274" z="-138.066435"/>
+							<max x="173.869919" y="27.307274" z="138.066435"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
