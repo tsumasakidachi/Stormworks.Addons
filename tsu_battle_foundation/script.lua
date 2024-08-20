@@ -19,19 +19,19 @@ zone_properties = {{
 
 games = {{
     tracker = "cqt",
-    name = "COUNQUEST",
+    name = "conquest",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
 }, {
     tracker = "flg",
-    name = "FLAG",
+    name = "flag",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
 }, {
     tracker = "dst",
-    name = "DESTRACTION",
+    name = "destraction",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
@@ -39,25 +39,25 @@ games = {{
 
 maps = {{
     map = "holt_bridge",
-    name = "HOLT BRIDGE",
-    center = matrix.translation(-500, 0, -5000),
-    radius = 2500
+    name = "holt bridge",
+    center = matrix.translation(-1000, 0, -5000),
+    radius = 3000
 }, {
-    map = "mid_arid",
-    name = "MID ARID",
-    center = matrix.translation(-12200, 0, -31800),
-    radius = 1500
+    map = "twin_hills",
+    name = "twin hills",
+    center = matrix.translation(-12400, 0, -31900),
+    radius = 2000
 }}
 
 game_trackers = {
     cqt = {
         init = function(self, game)
             game.teams = {{
-                name = "RED",
+                name = "red",
                 match_point = 0,
                 delpoy_point = 0
             }, {
-                name = "BLUE",
+                name = "blue",
                 match_point = 0,
                 delpoy_point = 0
             }}
@@ -127,15 +127,31 @@ game_trackers = {
     dst = {
         init = function(self, game)
             game.teams = {{
-                name = "RED",
+                name = "red",
+                ready = false,
+                winner = false,
                 vehicles = 0,
                 deploy_point = 120,
-                deploy_point_per_min = 0
+                deploy_point_per_min = 0,
+                color = {
+                    r = 191,
+                    g = 0,
+                    b = 0,
+                    a = 255
+                }
             }, {
-                name = "BLUE",
+                name = "blue",
+                ready = false,
+                winner = false,
                 vehicles = 0,
                 deploy_point = 120,
-                deploy_point_per_min = 0
+                deploy_point_per_min = 0,
+                color = {
+                    r = 0,
+                    g = 0,
+                    b = 191,
+                    a = 255
+                }
             }}
 
             draw_operation_zone(-1, game)
@@ -144,24 +160,65 @@ game_trackers = {
             clear_operation_zone(-1, game)
         end,
         tick = function(self, game, tick)
+            if not game.started then
+
+                local s = true
+
+                for i = 1, #game.teams do
+                    s = s and game.teams[i].ready
+                end
+                game.started = s
+
+                if game.started then
+                    server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+                end
+            end
+
+            if not game.finished then
+                local c = #game.teams
+
+                for i = 1, #game.teams do
+                    if game.teams[i].vehicles <= 0 then
+                        c = c - 1
+                    end
+                end
+
+                game.finished = c <= 1
+
+                if game.started then
+                    server.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+                end
+            end
         end,
-        completed = function(self, game)
+        started = function(self, game)
+            return game.started
         end,
-        referesh_ui = function(self, game, peer_id)
+        finished = function(self, game)
+            return game.finished
+        end,
+        join = function(self, game, peer_id)
+            draw_operation_zone(peer_id, game)
         end,
         deploy = function(self, game, vehicle)
             local member = table.find(game.team_members, function(x)
-                return x.steam_id == vehicle.owner_steam_id
+                return x.steam_id == vehicle.owner.steam_id
             end)
 
             game.teams[member.team_id].vehicles = game.teams[member.team_id].vehicles + 1
         end,
         destroy = function(self, game, vehicle)
             local member = table.find(game.team_members, function(x)
-                return x.steam_id == vehicle.owner_steam_id
+                return x.steam_id == vehicle.owner.steam_id
             end)
 
             game.teams[member.team_id].vehicles = game.teams[member.team_id].vehicles - 1
+        end,
+        status = function(self, game)
+            local text = ""
+
+            for i = 1, #game.teams do
+
+            end
         end
     }
 }
@@ -174,12 +231,15 @@ object_trackers = {
         init = function(self, object, group_id, group_cost, owner_steam_id)
             object.group_id = group_id
             object.cost = group_cost
-            object.owner_steam_id = tostring(owner_steam_id)
+            object.owner = {
+                steam_id = tostring(owner_steam_id)
+            }
             object.flag = false
-            object.component_checked = false
+            object.components_checked = false
             object.mass = 0
             object.voxels = 0
             object.deploy_point = 0
+            object.hp = 0
             object.seats = {}
 
             if object.name == "" then
@@ -191,7 +251,7 @@ object_trackers = {
                 vehicle_components(object)
 
                 object.deploy_point = math.ceil(object.mass / 100)
-                object.hp = object.mass
+                object.hp = object.mass * 3
 
                 if g_savedata.game ~= nil then
                     deploy_vehicle(g_savedata.game, object)
@@ -202,7 +262,8 @@ object_trackers = {
                 end
             end
         end,
-        spawn = function(self) end,
+        spawn = function(self, object)
+        end,
         despawn = function(self, object)
         end,
         clear = function(self, object)
@@ -211,6 +272,14 @@ object_trackers = {
             end
         end,
         tick = function(self, object, tick)
+            if object.components_checked and object.hp <= 0 then
+                local transform = server.getVehiclePos(object.id)
+                despawn_vehicle_group(object.group_id, true)
+                server.spawnExplosion(transform, 0.2)
+            end
+        end,
+        damage = function(self, object, damage)
+            object.hp = object.hp - math.max(damage, 0)
         end,
         position = function(self, object)
             return server.getVehiclePos(object.id)
@@ -223,8 +292,11 @@ object_trackers = {
 function initialize_game(mode, map, count_team, point_of_match)
     local game = {
         tracker = mode.tracker,
+        started = false,
+        finished = false,
         name = mode.name,
         map = map,
+        stats_marker_id = server.getMapID(),
         operation_zone_marker_id = server.getMapID(),
         count_team = count_team or 2,
         point_of_match = point_of_match or g_savedata.point_of_match,
@@ -235,14 +307,15 @@ function initialize_game(mode, map, count_team, point_of_match)
     game.team_members = team_members(math.min(2, count_team))
     g_savedata.game = game
 
-    console.notify(string.format("Matchmaking %s...", string.lower(game.name)))
+    server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+    console.notify(string.format("Matchmaking %s...", game.name))
 
     for i = 1, #game.team_members do
         local players = server.getPlayers()
 
         for j = 1, #players do
             if tostring(players[j].steam_id) == game.team_members[i].steam_id then
-                console.notify(string.format("%s joined %s team", players[j].name, string.lower(game.teams[game.team_members[i].team_id].name)))
+                console.notify(string.format("%s joined %s team", players[j].name, game.teams[game.team_members[i].team_id].name))
             end
         end
     end
@@ -256,6 +329,36 @@ function clear_game(game)
     game_trackers[game.tracker]:clear(game)
     g_savedata.game = nil
     console.notify("Cleared ongoing game")
+end
+
+function game_tick(game, tick)
+    game_trackers[g_savedata.game.tracker]:tick(game, tick)
+end
+
+function map_game_stats(game, peer_id)
+    local text = string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name))
+end
+
+function ready(game, steam_id)
+    local member = table.find(game.team_members, function(x)
+        return x.steam_id == tostring(steam_id)
+    end)
+
+    if member == nil then
+        return
+    end
+
+    game.teams[member.team_id].ready = not game.teams[member.team_id].ready
+
+    local text = ""
+
+    if game.teams[member.team_id].ready then
+        text = "READY"
+    else
+        text = "GETTING READY..."
+    end
+
+    server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), nil, 5)
 end
 
 -- objects
@@ -287,7 +390,6 @@ function clear_object(object)
         object_trackers[object.tracker]:clear(object)
     end
 
-    server.removeMapID(-1, object.marker)
     object.exists = false
     console.notify(string.format("Cleared object %s#%d.", object.type, object.id))
 end
@@ -296,7 +398,7 @@ function despawn_object(object)
     if object.type == "character" then
         server.despawnObject(object.id, true)
     elseif object.type == "vehicle" then
-        despawn_vehicle_group(object.id, true)
+        despawn_vehicle_group(object.group_id, true)
     else
         server.despawnObject(object.id, true)
     end
@@ -308,7 +410,7 @@ end
 
 function deploy_vehicle(game, vehicle)
     local member = table.find(game.team_members, function(x)
-        return x.steam_id == vehicle.owner_steam_id
+        return x.steam_id == vehicle.owner.steam_id
     end)
 
     game.teams[member.team_id].deploy_point = game.teams[member.team_id].deploy_point - vehicle.deploy_point
@@ -318,11 +420,21 @@ function deploy_vehicle(game, vehicle)
         server.despawnVehicleGroup(vehicle.group_id, true)
     end
 
+    map_vehicle_friendry(game, vehicle)
     game_trackers[g_savedata.game.tracker]:deploy(game, vehicle)
 end
 
 function destroy_vehicle(game, vehicle)
+    unmap_vehicle_friendry(game, vehicle)
     game_trackers[g_savedata.game.tracker]:destroy(game, vehicle)
+end
+
+function damage_vehicle(vehicle, damage)
+    if vehicle.tracker ~= "vehicle" then
+        return
+    end
+
+    object_trackers[vehicle.tracker]:damage(vehicle, damage)
 end
 
 function vehicle_components(object)
@@ -342,6 +454,44 @@ function vehicle_components(object)
     end
 
     object.components_checked = true
+end
+
+function map_vehicle_friendry(game, vehicle)
+    local owner = table.find(game.team_members, function(x)
+        return x.steam_id == vehicle.owner.steam_id
+    end)
+
+    local players = server.getPlayers()
+
+    for i = 1, #players do
+        local member = table.find(game.team_members, function(x)
+            return x.steam_id == tostring(players[i].steam_id) and x.team_id == owner.team_id
+        end)
+
+        if member ~= nil then
+            server.addMapObject(players[i].id, vehicle.marker_id, 1, 14, 0, 0, 0, 0, vehicle.id, nil, vehicle.name, 0, nil, game.teams[member.team_id].color.r, game.teams[member.team_id].color.g, game.teams[member.team_id].color.b, 255)
+        end
+    end
+end
+
+function unmap_vehicle_friendry(game, vehicle)
+    local owner = table.find(game.team_members, function(x)
+        return x.steam_id == vehicle.owner.steam_id
+    end)
+
+    local players = server.getPlayers()
+
+    for i = 1, #players do
+        local member = table.find(game.team_members, function(x)
+            return x.steam_id == tostring(players[i].steam_id) and x.team_id == owner.team_id
+        end)
+
+        if member ~= nil then
+            server.removeMapID(players[i].id, vehicle.marker_id)
+        end
+    end
+
+    console.notify("oi")
 end
 
 function vehicle_spec_table(vehicle)
@@ -375,7 +525,9 @@ function is_in_zone(transform, zone)
 end
 
 function map_zone(zone, peer_id)
-    local peer_id = peer_id or -1
+    if peer_id == nil then
+        peer_id = -1
+    end
 
     if g_savedata.zone_mapped or zone.mapped then
         local x, y, z = matrix.position(zone.transform)
@@ -493,14 +645,12 @@ timing = 0
 function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
-    -- console.notify("T: " .. timing)
-
     if timing == 0 then
         players = server.getPlayers()
     end
 
-    if g_savedata.game ~= nil then
-        game_trackers[g_savedata.game.tracker]:tick(g_savedata.game, tick)
+    if timing == 0 and g_savedata.game ~= nil then
+        game_tick(g_savedata.game, tick)
     end
 
     for i = #g_savedata.objects, 1, -1 do
@@ -521,41 +671,45 @@ function onTick(tick)
 end
 
 function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command, verb, ...)
-    if command ~= "?battle" then
-        return
-    end
+    if command == "?battle" then
+        if is_admin and verb == "init" then
+            local gamemode, mapname, count_team, point_of_match = ...
+            count_team = tonumber(count_team) or 2
+            point_of_match = tonumber(point_of_match) or 300
+            local game = table.find(games, function(x)
+                return x.tracker == gamemode
+            end)
 
-    server.announce(-1, "[Battle Foundation]", "ha?", -1)
+            if game == nil then
+                console.error(string.format("%s is not valid gamemode", gamemode))
+                return
+            end
 
-    if is_admin and verb == "init" then
-        local gamemode, mapname, count_team, point_of_match = ...
-        count_team = tonumber(count_team) or 2
-        point_of_match = tonumber(point_of_match) or 300
-        local game = table.find(games, function(x)
-            return x.tracker == gamemode
-        end)
+            local map = table.find(maps, function(x)
+                return x.map == mapname
+            end)
 
-        if game == nil then
-            console.error(string.format("%s is not valid gamemode", gamemode))
-            return
-        end
+            if map == nil then
+                console.error(string.format("%s is not valid map", mapname))
+                return
+            end
 
-        local map = table.find(maps, function(x)
-            return x.map == mapname
-        end)
+            if g_savedata.game ~= nil then
+                clear_game(g_savedata.game)
+            end
 
-        if map == nil then
-            console.error(string.format("%s is not valid map", mapname))
-            return
-        end
-
-        if g_savedata.game ~= nil then
+            initialize_game(game, map, point_of_match)
+        elseif is_admin and verb == "clear" then
             clear_game(g_savedata.game)
         end
+    elseif command == "?ready" then
+        if g_savedata.game == nil then
+            return
+        end
 
-        initialize_game(game, map, point_of_match)
-    elseif is_admin and verb == "clear" then
-        clear_game(g_savedata.game)
+        local player = get_player(user_peer_id)
+
+        ready(g_savedata.game, tostring(player.steam_id))
     end
 end
 
@@ -607,6 +761,14 @@ function onVehicleDespawn(vehicle_id, peer_id)
     end
 end
 
+function onVehicleDamaged(vehicle_id, damage_amount, voxel_x, voxel_y, voxel_z, body_index)
+    for i = #g_savedata.objects, 1, -1 do
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+            damage_vehicle(g_savedata.objects[i], damage_amount)
+        end
+    end
+end
+
 function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
     if peer_id < 0 or name == "Server" then
         return
@@ -616,6 +778,10 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
         map_zone(g_savedata.zones[i], peer_id)
     end
 
+end
+
+function onEquipmentDrop(object_id_actor, object_id_target, type)
+    server.despawnObject(object_id_target, false)
 end
 
 -- utils
@@ -670,14 +836,18 @@ end
 
 console = {
     notify = function(text, peer_id, always)
-        peer_id = peer_id or -1
+        if peer_id == nil then
+            peer_id = -1
+        end
 
         if always or g_savedata.mode == "debug" then
             server.announce("[Mission Foundation]", text, peer_id)
         end
     end,
     error = function(text, peer_id)
-        peer_id = peer_id or -1
+        if peer_id == nil then
+            peer_id = -1
+        end
 
         server.announce("[Mission Foundation]", text, peer_id)
     end
