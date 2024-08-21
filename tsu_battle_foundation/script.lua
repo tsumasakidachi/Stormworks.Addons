@@ -22,13 +22,14 @@ zone_properties = {{
     icon = 1
 }}
 
-games = {{
-    tracker = "cqt",
-    name = "conquest",
-    point_of_match = 60,
-    deploy_point_start = 200,
-    teams = {}
-}, {
+games = { --     {
+--     tracker = "cqt",
+--     name = "conquest",
+--     point_of_match = 60,
+--     deploy_point_start = 200,
+--     teams = {}
+-- }, 
+{
     tracker = "flg",
     name = "flag",
     point_of_match = 60,
@@ -268,7 +269,7 @@ object_trackers = {
 
 -- games
 
-function initialize_game(mode, map, count_team, point_of_match)
+function initialize_game(mode, map)
     for i = #g_savedata.objects, 1, -1 do
         despawn_object(g_savedata.objects[i])
     end
@@ -281,8 +282,7 @@ function initialize_game(mode, map, count_team, point_of_match)
         map = map,
         stats_marker_id = server.getMapID(),
         operation_area_marker_id = server.getMapID(),
-        count_team = count_team or 2,
-        point_of_match = point_of_match or g_savedata.point_of_match,
+        count_team = 2,
         teams = {{
             name = "red",
             ready = false,
@@ -298,7 +298,7 @@ function initialize_game(mode, map, count_team, point_of_match)
             }
         }, {
             name = "blue",
-            ready = false,
+            ready = true,
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
@@ -314,8 +314,10 @@ function initialize_game(mode, map, count_team, point_of_match)
     }
 
     game_trackers[game.tracker]:init(game)
-    game.team_members = team_members(math.min(2, count_team))
+    game.team_members = team_members(2)
     g_savedata.game = game
+
+    console.notify("oi")
 
     set_damages(false)
     set_teleports(false)
@@ -355,7 +357,6 @@ function clear_game(game)
     for i = 1, #players do
         local object_id = server.getPlayerCharacterID(players[i].id)
 
-        clear_player_inventory(object_id)
         server.killCharacter(object_id)
     end
 
@@ -409,9 +410,9 @@ function map_game_stats(game, peer_id)
     local text = string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name))
 end
 
-function ready(game, steam_id)
+function ready(game, player)
     local member = table.find(game.team_members, function(x)
-        return x.steam_id == tostring(steam_id)
+        return x.steam_id == tostring(player.steam_id)
     end)
 
     if member == nil then
@@ -428,7 +429,7 @@ function ready(game, steam_id)
         text = "GETTING READY..."
     end
 
-    server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), nil, 5)
+    server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), player.name, 5)
 end
 
 function set_teleports(v)
@@ -629,7 +630,7 @@ function is_in_landscape(transform, landscape)
     local is = false
 
     for i = 1, #g_savedata.zones do
-        is = is or g_savedata.zones[i].landscape == landscape and is_in_zone(transform, g_savedata.zones[i])
+        is = is or g_savedata.zones[i].tags.landscape == landscape and is_in_zone(transform, g_savedata.zones[i])
     end
 
     return is
@@ -650,7 +651,7 @@ function map_zone(zone, peer_id)
         local name = zone.name
 
         if name == "" then
-            name = zone.landscape
+            name = zone.tags.landscape
         end
 
         server.addMapLabel(peer_id, zone.marker_id, zone.icon, name, x, z, color, color, color, 255)
@@ -668,13 +669,12 @@ function load_zones()
     local id = 1
 
     for _, zone in pairs(server.getZones()) do
-        local tags = parse_tags(zone.tags_full)
+        local tags = parse_tags(zone.tags)
 
         for i = 1, #zone_properties do
             if tags.landscape and zone_properties[i].landscape == tags.landscape then
                 zone.id = id
                 zone.tags = tags
-                zone.landscape = zone_properties[i].landscape
                 zone.marker_id = server.getMapID()
                 zone.mapped = zone_properties[i].mapped or false
                 zone.icon = zone_properties[i].icon or 0
@@ -718,8 +718,8 @@ function clear_player_inventory(object_id)
         server.setCharacterItem(object_id, i, nil, false)
     end
 
-    server.setCharacterItem(object_id, 1, 15, false)
-    server.setCharacterItem(object_id, 2, 6, false)
+    server.setCharacterItem(object_id, 2, 15, false, 0, 100)
+    server.setCharacterItem(object_id, 3, 6, false)
 end
 
 -- UIs
@@ -797,11 +797,12 @@ end
 function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command, verb, ...)
     if command == "?battle" then
         if is_admin and verb == "init" then
-            local gamemode, mapname, count_team, point_of_match = ...
-            count_team = tonumber(count_team) or 2
-            point_of_match = tonumber(point_of_match) or 300
+            local params = parse_tags({...})
+            local mode_id = params.mode
+            local map_id = params.map
+
             local game = table.find(games, function(x)
-                return x.tracker == gamemode
+                return x.tracker == mode_id
             end)
 
             if game == nil then
@@ -810,7 +811,7 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
             end
 
             local map = table.find(maps, function(x)
-                return x.map == mapname
+                return x.map == map_id
             end)
 
             if map == nil then
@@ -822,8 +823,8 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
                 clear_game(g_savedata.game)
             end
 
-            initialize_game(game, map, point_of_match)
-        elseif is_admin and verb == "clear" then
+            initialize_game(game, map)
+        elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
             clear_game(g_savedata.game)
         end
     elseif command == "?ready" then
@@ -833,7 +834,7 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
 
         local player = get_player(user_peer_id)
 
-        ready(g_savedata.game, tostring(player.steam_id))
+        ready(g_savedata.game, player)
     end
 end
 
@@ -844,6 +845,7 @@ function onCreate(is_world_create)
         set_damages(false)
         set_teleports(true)
         set_maps(true)
+        server.setWeather(0.25, 0, 0)
     end
 
     console.notify(string.format("Zones: %d", #g_savedata.zones))
@@ -918,7 +920,15 @@ function onPlayerRespawn(peer_id)
                 end
             end
         end
+    else
+        local start_tile = server.getStartTile()
+        local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
+        server.setPlayerPos(peer_id, t)
     end
+
+    local object_id = server.getPlayerCharacterID(peer_id)
+
+    clear_player_inventory(object_id)
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, type)
@@ -965,10 +975,12 @@ function ntf(t, d)
     end
 end
 
-function parse_tags(tags_full)
+function parse_tags(tags)
     local t = {}
 
-    for k, v in string.gmatch(tags_full, "([%w_]+)=([%w_-]+)") do
+    for i = 1, #tags do
+        local k, v = string.match(tags[i], "^([%w_]+)=([%w_-]+)$")
+
         t[k] = v
     end
 
