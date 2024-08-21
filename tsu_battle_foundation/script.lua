@@ -373,7 +373,7 @@ function clear_game(game)
     console.notify("Cleared ongoing game")
 end
 
-function game_tick(game, tick)
+function tick_game(game, tick)
     game_trackers[g_savedata.game.tracker]:tick(game, tick)
     start_game(game)
     finish_game(game)
@@ -774,7 +774,7 @@ function onTick(tick)
     end
 
     if timing == 0 and g_savedata.game ~= nil then
-        game_tick(g_savedata.game, tick)
+        tick_game(g_savedata.game, tick * cycle)
     end
 
     for i = #g_savedata.objects, 1, -1 do
