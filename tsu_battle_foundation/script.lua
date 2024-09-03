@@ -7,7 +7,7 @@ g_savedata = {
     zones = {},
     subsystems = {
         operation_area = true,
-        deploy_points = true,
+        deploy_points = false,
         hit_points = true
     }
 }
@@ -20,6 +20,10 @@ zone_properties = {{
     landscape = "objective",
     mapped = false,
     icon = 1
+}, {
+    landscape = "storage",
+    mapped = false,
+    icon = 1
 }}
 
 games = { --     {
@@ -30,13 +34,13 @@ games = { --     {
 --     teams = {}
 -- }, 
 {
-    tracker = "flg",
+    tracker = "flag",
     name = "flag",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
 }, {
-    tracker = "dst",
+    tracker = "destraction",
     name = "destraction",
     point_of_match = 60,
     deploy_point_start = 200,
@@ -127,7 +131,7 @@ game_trackers = {
         end,
         zone_conquest_threshold = 100
     },
-    dst = {
+    destraction = {
         init = function(self, game)
             for i = 1, #game.teams do
                 game.teams[i].vehicles = 0
@@ -160,6 +164,10 @@ game_trackers = {
         join = function(self, game, peer_id)
         end,
         deploy = function(self, game, vehicle)
+            if vehicle.body_index > 0 then
+                return
+            end
+
             local member = table.find(game.team_members, function(x)
                 return x.steam_id == vehicle.owner.steam_id
             end)
@@ -167,6 +175,10 @@ game_trackers = {
             game.teams[member.team_id].vehicles = game.teams[member.team_id].vehicles + 1
         end,
         destroy = function(self, game, vehicle)
+            if vehicle.body_index > 0 then
+                return
+            end
+
             local member = table.find(game.team_members, function(x)
                 return x.steam_id == vehicle.owner.steam_id
             end)
@@ -177,8 +189,19 @@ game_trackers = {
             local text = ""
 
             for i = 1, #game.teams do
+                text = text .. string.upper(game.teams[i].name)
+                text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
 
+                if g_savedata.subsystems.deploy_points then
+                    text = text .. string.format("\n%d deploy points", game.teams[i].deploy_points)
+                end
+
+                if i < #game.teams then
+                    text = text .. "\n\n"
+                end
             end
+
+            return text
         end
     }
 }
@@ -186,10 +209,11 @@ game_trackers = {
 object_trackers = {
     vehicle = {
         test_type = function(self, object)
-            return object.type == "vehicle"
+            return object.type == "vehicle" and object.is_players_vehicle
         end,
-        init = function(self, object, group_id, cost, owner_steam_id)
+        init = function(self, object, group_id, body_index, cost, owner_steam_id)
             object.group_id = group_id
+            object.body_index = body_index
             object.cost = cost
             object.owner = {
                 steam_id = tostring(owner_steam_id)
@@ -198,8 +222,9 @@ object_trackers = {
             object.components_checked = false
             object.mass = 0
             object.voxels = 0
-            object.deploy_point = 0
-            object.hit_point = 0
+            object.deploy_points = 0
+            object.hit_points = 0
+            object.damage = 0
             object.seats = {}
             object.icon = 2
 
@@ -207,15 +232,17 @@ object_trackers = {
                 object.name = "Vehicle"
             end
 
-            if string.find(string.lower(object.name), "[plane]", 1, true) ~= nil then
+            local name = string.lower(object.name)
+
+            if string.find(name, "[plane]", 1, true) ~= nil then
                 object.icon = 13
-            elseif string.find(string.lower(object.name), "[tank]", 1, true) ~= nil then
+            elseif string.find(name, "[tank]", 1, true) ~= nil then
                 object.icon = 14
-            elseif string.find(string.lower(object.name), "[heli]", 1, true) ~= nil then
+            elseif string.find(name, "[heli]", 1, true) ~= nil then
                 object.icon = 15
-            elseif string.find(string.lower(object.name), "[ship]", 1, true) ~= nil then
+            elseif string.find(name, "[ship]", 1, true) ~= nil then
                 object.icon = 16
-            elseif string.find(string.lower(object.name), "[boat]", 1, true) ~= nil then
+            elseif string.find(name, "[boat]", 1, true) ~= nil then
                 object.icon = 17
             end
         end,
@@ -224,11 +251,11 @@ object_trackers = {
                 vehicle_components(object)
 
                 if g_savedata.subsystems.deploy_points then
-                    object.deploy_point = math.ceil(object.mass / 100)
+                    object.deploy_points = math.ceil(object.mass * 0.01)
                 end
 
                 if g_savedata.subsystems.hit_points then
-                    object.hit_point = object.mass * 2
+                    object.hit_points = object.mass * 2
                 end
 
                 if g_savedata.game ~= nil then
@@ -250,16 +277,13 @@ object_trackers = {
             end
         end,
         tick = function(self, object, tick)
-            if g_savedata.subsystems.hit_points and object.components_checked and object.hit_point <= 0 then
+            if g_savedata.subsystems.hit_points and object.components_checked and object.damage > object.hit_points and object.body_index == 0 then
                 local transform = server.getVehiclePos(object.id)
-                despawn_object(object)
-                server.spawnExplosion(transform, 0.1)
+                server.spawnExplosion(transform, 0.25)
             end
         end,
         damage = function(self, object, damage)
-            if g_savedata.subsystems.hit_points then
-                object.hit_point = object.hit_point - math.max(damage, 0)
-            end
+            object.damage = object.damage + damage
         end,
         position = function(self, object)
             return server.getVehiclePos(object.id)
@@ -289,35 +313,36 @@ function initialize_game(mode, map)
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
-            deploy_point = 120,
+            deploy_points = 120,
             color = {
                 r = 191,
                 g = 0,
                 b = 0,
                 a = 255
-            }
+            },
+            stats_marker_id = server.getMapID()
         }, {
             name = "blue",
-            ready = true,
+            ready = false,
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
-            deploy_point = 120,
+            deploy_points = 120,
             color = {
                 r = 0,
                 g = 0,
                 b = 191,
                 a = 255
-            }
+            },
+            stats_marker_id = server.getMapID()
         }},
         team_members = {}
     }
 
     game_trackers[game.tracker]:init(game)
     game.team_members = team_members(2)
+    spawn_storage(map)
     g_savedata.game = game
-
-    console.notify("oi")
 
     set_damages(false)
     set_teleports(false)
@@ -327,23 +352,16 @@ function initialize_game(mode, map)
         draw_operation_area(-1, game)
     end
 
-    local players = server.getPlayers()
-
-    for i = 1, #players do
-        local object_id = server.getPlayerCharacterID(players[i].id)
-
-        server.killCharacter(object_id)
-    end
-
     server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
     console.notify(string.format("Matchmaking %s...", game.name))
 
     for i = 1, #game.team_members do
-        for j = 1, #players do
-            if tostring(players[j].steam_id) == game.team_members[i].steam_id then
-                console.notify(string.format("%s joined %s team", players[j].name, game.teams[game.team_members[i].team_id].name))
-            end
-        end
+        local object_id = server.getPlayerCharacterID(game.team_members[i].id)
+
+        map_member(game, game.team_members[i])
+        clear_inventory(object_id)
+        server.killCharacter(object_id)
+        console.notify(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
     end
 end
 
@@ -357,6 +375,7 @@ function clear_game(game)
     for i = 1, #players do
         local object_id = server.getPlayerCharacterID(players[i].id)
 
+        clear_inventory(object_id)
         server.killCharacter(object_id)
     end
 
@@ -365,6 +384,8 @@ function clear_game(game)
     if g_savedata.subsystems.operation_area then
         clear_operation_area(-1, game)
     end
+
+    unmap_game_stats(game)
 
     set_damages(false)
     set_teleports(true)
@@ -378,6 +399,7 @@ function tick_game(game, tick)
     game_trackers[g_savedata.game.tracker]:tick(game, tick)
     start_game(game)
     finish_game(game)
+    map_game_stats(game)
 end
 
 function start_game(game)
@@ -406,8 +428,20 @@ function finish_game(game)
     end
 end
 
-function map_game_stats(game, peer_id)
+function map_game_stats(game)
     local text = string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name))
+    text = text .. "\n\n" .. game_trackers[game.tracker]:status(game)
+
+    for i = 1, #game.team_members do
+        -- server.removeMapID(game.team_members[i].id, game.stats_marker_id)
+        server.setPopupScreen(game.team_members[i].id, game.stats_marker_id, "STATS", true, text, 0.85, -0.7)
+    end
+end
+
+function unmap_game_stats(game)
+    for i = 1, #game.team_members do
+        server.removeMapID(game.team_members[i].id, game.stats_marker_id)
+    end
 end
 
 function ready(game, player)
@@ -452,7 +486,7 @@ end
 
 -- objects
 
-function initialize_object(id, object, ...)
+function initialize_object(id, type, object, ...)
     local params = {...}
 
     for k, v in pairs(object_trackers) do
@@ -463,10 +497,11 @@ function initialize_object(id, object, ...)
     end
 
     object.id = id
+    object.type = type
     object.marker_id = server.getMapID()
     object.exists = true
 
-    if object.tracker then
+    if object.tracker ~= nil then
         object_trackers[object.tracker]:init(object, table.unpack(params))
     end
 
@@ -475,6 +510,10 @@ function initialize_object(id, object, ...)
 end
 
 function clear_object(object)
+    if not object.exists then
+        return
+    end
+
     if object.tracker ~= nil then
         object_trackers[object.tracker]:clear(object)
     end
@@ -494,19 +533,25 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
+    if object.tracker ~= nil then
     object_trackers[object.tracker]:tick(object, tick)
+    end
 end
 
 function deploy_vehicle(game, vehicle)
+    if vehicle.tracker ~= "vehicle" then
+        return
+    end
+
     if g_savedata.subsystems.deploy_points then
         local member = table.find(game.team_members, function(x)
             return x.steam_id == vehicle.owner.steam_id
         end)
 
-        game.teams[member.team_id].deploy_point = game.teams[member.team_id].deploy_point - vehicle.deploy_point
+        game.teams[member.team_id].deploy_points = game.teams[member.team_id].deploy_points - vehicle.deploy_points
 
-        if game.teams[member.team_id].deploy_point < 0 then
-            console.notify(string.format("You need %d points to deploy this vehicle.", vehicle.deploy_point))
+        if game.teams[member.team_id].deploy_points < 0 then
+            console.notify(string.format("You need %d points to deploy this vehicle.", vehicle.deploy_points))
             despawn_object(vehicle, true)
         end
     end
@@ -516,6 +561,10 @@ function deploy_vehicle(game, vehicle)
 end
 
 function destroy_vehicle(game, vehicle)
+    if vehicle.tracker ~= "vehicle" then
+        return
+    end
+
     if g_savedata.subsystems.deploy_points then
         local t = server.getVehiclePos(vehicle.id)
         local member = table.find(game.team_members, function(x)
@@ -526,8 +575,8 @@ function destroy_vehicle(game, vehicle)
         end)
 
         if respawn ~= nil and is_in_zone(t, respawn) then
-            game.teams[member.team_id].deploy_point = game.teams[member.team_id].deploy_point + vehicle.deploy_point
-            console.notify(string.format("Your %d deploy points back.", vehicle.deploy_point))
+            game.teams[member.team_id].deploy_points = game.teams[member.team_id].deploy_points + vehicle.deploy_points
+            console.notify(string.format("Your %d deploy points back.", vehicle.deploy_points))
         end
     end
 
@@ -572,22 +621,20 @@ function vehicle_components(object)
 end
 
 function map_vehicle_friendry(game, vehicle)
+    if vehicle.tracker ~= "vehicle" then
+        return
+    end
+
     local owner = table.find(game.team_members, function(x)
         return x.steam_id == vehicle.owner.steam_id
     end)
 
-    local players = server.getPlayers()
-
-    for i = 1, #players do
-        local member = table.find(game.team_members, function(x)
-            return x.steam_id == tostring(players[i].steam_id) and x.team_id == owner.team_id
-        end)
-
+    for i = 1, #game.team_members do
         local label = string.format("#%d %s", vehicle.id, vehicle.name)
         local detail = vehicle_spec_table(vehicle)
 
-        if member ~= nil then
-            server.addMapObject(players[i].id, vehicle.marker_id, 1, vehicle.icon, 0, 0, 0, 0, vehicle.id, nil, label, 0, detail, game.teams[member.team_id].color.r, game.teams[member.team_id].color.g, game.teams[member.team_id].color.b, 255)
+        if game.team_members[i].team_id == owner.team_id then
+            server.addMapObject(game.team_members[i].id, vehicle.marker_id, 1, vehicle.icon, 0, 0, 0, 0, vehicle.id, nil, label, 0, detail, game.teams[owner.team_id].color.r, game.teams[owner.team_id].color.g, game.teams[owner.team_id].color.b, 255)
         end
     end
 end
@@ -597,22 +644,26 @@ function unmap_vehicle_friendry(game, vehicle)
         return x.steam_id == vehicle.owner.steam_id
     end)
 
-    local players = server.getPlayers()
-
-    for i = 1, #players do
-        local member = table.find(game.team_members, function(x)
-            return x.steam_id == tostring(players[i].steam_id) and x.team_id == owner.team_id
-        end)
-
-        if member ~= nil then
-            server.removeMapID(players[i].id, vehicle.marker_id)
+    for i = 1, #game.team_members do
+        if game.team_members[i].team_id == owner.team_id then
+            server.removeMapID(game.team_members[i].id, vehicle.marker_id)
         end
     end
 end
 
 function vehicle_spec_table(vehicle)
     local player = get_player()
-    return string.format("Deploy points: %d\nVoxels: %d\nMass: %.00f", vehicle.deploy_point, vehicle.voxels, vehicle.mass)
+    return string.format("Deploy points: %.00f\nHit points: %.00f\nVoxels: %.00f\nMass: %.00f", vehicle.deploy_points, vehicle.hit_points, vehicle.voxels, vehicle.mass)
+end
+
+function spawn_storage(map)
+    for i = 1, #g_savedata.zones do
+        if g_savedata.zones[i].tags.map == map.map and g_savedata.zones[i].tags.landscape == "storage" then
+            console.notify("あ")
+            local s = server.spawnNamedAddonLocation("storage", g_savedata.zones[i].transform)
+            console.notify(tostring(s))
+        end
+    end
 end
 
 -- zones
@@ -667,12 +718,13 @@ function load_zones()
 
     local zone_type_ids = table.keys(zone_properties)
     local id = 1
+    local z = server.getZones()
 
-    for _, zone in pairs(server.getZones()) do
+    for _, zone in pairs(z) do
         local tags = parse_tags(zone.tags)
 
         for i = 1, #zone_properties do
-            if tags.landscape and zone_properties[i].landscape == tags.landscape then
+            if tags.landscape ~= nil and zone_properties[i].landscape == tags.landscape then
                 zone.id = id
                 zone.tags = tags
                 zone.marker_id = server.getMapID()
@@ -691,10 +743,10 @@ end
 -- players
 
 players = {}
+peers_map_open = {}
 
 function team_members(count)
     local players = server.getPlayers()
-    local members = {}
 
     if players[1].name == "Server" then
         table.remove(players, 1)
@@ -703,23 +755,49 @@ function team_members(count)
     table.shuffle(players)
 
     for i = 1, #players do
-        local player = {
-            steam_id = tostring(players[i].steam_id),
-            team_id = (i % count)
-        }
-        table.insert(members, player)
+        players[i].steam_id = tostring(players[i].steam_id)
+        players[i].team_id = (i % count)
+        players[i].marker_id = server.getMapID()
+        players[i].opend_map = false
     end
 
-    return members
+    return players
 end
 
-function clear_player_inventory(object_id)
+function clear_inventory(object_id)
     for i = 1, 10 do
         server.setCharacterItem(object_id, i, nil, false)
     end
+end
 
+function set_default_inventory(object_id)
     server.setCharacterItem(object_id, 2, 15, false, 0, 100)
     server.setCharacterItem(object_id, 3, 6, false)
+    server.setCharacterItem(object_id, 9, 11, false, 4)
+end
+
+function map_member(game, member)
+    local object_id = server.getPlayerCharacterID(member.id)
+
+    for i = 1, #game.team_members do
+        if game.team_members[i].team_id == member.team_id then
+            map_player(game.team_members[i].id, game, member)
+        end
+    end
+end
+
+function unmap_member(game, member)
+    for i = 1, #game.team_members do
+        if game.team_members[i].team_id == member.team_id then
+            server.removeMapID(game.team_members[i].id, member.marker_id)
+        end
+    end
+end
+
+function map_player(peer_id, game, player)
+    local object_id = server.getPlayerCharacterID(player.id)
+
+    server.addMapObject(peer_id, player.marker_id, 2, 1, 0, 0, 0, 0, nil, object_id, player.name, 0, nil, game.teams[player.team_id].color.r, game.teams[player.team_id].color.g, game.teams[player.team_id].color.b, 255)
 end
 
 -- UIs
@@ -794,7 +872,7 @@ function onTick(tick)
     end
 end
 
-function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command, verb, ...)
+function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb, ...)
     if command == "?battle" then
         if is_admin and verb == "init" then
             local params = parse_tags({...})
@@ -826,13 +904,14 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
             initialize_game(game, map)
         elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
             clear_game(g_savedata.game)
+        elseif is_admin and verb == "map" then
         end
     elseif command == "?ready" then
         if g_savedata.game == nil then
             return
         end
 
-        local player = get_player(user_peer_id)
+        local player = get_player(peer_id)
 
         ready(g_savedata.game, player)
     end
@@ -848,32 +927,58 @@ function onCreate(is_world_create)
         server.setWeather(0.25, 0, 0)
     end
 
+    if g_savedata.game ~= nil then
+        console.notify(string.format("Game: %s, %s ", g_savedata.game.name, g_savedata.game.map.name))
+    else
+        console.notify("Game: no available")
+    end
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Objects: %d", #g_savedata.objects))
 end
 
-function onVehicleSpawn(vehicle_id, peer_id, x, y, z, group_cost, group_id)
-    if peer_id < 0 then
-        return
+-- function onVehicleSpawn(vehicle_id, peer_id, x, y, z, group_cost, group_id)
+--     if peer_id < 0 then
+--         return
+--     end
+
+--     local data, s = server.getVehicleData(vehicle_id)
+--     if not s then
+--         console.error(string.format("Spawned vehicle #%d, which has no body", group_id))
+--         return
+--     end
+
+--     data.type = "vehicle"
+
+--     local owner = get_player(peer_id)
+
+--     initialize_object(vehicle_id, data, group_id, 0, owner.steam_id)
+-- end
+
+function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
+    local vehicle_ids = server.getVehicleGroup(group_id)
+
+    for i = 1, #vehicle_ids do
+        local data, s = server.getVehicleData(vehicle_ids[i])
+
+        data.is_players_vehicle = peer_id >= 0
+
+        if data.is_players_vehicle then
+            local owner = get_player(peer_id)
+            local body_index = i - 1
+
+            initialize_object(vehicle_ids[i], "vehicle", data, group_id, body_index, 0, owner.steam_id)
+        else
+            initialize_object(vehicle_ids[i], "vehicle", data)
+        end
     end
-
-    local data, s = server.getVehicleData(vehicle_id)
-    if not s then
-        console.error(string.format("Spawned vehicle #%d, which has no body", group_id))
-        return
-    end
-
-    data.type = "vehicle"
-
-    local owner = get_player(peer_id)
-
-    initialize_object(vehicle_id, data, group_id, 0, owner.steam_id)
 end
 
 function onVehicleLoad(vehicle_id)
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
-            object_trackers.vehicle:load(g_savedata.objects[i])
+            if g_savedata.objects[i].tracker ~= nil then
+                object_trackers.vehicle:load(g_savedata.objects[i])
+            end
         end
     end
 end
@@ -881,7 +986,10 @@ end
 function onVehicleDespawn(vehicle_id, peer_id)
     for i = #g_savedata.objects, 1, -1 do
         if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
-            object_trackers[g_savedata.objects[i].tracker].despawn(g_savedata.objects[i])
+            if g_savedata.objects[i].tracker ~= nil then
+                object_trackers[g_savedata.objects[i].tracker]:despawn(g_savedata.objects[i])
+            end
+
             clear_object(g_savedata.objects[i])
         end
     end
@@ -904,6 +1012,27 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
         map_zone(g_savedata.zones[i], peer_id)
     end
 
+    if g_savedata.game ~= nil then
+        local player = get_player(peer_id)
+
+        for i = 1, #g_savedata.game.team_members do
+            if g_savedata.game.team_members[i].steam_id == tostring(player.steam_id) then
+                g_savedata.game.team_members[i].id = peer_id
+            end
+        end
+
+        local member = table.find(g_savedata.game.team_members, function(x)
+            return x.steam_id == tostring(player.steam_id)
+        end)
+
+        for i = 1, #g_savedata.game.team_members do
+            if g_savedata.game.team_members[i].team_id == member.team_id then
+                console.notify(g_savedata.game.team_members[i].id)
+                map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
+            end
+        end
+    end
+
     if g_savedata.subsystems.operation_area and g_savedata.game ~= nil then
         draw_operation_area(peer_id, g_savedata.game)
     end
@@ -911,15 +1040,10 @@ end
 
 function onPlayerRespawn(peer_id)
     if g_savedata.game ~= nil then
-        local players = server.getPlayers()
-
-        for i = 1, #players do
-            for j = 1, #g_savedata.game.team_members do
-                if players[i].id == peer_id and g_savedata.game.team_members[j].steam_id == tostring(players[i].steam_id) then
-                    server.setPlayerPos(peer_id, g_savedata.game.teams[g_savedata.game.team_members[j].team_id].base.transform)
-                end
-            end
-        end
+        local member = table.find(g_savedata.game.team_members, function(x)
+            return x.id == peer_id
+        end)
+        server.setPlayerPos(peer_id, g_savedata.game.teams[member.team_id].base.transform)
     else
         local start_tile = server.getStartTile()
         local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
@@ -928,7 +1052,37 @@ function onPlayerRespawn(peer_id)
 
     local object_id = server.getPlayerCharacterID(peer_id)
 
-    clear_player_inventory(object_id)
+    set_default_inventory(object_id)
+end
+
+function onPlayerSit(peer_id, vehicle_id, seat_name)
+    if g_savedata.game ~= nil then
+        local member = table.find(g_savedata.game.team_members, function(x)
+            return x.id == peer_id
+        end)
+        unmap_member(g_savedata.game, member)
+    end
+end
+
+function onPlayerUnsit(peer_id, vehicle_id, seat_name)
+    if g_savedata.game ~= nil then
+        local member = table.find(g_savedata.game.team_members, function(x)
+            return x.id == peer_id
+        end)
+        map_member(g_savedata.game, member)
+    end
+end
+
+function onToggleMap(peer_id, is_open)
+    if g_savedata.game ~= nil then
+        local player = get_player(peer_id)
+
+        for i = 1, #g_savedata.game.team_members do
+            if g_savedata.game.team_members[i].steam_id == tostring(player.steam_id) then
+                g_savedata.game.team_members[i].opend_map = is_open
+            end
+        end
+    end
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, type)
@@ -976,12 +1130,18 @@ function ntf(t, d)
 end
 
 function parse_tags(tags)
+    if tags == nil then
+        return
+    end
+
     local t = {}
 
     for i = 1, #tags do
         local k, v = string.match(tags[i], "^([%w_]+)=([%w_-]+)$")
 
-        t[k] = v
+        if k ~= nil and v ~= nil then
+            t[k] = v
+        end
     end
 
     return t
