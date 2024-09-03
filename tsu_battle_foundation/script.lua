@@ -190,6 +190,13 @@ game_trackers = {
 
             for i = 1, #game.teams do
                 text = text .. string.upper(game.teams[i].name)
+
+                if game.teams[i].ready then
+                    text = text .. "\nready"
+                else
+                    text = text .. "\ngetting ready..."
+                end
+                
                 text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
 
                 if g_savedata.subsystems.deploy_points then
@@ -208,8 +215,8 @@ game_trackers = {
 
 object_trackers = {
     vehicle = {
-        test_type = function(self, object)
-            return object.type == "vehicle" and object.is_players_vehicle
+        test_type = function(self, object, group_id, body_index, cost, owner_steam_id)
+            return object.type == "vehicle" and owner_steam_id ~= nil
         end,
         init = function(self, object, group_id, body_index, cost, owner_steam_id)
             object.group_id = group_id
@@ -225,6 +232,7 @@ object_trackers = {
             object.deploy_points = 0
             object.hit_points = 0
             object.damage = 0
+            object.exploded = false
             object.seats = {}
             object.icon = 2
 
@@ -277,9 +285,12 @@ object_trackers = {
             end
         end,
         tick = function(self, object, tick)
-            if g_savedata.subsystems.hit_points and object.components_checked and object.damage > object.hit_points and object.body_index == 0 then
+            if g_savedata.subsystems.hit_points and object.components_checked and not object.exploded and object.body_index == 0 and object.damage > object.hit_points then
                 local transform = server.getVehiclePos(object.id)
                 server.spawnExplosion(transform, 0.25)
+                object.exploded = true
+
+                console.notify(string.format("%s#%d Exploded", object.name, object.id))
             end
         end,
         damage = function(self, object, damage)
@@ -489,17 +500,17 @@ end
 function initialize_object(id, type, object, ...)
     local params = {...}
 
-    for k, v in pairs(object_trackers) do
-        if v:test_type(object) then
-            object.tracker = k
-            break
-        end
-    end
-
     object.id = id
     object.type = type
     object.marker_id = server.getMapID()
     object.exists = true
+
+    for k, v in pairs(object_trackers) do
+        if v:test_type(object, table.unpack(params)) then
+            object.tracker = k
+            break
+        end
+    end
 
     if object.tracker ~= nil then
         object_trackers[object.tracker]:init(object, table.unpack(params))
@@ -659,9 +670,7 @@ end
 function spawn_storage(map)
     for i = 1, #g_savedata.zones do
         if g_savedata.zones[i].tags.map == map.map and g_savedata.zones[i].tags.landscape == "storage" then
-            console.notify("あ")
-            local s = server.spawnNamedAddonLocation("storage", g_savedata.zones[i].transform)
-            console.notify(tostring(s))
+            server.spawnNamedAddonLocation("storage", g_savedata.zones[i].transform)
         end
     end
 end
@@ -856,7 +865,7 @@ function onTick(tick)
     end
 
     for i = #g_savedata.objects, 1, -1 do
-        if i % cycle == timing and g_savedata.objects[i].tracker ~= nil then
+        if i % cycle == timing then
             tick_object(g_savedata.objects[i], tick)
 
             if not g_savedata.objects[i].exists then
@@ -925,12 +934,13 @@ function onCreate(is_world_create)
         set_teleports(true)
         set_maps(true)
         server.setWeather(0.25, 0, 0)
+        server.command("?clearing")
     end
 
     if g_savedata.game ~= nil then
-        console.notify(string.format("Game: %s, %s ", g_savedata.game.name, g_savedata.game.map.name))
+        console.notify(string.format("Battle: %s, %s ", g_savedata.game.name, g_savedata.game.map.name))
     else
-        console.notify("Game: no available")
+        console.notify("Battle: no available")
     end
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Objects: %d", #g_savedata.objects))
@@ -960,9 +970,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     for i = 1, #vehicle_ids do
         local data, s = server.getVehicleData(vehicle_ids[i])
 
-        data.is_players_vehicle = peer_id >= 0
-
-        if data.is_players_vehicle then
+        if peer_id >= 0 then
             local owner = get_player(peer_id)
             local body_index = i - 1
 
