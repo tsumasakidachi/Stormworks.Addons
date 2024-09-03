@@ -29,7 +29,7 @@ end
 
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, target, ...)
     -- kill
-    if command == "?kill" then
+    if command == "?kill" and g_savedata.vehicle_clearing then
         local player = get_player(peer_id)
         local object_id, is_success = server.getPlayerCharacterID(peer_id)
 
@@ -39,15 +39,13 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
     -- hop
     if command == "?hop" then
-        local target_peer_id = tonumber(target)
-        local transform, is_success = server.getPlayerPos(target_peer_id)
+        -- local peer_id = tonumber(peer_id) or peer_id
+        local transform = server.getPlayerPos(peer_id)
         local hop = matrix.translation(0, 10, 0)
+        local player = get_player(peer_id)
 
-        if not is_success then
-            return
-        end
-
-        server.setPlayerPos(peer_id, matrix.multiply(transform, hop))
+        server.setPlayerPos(peer_id, hop)
+        server.announce("[UTILITY]", string.format("%s hopped.", player.name))
     end
 
     -- pin

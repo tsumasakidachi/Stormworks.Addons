@@ -381,12 +381,11 @@ function clear_game(game)
         despawn_object(g_savedata.objects[i])
     end
 
-    local players = server.getPlayers()
-
-    for i = 1, #players do
-        local object_id = server.getPlayerCharacterID(players[i].id)
+    for i = 1, #game.team_members do
+        local object_id = server.getPlayerCharacterID(game.team_members[i].id)
 
         clear_inventory(object_id)
+        unmap_member(game, game.team_members[i])
         server.killCharacter(object_id)
     end
 
@@ -632,7 +631,7 @@ function vehicle_components(object)
 end
 
 function map_vehicle_friendry(game, vehicle)
-    if vehicle.tracker ~= "vehicle" then
+    if vehicle.tracker ~= "vehicle" or vehicle.body_index > 0 then
         return
     end
 
@@ -782,7 +781,6 @@ end
 function set_default_inventory(object_id)
     server.setCharacterItem(object_id, 2, 15, false, 0, 100)
     server.setCharacterItem(object_id, 3, 6, false)
-    server.setCharacterItem(object_id, 9, 11, false, 4)
 end
 
 function map_member(game, member)
@@ -923,6 +921,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         local player = get_player(peer_id)
 
         ready(g_savedata.game, player)
+    elseif command == "?kill" then
+        local object_id = server.getPlayerCharacterID(peer_id)
+        server.killCharacter(object_id)
     end
 end
 
@@ -1035,7 +1036,6 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 
         for i = 1, #g_savedata.game.team_members do
             if g_savedata.game.team_members[i].team_id == member.team_id then
-                console.notify(g_savedata.game.team_members[i].id)
                 map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
             end
         end
@@ -1052,6 +1052,12 @@ function onPlayerRespawn(peer_id)
             return x.id == peer_id
         end)
         server.setPlayerPos(peer_id, g_savedata.game.teams[member.team_id].base.transform)
+        
+        for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].type == "vehicle" then
+                despawn_object(g_savedata.objects[i])
+            end
+        end
     else
         local start_tile = server.getStartTile()
         local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
