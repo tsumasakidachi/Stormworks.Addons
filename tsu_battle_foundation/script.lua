@@ -8,8 +8,9 @@ g_savedata = {
     subsystems = {
         operation_area = true,
         deploy_points = false,
-        hit_points = true
-    }
+        hit_points = false
+    },
+    altitude_max = 300
 }
 
 zone_properties = {{
@@ -131,7 +132,7 @@ game_trackers = {
         end,
         zone_conquest_threshold = 100
     },
-    destraction = {
+    flag = {
         init = function(self, game)
             for i = 1, #game.teams do
                 game.teams[i].vehicles = 0
@@ -141,14 +142,64 @@ game_trackers = {
         end,
         tick = function(self, game, tick)
         end,
-        started = function(self, game)
-            local s = true
-
-            for i = 1, #game.teams do
-                s = s and game.teams[i].ready
+        finished = function(self, game)
+            return false
+        end,
+        join = function(self, game, peer_id)
+        end,
+        deploy = function(self, game, vehicle)
+            if vehicle.body_index > 0 then
+                return
             end
 
-            return s
+            local member = table.find(game.team_members, function(x)
+                return x.steam_id == vehicle.owner.steam_id
+            end)
+
+            game.teams[member.team_id].vehicles = game.teams[member.team_id].vehicles + 1
+        end,
+        destroy = function(self, game, vehicle)
+            if vehicle.body_index > 0 then
+                return
+            end
+
+            local member = table.find(game.team_members, function(x)
+                return x.steam_id == vehicle.owner.steam_id
+            end)
+
+            game.teams[member.team_id].vehicles = game.teams[member.team_id].vehicles - 1
+        end,
+        status = function(self, game)
+            local text = ""
+
+            for i = 1, #game.teams do
+                text = text .. string.upper(game.teams[i].name)
+
+                if game.teams[i].ready then
+                    text = text .. "\nready"
+                else
+                    text = text .. "\ngetting ready..."
+                end
+
+                text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
+
+                if i < #game.teams then
+                    text = text .. "\n\n"
+                end
+            end
+
+            return text
+        end
+    },
+    destraction = {
+        init = function(self, game)
+            for i = 1, #game.teams do
+                game.teams[i].vehicles = 0
+            end
+        end,
+        clear = function(self, game)
+        end,
+        tick = function(self, game, tick)
         end,
         finished = function(self, game)
             local c = #game.teams
@@ -196,7 +247,7 @@ game_trackers = {
                 else
                     text = text .. "\ngetting ready..."
                 end
-                
+
                 text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
 
                 if g_savedata.subsystems.deploy_points then
@@ -234,7 +285,7 @@ object_trackers = {
             object.damage = 0
             object.exploded = false
             object.seats = {}
-            object.icon = 2
+            object.icon = 12
 
             if object.name == "" then
                 object.name = "Vehicle"
@@ -317,6 +368,7 @@ function initialize_game(mode, map)
         map = map,
         stats_marker_id = server.getMapID(),
         operation_area_marker_id = server.getMapID(),
+        out_of_area_marker_id = server.getMapID(),
         count_team = 2,
         teams = {{
             name = "red",
@@ -414,7 +466,13 @@ end
 
 function start_game(game)
     if not game.started then
-        game.started = game_trackers[game.tracker]:started(game)
+        local s = true
+
+        for i = 1, #game.teams do
+            s = s and game.teams[i].ready
+        end
+
+        game.started = s
 
         if game.started then
             set_damages(true)
@@ -544,7 +602,7 @@ end
 
 function tick_object(object, tick)
     if object.tracker ~= nil then
-    object_trackers[object.tracker]:tick(object, tick)
+        object_trackers[object.tracker]:tick(object, tick)
     end
 end
 
@@ -766,6 +824,7 @@ function team_members(count)
         players[i].steam_id = tostring(players[i].steam_id)
         players[i].team_id = (i % count)
         players[i].marker_id = server.getMapID()
+        players[i].commander = false
         players[i].opend_map = false
     end
 
@@ -805,6 +864,74 @@ function map_player(peer_id, game, player)
     local object_id = server.getPlayerCharacterID(player.id)
 
     server.addMapObject(peer_id, player.marker_id, 2, 1, 0, 0, 0, 0, nil, object_id, player.name, 0, nil, game.teams[player.team_id].color.r, game.teams[player.team_id].color.g, game.teams[player.team_id].color.b, 255)
+end
+
+function select_commander(game, player)
+    local steam_id = tostring(player.steam_id)
+    local member = table.find(game.team_members, function(x)
+        return x.steam_id == steam_id
+    end)
+
+    if member == nil then
+        return
+    end
+
+    for i = 1, #game.team_members do
+        if game.team_members[i].team_id == member.team_id and game.team_members[i].steam_id == steam_id then
+            game.team_members[i].commander = true
+        elseif game.team_members[i].team_id == member.team_id then
+            game.team_members[i].commander = false
+        end
+    end
+end
+
+function teleport(game, player, target)
+    local steam_id = tostring(player.steam_id)
+    local member = table.find(game.team_members, function(x)
+        return x.steam_id == steam_id
+    end)
+
+    if member == nil then
+        return
+    end
+
+    if game.tracker == "flag" then
+        local transform = server.getPlayerPos(player.id)
+
+        if not is_in_landscape(transform, "base") then
+            console.error("You are not in base.", player.id)
+            return
+        end
+
+        local commander = table.find(game.team_members, function(x)
+            return x.team_id == member.team_id and x.commander
+        end)
+
+        if commander == nil then
+            console.error("No commander.", player.id)
+            return
+        end
+
+        local cv = table.find(g_savedata.objects, function(x)
+            return x.tracker == "vehicle" and x.owner.steam_id == commander.steam_id
+        end)
+
+        if cv == nil then
+            console.error("No commander's vehicle.", player.id)
+            return
+        end
+
+        for i = 1, #cv.seats do
+            local seat = server.getVehicleSeat(cv.id, cv.seats[i].pos.x, cv.seats[i].pos.y, cv.seats[i].pos.z)
+            console.notify((seat.seated_id))
+
+            if seat.seated_id == 4294967295 then
+                local object_id = server.getPlayerCharacterID(player.id)
+                server.setSeated(object_id, cv.id, cv.seats[i].pos.x, cv.seats[i].pos.y, cv.seats[i].pos.z)
+                return
+            end
+        end
+    end
 end
 
 -- UIs
@@ -913,7 +1040,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             clear_game(g_savedata.game)
         elseif is_admin and verb == "map" then
         end
-    elseif command == "?ready" then
+    elseif command == "?ready" and g_savedata.game ~= nil then
         if g_savedata.game == nil then
             return
         end
@@ -921,9 +1048,16 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         local player = get_player(peer_id)
 
         ready(g_savedata.game, player)
-    elseif command == "?kill" then
+    elseif command == "?kill" and g_savedata.game ~= nil then
         local object_id = server.getPlayerCharacterID(peer_id)
         server.killCharacter(object_id)
+    elseif command == "?cv" and g_savedata.game ~= nil then
+        local player = get_player(peer_id)
+        select_commander(g_savedata.game, player)
+    elseif command == "?tp" and g_savedata.game ~= nil then
+        local params = {...}
+        local player = get_player(peer_id)
+        teleport(g_savedata.game, player, params)
     end
 end
 
@@ -935,7 +1069,6 @@ function onCreate(is_world_create)
         set_teleports(true)
         set_maps(true)
         server.setWeather(0.25, 0, 0)
-        server.command("?clearing")
     end
 
     if g_savedata.game ~= nil then
@@ -1052,9 +1185,9 @@ function onPlayerRespawn(peer_id)
             return x.id == peer_id
         end)
         server.setPlayerPos(peer_id, g_savedata.game.teams[member.team_id].base.transform)
-        
+
         for i = 1, #g_savedata.objects do
-            if g_savedata.objects[i].type == "vehicle" then
+            if g_savedata.objects[i].tracker == "vehicle" and g_savedata.objects[i].owner.steam_id == member.steam_id then
                 despawn_object(g_savedata.objects[i])
             end
         end
