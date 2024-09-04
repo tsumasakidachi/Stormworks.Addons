@@ -538,6 +538,7 @@ function set_teleports(v)
     server.setGameSetting("fast_travel", v)
     server.setGameSetting("teleport_vehicle", v)
     server.setGameSetting("map_teleport", v)
+    server.setGameSetting("no_clip", v)
 end
 
 function set_maps(v)
