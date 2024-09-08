@@ -41,8 +41,8 @@ games = { --     {
     deploy_point_start = 200,
     teams = {}
 }, {
-    tracker = "destraction",
-    name = "destraction",
+    tracker = "destruction",
+    name = "destruction",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
@@ -58,6 +58,11 @@ maps = {{
     name = "twin hills",
     center = matrix.translation(-12400, 0, -31900),
     radius = 2000
+}, {
+    map = "arctic",
+    name = "arctic",
+    center = matrix.translation(-29000, 0, -90000),
+    radius = 1500
 }}
 
 game_trackers = {
@@ -191,7 +196,7 @@ game_trackers = {
             return text
         end
     },
-    destraction = {
+    destruction = {
         init = function(self, game)
             for i = 1, #game.teams do
                 game.teams[i].vehicles = 0
@@ -407,10 +412,6 @@ function initialize_game(mode, map)
     spawn_storage(map)
     g_savedata.game = game
 
-    set_damages(false)
-    set_teleports(false)
-    set_maps(false)
-
     if g_savedata.subsystems.operation_area then
         draw_operation_area(-1, game)
     end
@@ -448,10 +449,6 @@ function clear_game(game)
     end
 
     unmap_game_stats(game)
-
-    set_damages(false)
-    set_teleports(true)
-    set_maps(true)
 
     g_savedata.game = nil
     console.notify("Cleared ongoing game")

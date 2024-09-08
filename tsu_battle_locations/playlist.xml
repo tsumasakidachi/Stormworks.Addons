@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_battle_locations" file_store="4" name="TSU Battle Locations">
-	<locations location_id_counter="7" component_id_counter="9">
+	<locations location_id_counter="11" component_id_counter="17">
 		<locations>
 			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -42,15 +42,82 @@
 					</c>
 				</components>
 			</l>
-			<l id="7" name="storage" env_mod_spawn_num="1">
+			<l id="8" tile="data/tiles/arctic_tile_22.xml" name="arctic" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="3" id="6" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_6.xml" vehicle_file_store="4" vehicle_is_static="true">
-						<spawn_transform 31="1"/>
+					<c component_type="10" id="10" cargo_zone_import_cargo_type="map=arctic,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="1.684266" 31="18.480202" 32="-416.091064"/>
 						<spawn_bounds>
-							<min x="-1.375" y="-0.875" z="-6.125"/>
-							<max x="1.375" y="1.125" z="6.125"/>
+							<min x="-99.718201" y="-27.481028" z="-104.002368"/>
+							<max x="99.718201" y="27.481028" z="104.002368"/>
 						</spawn_bounds>
-						<spawn_local_offset y="-0.125"/>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="11" cargo_zone_import_cargo_type="map=arctic,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999526" 02="0.030784" 20="-0.030784" 22="-0.999526" 30="6.705488" 31="16.00333" 32="-378.571167"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="9" tile="data/tiles/arctic_tile_12_oilrig.xml" name="arctic" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="12" cargo_zone_import_cargo_type="map=arctic,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.659338" 02="0.751847" 20="-0.751847" 22="0.659338" 30="390.681213" 31="17.523409" 32="-341.985565"/>
+						<spawn_bounds>
+							<min x="-71.224274" y="-50.842873" z="-70.575943"/>
+							<max x="71.224274" y="50.842873" z="70.575943"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="13" cargo_zone_import_cargo_type="map=arctic,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.657661" 02="-0.753314" 20="0.753314" 22="-0.657661" 30="374.262207" 31="15.969788" 32="-322.289307"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="10" tile="data/tiles/arid_island_11_6.xml" name="twin hills" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="14" cargo_zone_import_cargo_type="map=twin_hills,landscape=base,team=blue" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.867312" 02="-0.497764" 20="0.497764" 22="0.867312" 30="258.649109" 31="52.617073" 32="-24.975716"/>
+						<spawn_bounds>
+							<min x="-59.741895" y="-22.465813" z="-59.998943"/>
+							<max x="59.741895" y="22.465813" z="59.998943"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="17" cargo_zone_import_cargo_type="map=twin_hills,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.862273" 02="-0.506444" 20="0.506444" 22="0.862273" 30="280.819305" 31="50.038445" 32="-32.526535"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="11" tile="data/tiles/arid_island_12_10.xml" name="twin hills" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="15" cargo_zone_import_cargo_type="map=twin_hills,landscape=base,team=red" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.658989" 02="-0.752152" 20="0.752152" 22="0.658989" 30="259.0065" 31="32.732296" 32="255.367996"/>
+						<spawn_bounds>
+							<min x="-50.220371" y="-24.11497" z="-45.882507"/>
+							<max x="50.220371" y="24.11497" z="45.882507"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="16" cargo_zone_import_cargo_type="map=twin_hills,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.661944" 02="0.749553" 20="-0.749553" 22="-0.661944" 30="243.005981" 31="30.568926" 32="270.017731"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
 						<graph_links/>
 					</c>
 				</components>
