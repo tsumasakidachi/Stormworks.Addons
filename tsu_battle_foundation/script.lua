@@ -35,8 +35,8 @@ games = { --     {
 --     teams = {}
 -- }, 
 {
-    tracker = "flag",
-    name = "flag",
+    tracker = "common",
+    name = "common",
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
@@ -137,7 +137,7 @@ game_trackers = {
         end,
         zone_conquest_threshold = 100
     },
-    flag = {
+    common = {
         init = function(self, game)
             for i = 1, #game.teams do
                 game.teams[i].vehicles = 0
@@ -314,13 +314,8 @@ object_trackers = {
             if not object.components_checked then
                 vehicle_components(object)
 
-                if g_savedata.subsystems.deploy_points then
-                    object.deploy_points = math.ceil(object.mass * 0.01)
-                end
-
-                if g_savedata.subsystems.hit_points then
-                    object.hit_points = object.mass * 2
-                end
+                object.deploy_points = math.ceil(object.mass * 0.01)
+                object.hit_points = object.mass * 2
 
                 if g_savedata.game ~= nil then
                     deploy_vehicle(g_savedata.game, object)
@@ -381,7 +376,7 @@ function initialize_game(mode, map)
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
-            deploy_points = 120,
+            deploy_points = 100,
             color = {
                 r = 191,
                 g = 0,
@@ -395,7 +390,7 @@ function initialize_game(mode, map)
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
-            deploy_points = 120,
+            deploy_points = 100,
             color = {
                 r = 0,
                 g = 0,
@@ -415,6 +410,8 @@ function initialize_game(mode, map)
     if g_savedata.subsystems.operation_area then
         draw_operation_area(-1, game)
     end
+
+    set_maps(false)
 
     server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
     console.notify(string.format("Matchmaking %s...", game.name))
@@ -475,6 +472,7 @@ function start_game(game)
             set_damages(true)
             set_teleports(false)
             set_maps(false)
+            set_name_plates(false)
             server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
@@ -488,6 +486,7 @@ function finish_game(game)
             set_damages(false)
             set_teleports(true)
             set_maps(true)
+            set_name_plates(true)
             server.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
@@ -541,6 +540,9 @@ end
 function set_maps(v)
     server.setGameSetting("map_show_players", v)
     server.setGameSetting("map_show_vehicles", v)
+end
+
+function set_name_plates(v)
     server.setGameSetting("show_name_plates", v)
 end
 
@@ -632,17 +634,19 @@ function destroy_vehicle(game, vehicle)
     end
 
     if g_savedata.subsystems.deploy_points then
-        local t = server.getVehiclePos(vehicle.id)
+        local t, s = server.getVehiclePos(vehicle.id)
         local member = table.find(game.team_members, function(x)
             return x.steam_id == vehicle.owner.steam_id
         end)
         local respawn = table.find(g_savedata.zones, function(x)
-            return x.tags.landscape == "base" and x.tags.team == game.teams[member.team_id].name
+            return x.tags.map == game.map.map and x.tags.landscape == "base" and x.tags.team == game.teams[member.team_id].name
         end)
 
         if respawn ~= nil and is_in_zone(t, respawn) then
             game.teams[member.team_id].deploy_points = game.teams[member.team_id].deploy_points + vehicle.deploy_points
             console.notify(string.format("Your %d deploy points back.", vehicle.deploy_points))
+        else
+            console.notify(string.format("You lost %d deploy points.", vehicle.deploy_points))
         end
     end
 
@@ -884,6 +888,7 @@ function select_commander(game, player)
 end
 
 function teleport(game, player, target)
+    local target = tonumber(target)
     local steam_id = tostring(player.steam_id)
     local member = table.find(game.team_members, function(x)
         return x.steam_id == steam_id
@@ -893,14 +898,25 @@ function teleport(game, player, target)
         return
     end
 
-    if game.tracker == "flag" then
-        local transform = server.getPlayerPos(player.id)
+    local transform = server.getPlayerPos(player.id)
 
-        if not is_in_landscape(transform, "base") then
-            console.error("You are not in base.", player.id)
+    if not is_in_landscape(transform, "base") then
+        console.error("You are not in base.", player.id)
+        return
+    end
+    
+    console.error(tostring(target), player.id)
+
+    if target ~= nil then
+        local vehicle = table.find(g_savedata.objects, function(x) return x.tracker == "vehicle" and x.id == target and x.body_index == 0 end)
+
+        if vehicle == nil then
+            console.error(string.format("No vehicle#%d.", target), player.id)
             return
         end
 
+        teleport_to_empty_seat(vehicle, player)
+    elseif game.tracker == "flag" then
         local commander = table.find(game.team_members, function(x)
             return x.team_id == member.team_id and x.commander
         end)
@@ -919,17 +935,22 @@ function teleport(game, player, target)
             return
         end
 
-        for i = 1, #cv.seats do
-            local seat = server.getVehicleSeat(cv.id, cv.seats[i].pos.x, cv.seats[i].pos.y, cv.seats[i].pos.z)
-            console.notify((seat.seated_id))
+        teleport_to_empty_seat(cv, player)
+    end
+end
 
-            if seat.seated_id == 4294967295 then
-                local object_id = server.getPlayerCharacterID(player.id)
-                server.setSeated(object_id, cv.id, cv.seats[i].pos.x, cv.seats[i].pos.y, cv.seats[i].pos.z)
-                return
-            end
+function teleport_to_empty_seat(vehicle, player)
+    for i = 1, #vehicle.seats do
+        local seat = server.getVehicleSeat(vehicle.id, vehicle.seats[i].pos.x, vehicle.seats[i].pos.y, vehicle.seats[i].pos.z)
+
+        if seat.seated_id == 4294967295 then
+            local object_id = server.getPlayerCharacterID(player.id)
+            server.setSeated(object_id, vehicle.id, vehicle.seats[i].pos.x, vehicle.seats[i].pos.y, vehicle.seats[i].pos.z)
+            return
         end
     end
+    
+    console.error("No empty seat.", player.id)
 end
 
 -- UIs
@@ -1037,6 +1058,15 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
             clear_game(g_savedata.game)
         elseif is_admin and verb == "map" then
+        elseif is_admin and verb == "deploy_points" then
+            g_savedata.subsystems.deploy_points = not g_savedata.subsystems.deploy_points
+            server.announce("[Battle]", string.format("Deploy points: %s", g_savedata.subsystems.deploy_points), -1)
+        elseif is_admin and verb == "hit_points" then
+            g_savedata.subsystems.hit_points = not g_savedata.subsystems.hit_points
+            server.announce("[Battle]", string.format("Deploy points: %s", g_savedata.subsystems.hit_points), -1)
+        elseif is_admin and verb == "operation_area" then
+            g_savedata.subsystems.operation_area = not g_savedata.subsystems.operation_area
+            server.announce("[Battle]", string.format("Deploy points: %s", g_savedata.subsystems.operation_area), -1)
         end
     elseif command == "?ready" and g_savedata.game ~= nil then
         if g_savedata.game == nil then
@@ -1053,9 +1083,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         local player = get_player(peer_id)
         select_commander(g_savedata.game, player)
     elseif command == "?tp" and g_savedata.game ~= nil then
-        local params = {...}
         local player = get_player(peer_id)
-        teleport(g_savedata.game, player, params)
+        teleport(g_savedata.game, player, verb)
     end
 end
 

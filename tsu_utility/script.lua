@@ -41,7 +41,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
     if command == "?hop" then
         -- local peer_id = tonumber(peer_id) or peer_id
         local transform = server.getPlayerPos(peer_id)
-        local hop = matrix.translation(0, 10, 0)
+        local hop = matrix.multiply(transform, matrix.translation(0, 10, 0))
         local player = get_player(peer_id)
 
         server.setPlayerPos(peer_id, hop)
