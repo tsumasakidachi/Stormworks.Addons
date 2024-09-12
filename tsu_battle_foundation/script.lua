@@ -186,7 +186,20 @@ game_trackers = {
                     text = text .. "\ngetting ready..."
                 end
 
+                local p = 0
+
+                for j = 1, #game.team_members do
+                    if game.team_members[j].team_id == i then
+                        p = p + 1
+                    end
+                end
+
+                text = text .. string.format("\n%d players", p)
                 text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
+
+                if g_savedata.subsystems.deploy_points then
+                    text = text .. string.format("\n%d deploy points", game.teams[i].deploy_points)
+                end
 
                 if i < #game.teams then
                     text = text .. "\n\n"
@@ -253,6 +266,15 @@ game_trackers = {
                     text = text .. "\ngetting ready..."
                 end
 
+                local p = 0
+
+                for j = 1, #game.team_members do
+                    if game.team_members[j].team_id == i then
+                        p = p + 1
+                    end
+                end
+
+                text = text .. string.format("\n%d players", p)
                 text = text .. string.format("\n%d vehicles", game.teams[i].vehicles)
 
                 if g_savedata.subsystems.deploy_points then
@@ -366,7 +388,8 @@ function initialize_game(mode, map)
         finished = false,
         name = mode.name,
         map = map,
-        stats_marker_id = server.getMapID(),
+        game_stats_marker_id = server.getMapID(),
+        team_status_marker_id = server.getMapID(),
         operation_area_marker_id = server.getMapID(),
         out_of_area_marker_id = server.getMapID(),
         count_team = 2,
@@ -378,26 +401,24 @@ function initialize_game(mode, map)
             end),
             deploy_points = 100,
             color = {
-                r = 191,
-                g = 0,
-                b = 0,
+                r = 204,
+                g = 43,
+                b = 43,
                 a = 255
-            },
-            stats_marker_id = server.getMapID()
+            }
         }, {
             name = "blue",
             ready = false,
             base = table.find(g_savedata.zones, function(x)
-                return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
+                return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "blue"
             end),
             deploy_points = 100,
             color = {
-                r = 0,
-                g = 0,
-                b = 191,
+                r = 40,
+                g = 149,
+                b = 204,
                 a = 255
-            },
-            stats_marker_id = server.getMapID()
+            }
         }},
         team_members = {}
     }
@@ -411,18 +432,21 @@ function initialize_game(mode, map)
         draw_operation_area(-1, game)
     end
 
+    set_damages(false)
+    set_teleports(true)
     set_maps(false)
+    set_name_plates(true)
 
     server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
-    console.notify(string.format("Matchmaking %s...", game.name))
+    console.log(string.format("Matchmaking %s...", game.name))
 
     for i = 1, #game.team_members do
         local object_id = server.getPlayerCharacterID(game.team_members[i].id)
 
-        map_member(game, game.team_members[i])
         clear_inventory(object_id)
-        server.killCharacter(object_id)
-        console.notify(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
+        map_member(game, game.team_members[i])
+        teleport_to_base(game, game.team_members[i])
+        console.log(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name))
     end
 end
 
@@ -436,7 +460,7 @@ function clear_game(game)
 
         clear_inventory(object_id)
         unmap_member(game, game.team_members[i])
-        server.killCharacter(object_id)
+        teleport_to_start_tile(game.team_members[i])
     end
 
     game_trackers[game.tracker]:clear(game)
@@ -445,10 +469,14 @@ function clear_game(game)
         clear_operation_area(-1, game)
     end
 
+    set_damages(false)
+    set_teleports(true)
+    set_maps(true)
+    set_name_plates(true)
     unmap_game_stats(game)
 
     g_savedata.game = nil
-    console.notify("Cleared ongoing game")
+    console.log("Cleared ongoing game")
 end
 
 function tick_game(game, tick)
@@ -473,7 +501,7 @@ function start_game(game)
             set_teleports(false)
             set_maps(false)
             set_name_plates(false)
-            server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+            server.log(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
 end
@@ -487,7 +515,7 @@ function finish_game(game)
             set_teleports(true)
             set_maps(true)
             set_name_plates(true)
-            server.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+            server.log(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
 end
@@ -497,15 +525,34 @@ function map_game_stats(game)
     text = text .. "\n\n" .. game_trackers[game.tracker]:status(game)
 
     for i = 1, #game.team_members do
-        -- server.removeMapID(game.team_members[i].id, game.stats_marker_id)
-        server.setPopupScreen(game.team_members[i].id, game.stats_marker_id, "STATS", true, text, 0.85, -0.7)
+        server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.8, -0.6)
+        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "STATS", true, team_stats(game, game.team_members[i]), 0.6, -0.6)
     end
 end
 
 function unmap_game_stats(game)
     for i = 1, #game.team_members do
-        server.removeMapID(game.team_members[i].id, game.stats_marker_id)
+        server.removeMapID(game.team_members[i].id, game.game_stats_marker_id)
+        server.removeMapID(game.team_members[i].id, game.team_stats_marker_id)
     end
+end
+
+function team_stats(game, member)
+    local text = string.upper(game.teams[member.team_id].name) .. "\n"
+
+    for i = 1, #game.team_members do
+        if game.team_members[i].team_id == member.team_id then
+            local status = "-"
+            
+            if game.team_members[i].flag then
+                status = "*"
+            end
+
+            text = text .. string.format("\n%s%s", status, game.team_members[i].name)
+        end
+    end
+
+    return text
 end
 
 function ready(game, player)
@@ -824,7 +871,7 @@ function team_members(count)
 
     for i = 1, #players do
         players[i].steam_id = tostring(players[i].steam_id)
-        players[i].team_id = (i % count)
+        players[i].team_id = (i - 1) % count + 1
         players[i].marker_id = server.getMapID()
         players[i].commander = false
         players[i].opend_map = false
@@ -953,6 +1000,22 @@ function teleport_to_empty_seat(vehicle, player)
     console.error("No empty seat.", player.id)
 end
 
+function teleport_to_base(game, member)
+    server.setPlayerPos(member.id, game.teams[member.team_id].base.transform)
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].tracker == "vehicle" and g_savedata.objects[i].owner.steam_id == member.steam_id then
+            despawn_object(g_savedata.objects[i])
+        end
+    end
+end
+
+function teleport_to_start_tile(player)
+    local start_tile = server.getStartTile()
+    local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
+    server.setPlayerPos(player.id, t)
+end
+
 -- UIs
 
 function draw_operation_area(peer_id, game)
@@ -1002,6 +1065,10 @@ function onTick(tick)
 
     if timing == 0 then
         players = server.getPlayers()
+
+        for i = 1, #players do
+            players[i].steam_id = tostring(players[i].steam_id)
+        end
     end
 
     if timing == 0 and g_savedata.game ~= nil then
@@ -1182,51 +1249,48 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
     end
 
     if g_savedata.game ~= nil then
-        local player = get_player(peer_id)
-
-        for i = 1, #g_savedata.game.team_members do
-            if g_savedata.game.team_members[i].steam_id == tostring(player.steam_id) then
-                g_savedata.game.team_members[i].id = peer_id
-            end
-        end
-
+        local player = table.find(players, function(x) return x.id == peer_id end)
         local member = table.find(g_savedata.game.team_members, function(x)
             return x.steam_id == tostring(player.steam_id)
         end)
 
         for i = 1, #g_savedata.game.team_members do
-            if g_savedata.game.team_members[i].team_id == member.team_id then
+            if g_savedata.game.team_members[i].steam_id == player.steam_id then
+                g_savedata.game.team_members[i].id = peer_id
+            end
+
+            if member ~= nil and g_savedata.game.team_members[i].team_id == member.team_id then
                 map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
             end
         end
-    end
 
-    if g_savedata.subsystems.operation_area and g_savedata.game ~= nil then
-        draw_operation_area(peer_id, g_savedata.game)
+        for i = 1, #g_savedata.objects do
+            map_vehicle_friendry(g_savedata.game, g_savedata.objects[i])
+        end
+
+        if g_savedata.subsystems.operation_area then
+            draw_operation_area(peer_id, g_savedata.game)
+        end
     end
 end
 
 function onPlayerRespawn(peer_id)
+    local player = table.find(players, function(x) return x.id == peer_id end)
+    
     if g_savedata.game ~= nil then
-        local member = table.find(g_savedata.game.team_members, function(x)
-            return x.id == peer_id
-        end)
-        server.setPlayerPos(peer_id, g_savedata.game.teams[member.team_id].base.transform)
+        local member = table.find(g_savedata.game.team_members, function(x) return x.id == player.id end)
 
-        for i = 1, #g_savedata.objects do
-            if g_savedata.objects[i].tracker == "vehicle" and g_savedata.objects[i].owner.steam_id == member.steam_id then
-                despawn_object(g_savedata.objects[i])
-            end
+        if member ~= nil then
+            unmap_member(g_savedata.game, member)
+            map_member(g_savedata.game, member)
+            teleport_to_base(g_savedata.game, member)
+            console.log(string.format("%s dead.", member.name))
+        else
+            teleport_to_start_tile(player)
         end
     else
-        local start_tile = server.getStartTile()
-        local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
-        server.setPlayerPos(peer_id, t)
+        teleport_to_start_tile(player)
     end
-
-    local object_id = server.getPlayerCharacterID(peer_id)
-
-    set_default_inventory(object_id)
 end
 
 function onPlayerSit(peer_id, vehicle_id, seat_name)
@@ -1266,7 +1330,7 @@ end
 -- utils
 
 function get_player(peer_id)
-    for k, player in pairs(server.getPlayers()) do
+    for k, player in pairs(players) do
         if player.id == peer_id then
             return table.copy(player)
         end
@@ -1322,6 +1386,13 @@ function parse_tags(tags)
 end
 
 console = {
+    log = function(text, peer_id)
+        if peer_id == nil then
+            peer_id = -1
+        end
+
+        server.announce("[Mission Foundation]", text, peer_id)
+    end,
     notify = function(text, peer_id, always)
         if peer_id == nil then
             peer_id = -1
