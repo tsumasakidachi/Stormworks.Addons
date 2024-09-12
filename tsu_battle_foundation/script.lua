@@ -395,7 +395,7 @@ function initialize_game(mode, map)
         count_team = 2,
         teams = {{
             name = "red",
-            ready = false,
+            ready = true,
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
@@ -501,7 +501,7 @@ function start_game(game)
             set_teleports(false)
             set_maps(false)
             set_name_plates(false)
-            server.log(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+            server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
 end
@@ -515,7 +515,7 @@ function finish_game(game)
             set_teleports(true)
             set_maps(true)
             set_name_plates(true)
-            server.log(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
+            console.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map.name)), 5)
         end
     end
 end
@@ -542,13 +542,19 @@ function team_stats(game, member)
 
     for i = 1, #game.team_members do
         if game.team_members[i].team_id == member.team_id then
+            local object_id, s = server.getPlayerCharacterID(game.team_members[i].id)
+            local data = server.getObjectData(object_id)
             local status = "-"
-            
-            if game.team_members[i].flag then
+
+            if data ~= nil and data.hp <= 0 then
                 status = "*"
+            elseif game.team_members[i].flag then
+                status = "="
             end
 
             text = text .. string.format("\n%s%s", status, game.team_members[i].name)
+
+            ::continue::
         end
     end
 
@@ -861,23 +867,23 @@ players = {}
 peers_map_open = {}
 
 function team_members(count)
-    local players = server.getPlayers()
+    local p = table.copy(players)
 
-    if players[1].name == "Server" then
-        table.remove(players, 1)
+    if p[1].name == "Server" then
+        table.remove(p, 1)
     end
 
-    table.shuffle(players)
+    table.shuffle(p)
 
-    for i = 1, #players do
-        players[i].steam_id = tostring(players[i].steam_id)
-        players[i].team_id = (i - 1) % count + 1
-        players[i].marker_id = server.getMapID()
-        players[i].commander = false
-        players[i].opend_map = false
+    for i = 1, #p do
+        p[i].steam_id = tostring(p[i].steam_id)
+        p[i].team_id = (i - 1) % count + 1
+        p[i].marker_id = server.getMapID()
+        p[i].commander = false
+        p[i].opend_map = false
     end
 
-    return players
+    return p
 end
 
 function clear_inventory(object_id)
@@ -951,11 +957,13 @@ function teleport(game, player, target)
         console.error("You are not in base.", player.id)
         return
     end
-    
+
     console.error(tostring(target), player.id)
 
     if target ~= nil then
-        local vehicle = table.find(g_savedata.objects, function(x) return x.tracker == "vehicle" and x.id == target and x.body_index == 0 end)
+        local vehicle = table.find(g_savedata.objects, function(x)
+            return x.tracker == "vehicle" and x.id == target and x.body_index == 0
+        end)
 
         if vehicle == nil then
             console.error(string.format("No vehicle#%d.", target), player.id)
@@ -996,7 +1004,7 @@ function teleport_to_empty_seat(vehicle, player)
             return
         end
     end
-    
+
     console.error("No empty seat.", player.id)
 end
 
@@ -1068,6 +1076,44 @@ function onTick(tick)
 
         for i = 1, #players do
             players[i].steam_id = tostring(players[i].steam_id)
+        end
+
+        if false then
+            table.insert(players, {
+                id = 100,
+                name = "a",
+                is_admin = false,
+                is_auth = false,
+                steam_id = "100"
+            })
+            table.insert(players, {
+                id = 101,
+                name = "b",
+                is_admin = false,
+                is_auth = false,
+                steam_id = "101"
+            })
+            table.insert(players, {
+                id = 102,
+                name = "c",
+                is_admin = false,
+                is_auth = false,
+                steam_id = "102"
+            })
+            table.insert(players, {
+                id = 103,
+                name = "d",
+                is_admin = false,
+                is_auth = false,
+                steam_id = "103"
+            })
+            table.insert(players, {
+                id = 104,
+                name = "e",
+                is_admin = false,
+                is_auth = false,
+                steam_id = "104"
+            })
         end
     end
 
@@ -1249,9 +1295,11 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
     end
 
     if g_savedata.game ~= nil then
-        local player = table.find(players, function(x) return x.id == peer_id end)
+        local player = table.find(players, function(x)
+            return x.id == peer_id
+        end)
         local member = table.find(g_savedata.game.team_members, function(x)
-            return x.steam_id == tostring(player.steam_id)
+            return x.steam_id == player.steam_id
         end)
 
         for i = 1, #g_savedata.game.team_members do
@@ -1275,10 +1323,14 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 end
 
 function onPlayerRespawn(peer_id)
-    local player = table.find(players, function(x) return x.id == peer_id end)
-    
+    local player = table.find(players, function(x)
+        return x.id == peer_id
+    end)
+
     if g_savedata.game ~= nil then
-        local member = table.find(g_savedata.game.team_members, function(x) return x.id == player.id end)
+        local member = table.find(g_savedata.game.team_members, function(x)
+            return x.id == player.id
+        end)
 
         if member ~= nil then
             unmap_member(g_savedata.game, member)
