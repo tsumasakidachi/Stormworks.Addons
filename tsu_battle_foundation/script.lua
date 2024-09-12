@@ -446,7 +446,7 @@ function initialize_game(mode, map)
         clear_inventory(object_id)
         map_member(game, game.team_members[i])
         teleport_to_base(game, game.team_members[i])
-        console.log(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name))
+        console.log(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
     end
 end
 
@@ -526,7 +526,7 @@ function map_game_stats(game)
 
     for i = 1, #game.team_members do
         server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.8, -0.6)
-        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "STATS", true, team_stats(game, game.team_members[i]), 0.6, -0.6)
+        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "TEAM", true, team_stats(game, game.team_members[i]), 0.6, -0.6)
     end
 end
 
