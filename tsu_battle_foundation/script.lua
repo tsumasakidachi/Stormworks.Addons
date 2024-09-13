@@ -1,7 +1,7 @@
 -- TSU Battle Foundation 1.0
 -- properties
 g_savedata = {
-    mode = "debug",
+    mode = "prod",
     objects = {},
     game = nil,
     zones = {},
@@ -1188,6 +1188,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif is_admin and verb == "operation_area" then
             g_savedata.subsystems.operation_area = not g_savedata.subsystems.operation_area
             server.announce("[Battle]", string.format("Deploy points: %s", g_savedata.subsystems.operation_area), -1)
+        elseif verb == "prod" and is_admin then
+            g_savedata.mode = "prod"
+        elseif verb == "debug" and is_admin then
+            g_savedata.mode = "debug"
         end
     elseif command == "?ready" and g_savedata.game ~= nil then
         if g_savedata.game == nil then
