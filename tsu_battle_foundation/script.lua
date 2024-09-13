@@ -61,8 +61,8 @@ maps = {{
 }, {
     map = "desert_mine",
     name = "desert mine",
-    center = matrix.translation(-1300, 0, -30500),
-    radius = 1500
+    center = matrix.translation(-1100, 0, -29200),
+    radius = 2000
 }, {
     map = "arctic",
     name = "arctic",
@@ -578,14 +578,17 @@ function ready(game, player)
     game.teams[member.team_id].ready = not game.teams[member.team_id].ready
 
     local text = ""
+    local type = 5
 
     if game.teams[member.team_id].ready then
         text = "READY"
+        type = 5
     else
         text = "GETTING READY..."
+        type = 6
     end
 
-    server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), player.name, 5)
+    server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), player.name, type)
 end
 
 function set_teleports(v)
