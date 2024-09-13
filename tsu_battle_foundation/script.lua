@@ -59,6 +59,11 @@ maps = {{
     center = matrix.translation(-12400, 0, -31900),
     radius = 2000
 }, {
+    map = "desert_mine",
+    name = "desert mine",
+    center = matrix.translation(-1300, 0, -30500),
+    radius = 1500
+}, {
     map = "arctic",
     name = "arctic",
     center = matrix.translation(-29000, 0, -90000),

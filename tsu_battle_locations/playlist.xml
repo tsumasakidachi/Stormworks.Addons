@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_battle_locations" file_store="4" name="TSU Battle Locations">
-	<locations location_id_counter="11" component_id_counter="17">
+	<locations location_id_counter="13" component_id_counter="21">
 		<locations>
 			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -87,8 +87,8 @@
 					<c component_type="10" id="14" cargo_zone_import_cargo_type="map=twin_hills,landscape=base,team=blue" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.867312" 02="-0.497764" 20="0.497764" 22="0.867312" 30="258.649109" 31="52.617073" 32="-24.975716"/>
 						<spawn_bounds>
-							<min x="-59.741895" y="-22.465813" z="-59.998943"/>
-							<max x="59.741895" y="22.465813" z="59.998943"/>
+							<min x="-92.232898" y="-22.465813" z="-95.747778"/>
+							<max x="92.232898" y="22.465813" z="95.747778"/>
 						</spawn_bounds>
 						<graph_links/>
 					</c>
@@ -114,6 +114,46 @@
 					</c>
 					<c component_type="10" id="16" cargo_zone_import_cargo_type="map=twin_hills,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.661944" 02="0.749553" 20="-0.749553" 22="-0.661944" 30="243.005981" 31="30.568926" 32="270.017731"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="12" tile="data/tiles/arid_island_19_11.xml" name="desert mine" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="18" cargo_zone_import_cargo_type="map=desert_mine,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.709003" 02="-0.705205" 20="0.705205" 22="0.709003" 30="50.549335" 31="21.019842" 32="122.506599"/>
+						<spawn_bounds>
+							<min x="-150.221892" y="-40.825203" z="-131.120889"/>
+							<max x="150.221892" y="40.825203" z="131.120889"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="21" cargo_zone_import_cargo_type="map=desert_mine,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.695334" 02="0.718686" 20="-0.718686" 22="-0.695334" 30="95.014618" 31="19.123518" 32="135.432053"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="13" tile="data/tiles/arid_island_26_14.xml" name="desert mine" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="19" cargo_zone_import_cargo_type="map=desert_mine,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.965786" 02="0.259341" 20="-0.259341" 22="0.965786" 30="-248.563339" 31="10.262378" 32="-442.037384"/>
+						<spawn_bounds>
+							<min x="-205.429011" y="-49.185113" z="-244.744636"/>
+							<max x="205.429011" y="49.185113" z="244.744636"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="20" cargo_zone_import_cargo_type="map=desert_mine,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.964225" 02="-0.265085" 20="0.265085" 22="-0.964225" 30="-235.983917" 31="8.609925" 32="-400.335999"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
 							<max x="5" y="5" z="5"/>
