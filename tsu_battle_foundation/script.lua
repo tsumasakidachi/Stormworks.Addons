@@ -1316,6 +1316,7 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
             end
 
             if member ~= nil and g_savedata.game.team_members[i].team_id == member.team_id then
+                map_player(member.id, g_savedata.game, g_savedata.game.team_members[i])
                 map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
             end
         end
