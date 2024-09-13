@@ -400,7 +400,7 @@ function initialize_game(mode, map)
         count_team = 2,
         teams = {{
             name = "red",
-            ready = true,
+            ready = false,
             base = table.find(g_savedata.zones, function(x)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
