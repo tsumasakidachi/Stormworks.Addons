@@ -1308,23 +1308,23 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
         return
     end
 
+    local steam_id = tostring(steam_id)
+
     for i = 1, #g_savedata.zones do
         map_zone(g_savedata.zones[i], peer_id)
     end
 
     if g_savedata.game ~= nil then
-        local player = table.find(players, function(x)
-            return x.id == peer_id
-        end)
-        local member = table.find(g_savedata.game.team_members, function(x)
-            return x.steam_id == player.steam_id
-        end)
+        local member = nil
 
         for i = 1, #g_savedata.game.team_members do
-            if g_savedata.game.team_members[i].steam_id == player.steam_id then
+            if g_savedata.game.team_members[i].steam_id == steam_id then
                 g_savedata.game.team_members[i].id = peer_id
+                member = g_savedata.game.team_members[i]
             end
+        end
 
+        for i = 1, #g_savedata.game.team_members do
             if member ~= nil and g_savedata.game.team_members[i].team_id == member.team_id then
                 map_player(member.id, g_savedata.game, g_savedata.game.team_members[i])
                 map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
