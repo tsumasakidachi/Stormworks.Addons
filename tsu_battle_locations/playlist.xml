@@ -93,7 +93,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="17" cargo_zone_import_cargo_type="map=twin_hills,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="0.862273" 02="-0.506444" 20="0.506444" 22="0.862273" 30="280.819305" 31="50.038445" 32="-32.526535"/>
+						<spawn_transform 00="-0.863977" 02="0.503532" 20="-0.503532" 22="-0.863977" 30="275.061035" 31="50.038445" 32="-20.505739"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
 							<max x="5" y="5" z="5"/>
@@ -113,7 +113,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="16" cargo_zone_import_cargo_type="map=twin_hills,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="-0.661944" 02="0.749553" 20="-0.749553" 22="-0.661944" 30="243.005981" 31="30.568926" 32="270.017731"/>
+						<spawn_transform 00="-0.661944" 02="0.749553" 20="-0.749553" 22="-0.661944" 30="250.623642" 31="30.568926" 32="262.812592"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
 							<max x="5" y="5" z="5"/>

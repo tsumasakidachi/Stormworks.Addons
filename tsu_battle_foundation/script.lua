@@ -347,10 +347,6 @@ object_trackers = {
                 if g_savedata.game ~= nil then
                     deploy_vehicle(g_savedata.game, object)
                 end
-
-                if g_savedata.mode == "debug" then
-                    server.setVehicleTooltip(object.id, string.format("#%d %s\n\n%s", object.id, object.name, vehicle_spec_table(object)))
-                end
             end
         end,
         spawn = function(self, object)
@@ -449,6 +445,7 @@ function initialize_game(mode, map)
         local object_id = server.getPlayerCharacterID(game.team_members[i].id)
 
         clear_inventory(object_id)
+        set_default_inventory(object_id)
         map_member(game, game.team_members[i])
         teleport_to_base(game, game.team_members[i])
         console.log(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
@@ -464,6 +461,7 @@ function clear_game(game)
         local object_id = server.getPlayerCharacterID(game.team_members[i].id)
 
         clear_inventory(object_id)
+        set_default_inventory(object_id)
         unmap_member(game, game.team_members[i])
         teleport_to_start_tile(game.team_members[i])
     end
@@ -566,7 +564,7 @@ function team_stats(game, member)
     return text
 end
 
-function ready(game, player)
+function ready(game, player, r)
     local member = table.find(game.team_members, function(x)
         return x.steam_id == tostring(player.steam_id)
     end)
@@ -575,7 +573,7 @@ function ready(game, player)
         return
     end
 
-    game.teams[member.team_id].ready = not game.teams[member.team_id].ready
+    game.teams[member.team_id].ready = r
 
     local text = ""
     local type = 5
@@ -783,8 +781,8 @@ function unmap_vehicle_friendry(game, vehicle)
 end
 
 function vehicle_spec_table(vehicle)
-    local player = get_player()
-    return string.format("Deploy points: %.00f\nHit points: %.00f\nVoxels: %.00f\nMass: %.00f", vehicle.deploy_points, vehicle.hit_points, vehicle.voxels, vehicle.mass)
+    local player = table.find(players, function(x) return x.steam_id == vehicle.owner.steam_id end)
+    return string.format("%s\n\n%.00f deploy points\n%.00f hit points\n%.00f voxels\n%.00f mass", player.name, vehicle.deploy_points, vehicle.hit_points, vehicle.voxels, vehicle.mass)
 end
 
 function spawn_storage(map)
@@ -1150,7 +1148,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     if command == "?battle" then
         if is_admin and verb == "init" then
             local params = parse_tags({...})
-            local mode_id = params.mode
+            local mode_id = params.mode or "common"
             local map_id = params.map
 
             local game = table.find(games, function(x)
@@ -1200,7 +1198,15 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
         local player = get_player(peer_id)
 
-        ready(g_savedata.game, player)
+        ready(g_savedata.game, player, true)
+    elseif command == "?wait" and g_savedata.game ~= nil then
+        if g_savedata.game == nil then
+            return
+        end
+
+        local player = get_player(peer_id)
+
+        ready(g_savedata.game, player, false)
     elseif command == "?kill" and g_savedata.game ~= nil then
         local object_id = server.getPlayerCharacterID(peer_id)
         server.killCharacter(object_id)
@@ -1220,7 +1226,7 @@ function onCreate(is_world_create)
         set_damages(false)
         set_teleports(true)
         set_maps(true)
-        server.setWeather(0.25, 0, 0)
+        server.setWeather(0.33, 0, 0)
     end
 
     if g_savedata.game ~= nil then
@@ -1339,6 +1345,9 @@ function onPlayerRespawn(peer_id)
     local player = table.find(players, function(x)
         return x.id == peer_id
     end)
+
+    local object_id = server.getPlayerCharacterID(player.id)
+    set_default_inventory(object_id)
 
     if g_savedata.game ~= nil then
         local member = table.find(g_savedata.game.team_members, function(x)
