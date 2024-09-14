@@ -1,7 +1,7 @@
 -- TSU Battle Foundation 1.0
 -- properties
 g_savedata = {
-    mode = "prod",
+    mode = "debug",
     objects = {},
     game = nil,
     zones = {},
@@ -53,6 +53,11 @@ maps = {{
     name = "holt bridge",
     center = matrix.translation(-1000, 0, -5000),
     radius = 3000
+}, {
+    map = "sawyer_east",
+    name = "sawyer east",
+    center = matrix.translation(2750, 0, -4850),
+    radius = 2000
 }, {
     map = "twin_hills",
     name = "twin hills",
@@ -1234,6 +1239,7 @@ function onCreate(is_world_create)
     else
         console.notify("Battle: no available")
     end
+    
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Objects: %d", #g_savedata.objects))
 end

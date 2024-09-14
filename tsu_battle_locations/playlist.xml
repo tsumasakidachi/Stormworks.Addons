@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_battle_locations" file_store="4" name="TSU Battle Locations">
-	<locations location_id_counter="13" component_id_counter="21">
+	<locations location_id_counter="15" component_id_counter="25">
 		<locations>
 			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="holt bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -154,6 +154,46 @@
 					</c>
 					<c component_type="10" id="20" cargo_zone_import_cargo_type="map=desert_mine,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.964225" 02="-0.265085" 20="0.265085" 22="-0.964225" 30="-235.983917" 31="8.609925" 32="-400.335999"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="14" tile="data/tiles/mega_island_9_8.xml" name="sawyer east" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="22" cargo_zone_import_cargo_type="map=sawyer_east,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.027066" 02="0.999634" 20="-0.999634" 22="0.027066" 30="331.030853" 31="8.940861" 32="234.124924"/>
+						<spawn_bounds>
+							<min x="-98.633501" y="-49.108262" z="-137.366246"/>
+							<max x="98.633501" y="49.108262" z="137.366246"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="24" cargo_zone_import_cargo_type="map=sawyer_east,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.014901" 02="-0.999889" 20="0.999889" 22="-0.014901" 30="309.491302" 31="7.005119" 32="238.493011"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="15" tile="data/tiles/mega_island_12_6.xml" name="sawyer east" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="23" cargo_zone_import_cargo_type="map=sawyer_east,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.71487" 02="-0.699258" 20="0.699258" 22="0.71487" 30="80.407669" 31="10.299456" 32="74.927979"/>
+						<spawn_bounds>
+							<min x="-163.967231" y="-47.383145" z="-181.838614"/>
+							<max x="163.967231" y="47.383145" z="181.838614"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="25" cargo_zone_import_cargo_type="map=sawyer_east,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.689362" 02="0.724417" 20="-0.724417" 22="-0.689362" 30="122.331215" 31="8.712862" 32="86.112053"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
 							<max x="5" y="5" z="5"/>
