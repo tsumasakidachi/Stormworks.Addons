@@ -330,10 +330,12 @@ object_trackers = {
 
             local name = string.lower(object.name)
 
-            if string.find(name, "[plane]", 1, true) ~= nil then
-                object.icon = 13
+            if string.find(name, "[flag]", 1, true) ~= nil then
+                object.icon = 9
             elseif string.find(name, "[tank]", 1, true) ~= nil then
                 object.icon = 14
+            elseif string.find(name, "[plane]", 1, true) ~= nil then
+                object.icon = 13
             elseif string.find(name, "[heli]", 1, true) ~= nil then
                 object.icon = 15
             elseif string.find(name, "[ship]", 1, true) ~= nil then
@@ -406,6 +408,7 @@ function initialize_game(mode, map)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "red"
             end),
             deploy_points = 100,
+            tickets = 0,
             color = {
                 r = 204,
                 g = 43,
@@ -419,6 +422,7 @@ function initialize_game(mode, map)
                 return x.tags.map == map.map and x.tags.landscape == "base" and x.tags.team == "blue"
             end),
             deploy_points = 100,
+            tickets = 0,
             color = {
                 r = 40,
                 g = 149,
@@ -1231,7 +1235,6 @@ function onCreate(is_world_create)
         set_damages(false)
         set_teleports(true)
         set_maps(true)
-        server.setWeather(0.33, 0, 0)
     end
 
     if g_savedata.game ~= nil then
