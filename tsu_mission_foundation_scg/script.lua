@@ -1076,7 +1076,9 @@ function is_location_duplicated(location)
         unique = unique + 1
     end
 
-    for i = #g_savedata.locations_history, #g_savedata.locations_history - math.floor(unique * 0.75) + 1, -1 do
+    local history_back = #g_savedata.locations_history - math.floor(unique * 0.75) + 1
+
+    for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
         dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
     end
 

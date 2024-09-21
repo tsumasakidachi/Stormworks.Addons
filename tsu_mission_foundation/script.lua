@@ -712,7 +712,9 @@ function is_location_duplicated(location)
         unique = unique + 1
     end
 
-    for i = #g_savedata.locations_history, #g_savedata.locations_history - math.floor(unique * 0.75) + 1, -1 do
+    local history_back = #g_savedata.locations_history - math.floor(unique * 0.75) + 1
+
+    for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
         dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
     end
 
@@ -1291,6 +1293,7 @@ function onCreate(is_world_create)
 
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
+    console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
 end
