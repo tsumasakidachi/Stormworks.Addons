@@ -1474,7 +1474,7 @@ console = {
             peer_id = -1
         end
 
-        server.announce("[Mission Foundation]", text, peer_id)
+        server.announce("[Battle Foundation]", text, peer_id)
     end,
     notify = function(text, peer_id, always)
         if peer_id == nil then
@@ -1482,7 +1482,7 @@ console = {
         end
 
         if always or g_savedata.mode == "debug" then
-            server.announce("[Mission Foundation]", text, peer_id)
+            server.announce("[Battle Foundation]", text, peer_id)
         end
     end,
     error = function(text, peer_id)
@@ -1490,7 +1490,7 @@ console = {
             peer_id = -1
         end
 
-        server.announce("[Mission Foundation]", text, peer_id)
+        server.announce("[Battle Foundation]", text, peer_id)
     end
 }
 
