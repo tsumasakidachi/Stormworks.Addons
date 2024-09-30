@@ -12,7 +12,7 @@ g_savedata = {
     mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
     mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) * 3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 100, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 10) * 1000,
+    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 5) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
@@ -245,7 +245,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 100,
-    notification_type = 1,
+    notification_type = 0,
     report = "火災\nマリーナに係留されているボートが燃えて周りの船にも燃え移っている.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -260,8 +260,8 @@ location_properties = {{
     sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 1000,
-    notification_type = 1,
-    report = "火災\nキャンプ場で火事. たき火が森に移って燃え広がっている. 森などで遊んでいたレジャー客がいまだ残っているとみられる. 消火に当たると同時に周辺を捜索, 人々を退避させる必要がある.",
+    notification_type = 0,
+    report = "火災\nキャンプ場で火事. たき火が森に移って燃え広がっている. 森などで遊んでいた行楽客がいまだ周辺に残っているとみられる. 消火に当たると同時に人々を退避させる必要がある.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -276,7 +276,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 200,
     notification_type = 1,
-    report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 多数のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
+    report = "鉄道事故\n2両編成の列車が脱線転覆, 1両は崖下へ転落し水没した. 多数の負傷者が発生!.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "運転士からの通報"
@@ -291,7 +291,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 200,
     notification_type = 1,
-    report = "火災\n原子力発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる. なお放射性物質の漏洩は確認されていない.",
+    report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
@@ -412,7 +412,7 @@ mission_trackers = {
             local rescuee_count = 0
             local risked_count = 0
             local fire_count = 0
-            local flotsam_count = 0
+            local wreckage_count = 0
             local underwater_count = 0
             local radiation_count = 0
 
@@ -425,8 +425,8 @@ mission_trackers = {
                     end
                 elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "fire" then
                     fire_count = fire_count + 1
-                elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "lost_property" then
-                    flotsam_count = flotsam_count + 1
+                elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "wreckage" then
+                    wreckage_count = wreckage_count + 1
                 end
             end
 
@@ -448,7 +448,7 @@ mission_trackers = {
                 mission.units.med = true
             end
 
-            if not mission.units.spc and (flotsam_count >= 1 or underwater_count >= 1) then
+            if not mission.units.spc and (wreckage_count >= 1 or underwater_count >= 1) then
                 mission.units.spc = true
             end
         end,
@@ -685,19 +685,19 @@ object_trackers = {
         progress = "炎を発見し鎮火",
         marker_type = 5
     },
-    lost_property = {
+    wreckage = {
         test_type = function(self, component)
-            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "lost_property"
+            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "wreckage"
         end,
         init = function(self, object)
             object.is_in_freight_terminal = false
-            server.setVehicleTooltip(object.main_body_id, string.format("落下物\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(object.main_body_id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
         end,
         tick = function(self, object, tick)
             local transform, is_success = server.getVehiclePos(object.main_body_id)
-            object.is_in_freight_terminal = not is_success or is_in_landscape(transform, "freight_terminal")
+            object.is_in_freight_terminal = not is_success or is_in_landscape(transform, "base")
         end,
         position = function(self, object)
             return server.getVehiclePos(object.main_body_id)
@@ -709,7 +709,7 @@ object_trackers = {
             return self.reward_base
         end,
         reward_base = 25000,
-        progress = "落下物を回収し貨物ターミナルへ輸送",
+        progress = "残骸を回収し貨物ターミナルへ輸送",
         marker_type = 2
     },
     headquarter = {

@@ -56,7 +56,7 @@
 						<spawn_local_offset z="2.5"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,landscape=base" display_name="Sawyer Coastguard" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,landscape=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="178.003006" 31="1.308605" 32="-390.308105"/>
 						<spawn_bounds>
 							<min x="-54.774408" y="-10.135273" z="-71.71438"/>
