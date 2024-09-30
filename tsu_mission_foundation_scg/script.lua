@@ -184,7 +184,7 @@ location_properties = {{
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 500,
+    search_radius = 200,
     notification_type = 1,
     report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる.",
     report_timer_min = 0,
@@ -270,11 +270,11 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = {"mission:passenger_fallen_water_%d+"},
+    sub_locations = {},
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    search_radius = 1000,
+    search_radius = 200,
     notification_type = 1,
     report = "鉄道事故\n2両編成の列車が土砂崩れに巻き込まれ脱線転覆, 多数のけが人が発生! 線路は完全に土砂で埋まっているため線路を伝ってのアプローチは不可能と思われる. ",
     report_timer_min = 0,
@@ -289,7 +289,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 500,
+    search_radius = 200,
     notification_type = 1,
     report = "火災\n原子力発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる. なお放射性物質の漏洩は確認されていない.",
     report_timer_min = 0,
@@ -440,11 +440,11 @@ mission_trackers = {
                 mission.units.sar = true
             end
 
-            if not mission.units.fire and fire_count >= 6 then
+            if not mission.units.fire and fire_count >= 5 then
                 mission.units.fire = true
             end
 
-            if not mission.units.med and risked_count >= 3 then
+            if not mission.units.med and (rescuee_count >= 10 or risked_count >= 1) then
                 mission.units.med = true
             end
 
@@ -771,7 +771,7 @@ object_trackers = {
 -- missions
 
 function random_mission(center, range_max, range_min)
-    local location, e = random_location(center, range_max, range_min, {}, {}, true, nil)
+    local location, e = random_location(center, range_max, range_min, {}, {}, true, true)
 
     if location == nil then
         return
@@ -812,7 +812,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
     for i = 1, sub_location_count do
-        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, mission.id)
+        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, true)
 
         if sub_location then
             table.insert(mission.locations, sub_location)
@@ -933,12 +933,12 @@ end
 
 -- locations
 
-function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, mission_id)
+function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
     if #g_savedata.locations == 0 then
         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
         return nil
     end
-
+    
     local location_candidates = {}
 
     for i = 1, #g_savedata.locations do
@@ -946,7 +946,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
+        if check_dupe and (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
             goto continue_location
         end
 
@@ -1034,7 +1034,20 @@ function random_location(center, range_max, range_min, location_names, zone_name
     end
 
     if #location_candidates == 0 then
-        console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+        -- console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+
+        local text = "No available locations were found with name: "
+
+        for i = 1, #location_names do
+            text = text .. location_names[i]
+
+            if i < #location_names then
+                text = text .. ", "
+            end
+        end
+
+        console.error(text)
+
         return nil
     end
 
@@ -1534,7 +1547,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local report_timer = tonumber(report_timer)
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, false)
 
             if location == nil then
                 return
@@ -1620,6 +1633,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.cpa_recurrence = not g_savedata.cpa_recurrence
 
             console.notify(string.format("CPA Recurrence: %s", g_savedata.cpa_recurrence))
+        elseif verb == "clear-history" and is_admin then
+            g_savedata.locations_history = {}
         end
     end
 end
@@ -1657,6 +1672,7 @@ function onCreate(is_world_create)
 
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
+    console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
 end

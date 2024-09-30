@@ -407,7 +407,7 @@ object_trackers = {
 -- missions
 
 function random_mission(center, range_max, range_min)
-    local location, e = random_location(center, range_max, range_min, {}, {}, true, nil)
+    local location, e = random_location(center, range_max, range_min, {}, {}, true, true)
 
     if location == nil then
         return
@@ -448,7 +448,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
     for i = 1, sub_location_count do
-        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, mission.id)
+        local sub_location = random_location(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, true)
 
         if sub_location then
             table.insert(mission.locations, sub_location)
@@ -569,12 +569,12 @@ end
 
 -- locations
 
-function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, mission_id)
+function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
     if #g_savedata.locations == 0 then
         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
         return nil
     end
-
+    
     local location_candidates = {}
 
     for i = 1, #g_savedata.locations do
@@ -582,7 +582,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             goto continue_location
         end
 
-        if (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
+        if check_dupe and (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
             goto continue_location
         end
 
@@ -670,7 +670,20 @@ function random_location(center, range_max, range_min, location_names, zone_name
     end
 
     if #location_candidates == 0 then
-        console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+        -- console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+
+        local text = "No available locations were found with name: "
+
+        for i = 1, #location_names do
+            text = text .. location_names[i]
+
+            if i < #location_names then
+                text = text .. ", "
+            end
+        end
+
+        console.error(text)
+
         return nil
     end
 
@@ -1170,7 +1183,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local report_timer = tonumber(report_timer)
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, nil)
+            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, false)
 
             if location == nil then
                 return
@@ -1256,6 +1269,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.cpa_recurrence = not g_savedata.cpa_recurrence
 
             console.notify(string.format("CPA Recurrence: %s", g_savedata.cpa_recurrence))
+        elseif verb == "clear-history" and is_admin then
+            g_savedata.locations_history = {}
         end
     end
 end
