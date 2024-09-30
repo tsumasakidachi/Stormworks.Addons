@@ -52,10 +52,10 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
-    report = "",
+    report = "落水者",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "落水者"
+    note = ""
 }, {
     pattern = "^mission:passenger_fallen_water_%d+$",
     tracker = "sar",
@@ -67,10 +67,10 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
-    report = "",
+    report = "落水者",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "落水者"
+    note = ""
 }, {
     pattern = "^mission:lifeboat_%d+$",
     tracker = "sar",
@@ -82,9 +82,9 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
-    report = "",
+    report = "救命ボート",
     report_timer = 0,
-    note = "救命ボート"
+    note = ""
 }, {
     pattern = "^mission:raft_%d+$",
     tracker = "sar",
@@ -96,10 +96,10 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
-    report = "",
+    report = "いかだ",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "救命ボート"
+    note = ""
 }, {
     pattern = "^mission:vessel_fire_%d+$",
     tracker = "sar",
@@ -156,10 +156,10 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 500,
     notification_type = 0,
-    report = "",
+    report = "行方不明のダイバー",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "民間人"
+    note = ""
 }, {
     pattern = "^mission:oil_platform_fire_%d+$",
     tracker = "sar",
@@ -171,44 +171,29 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 1,
-    report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し我々の手には負えない. 職員は脱出を開始している.",
+    report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始している.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
 }, {
-    pattern = "^mission:car_collision_%d+$",
+    pattern = "^mission:tunnel_fire$",
     tracker = "sar",
-    suitable_zones = {"tunnel"},
+    suitable_zones = {},
     is_main_location = true,
-    sub_locations = {"^mission:tunnel_fire$", "^mission:car_stuck_%d+"},
-    sub_location_min = 1,
-    sub_location_max = 3,
+    sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
+    sub_location_min = 3,
+    sub_location_max = 5,
     is_unique_sub_location = false,
-    search_radius = 200,
+    search_radius = 500,
     notification_type = 1,
-    report = "交通事故\nトンネルの中で複数の車が衝突炎上しけが人が多数いる.",
+    report = "トンネル火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "民間人からの通報"
 }, {
-    pattern = "^mission:tunnel_fire$",
+    pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
-    suitable_zones = {},
-    is_main_location = false,
-    sub_locations = {},
-    sub_location_min = 0,
-    sub_location_max = 0,
-    is_unique_sub_location = true,
-    search_radius = 100,
-    notification_type = 0,
-    report = "",
-    report_timer_min = 0,
-    report_timer_max = 0,
-    note = "トンネル火災"
-}, {
-    pattern = "^mission:car_stuck_%d+$",
-    tracker = "sar",
-    suitable_zones = {"tunnel"},
+    suitable_zones = {"road", "tunnel"},
     is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
@@ -216,10 +201,25 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 100,
     notification_type = 0,
-    report = "",
+    report = "交通事故\n自動車が正面衝突しけが人がいる.",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "スタックした自動車"
+    note = "民間人からの通報"
+}, {
+    pattern = "^mission:car_stuck_%d+$",
+    tracker = "sar",
+    suitable_zones = {"road", "tunnel"},
+    is_main_location = false,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    notification_type = 0,
+    report = "スタックした自動車",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = ""
 }, {
     pattern = "^mission:aircraft_down_%d+$",
     tracker = "sar",
@@ -436,7 +436,7 @@ mission_trackers = {
                 end
             end
 
-            if not mission.units.sar and mission.locations[1].search_radius >= 250 then
+            if not mission.units.sar and mission.locations[1].search_radius >= 500 then
                 mission.units.sar = true
             end
 
