@@ -516,30 +516,29 @@ mission_trackers = {
             return progresses
         end,
         status = function(self, mission)
-            local text = "出動区分:"
+            local text = mission.locations[1].note
+            text = text .. "\n\n[出動区分]\n"
 
-            if mission.units.sar then
-                text = text .. " SAR"
+            local first = true
+
+            for name, available in pairs(mission.units) do
+                if available then
+                    if not first then
+                        text = text .. " "
+                    else
+                        first = false
+                    end
+
+                    text = text .. string.upper(name)
+                end
             end
 
-            if mission.units.med then
-                text = text .. " MED"
-            end
-
-            if mission.units.fire then
-                text = text .. " FIRE"
-            end
-
-            if mission.units.spc then
-                text = text .. " SPC"
-            end
-
-            text = text .. "\n\n進捗:"
+            text = text .. "\n\n[進捗]"
 
             local progresses = self:progress(mission)
 
             for k, progress in pairs(progresses) do
-                text = text .. "\n\n" .. progress
+                text = text .. "\n" .. progress
             end
 
             return text
@@ -656,7 +655,7 @@ object_trackers = {
             return value
         end,
         reward_base = 2500,
-        progress = "要救助者を発見し病院または基地へ移送",
+        progress = "要救助者を発見し病院へ移送",
         marker_type = 1
     },
     fire = {
@@ -710,7 +709,7 @@ object_trackers = {
             return self.reward_base
         end,
         reward_base = 25000,
-        progress = "落下物を回収し貨物駅へ輸送",
+        progress = "落下物を回収し貨物ターミナルへ輸送",
         marker_type = 2
     },
     headquarter = {
