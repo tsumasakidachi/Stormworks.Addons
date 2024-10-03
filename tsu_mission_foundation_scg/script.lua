@@ -9,10 +9,10 @@ g_savedata = {
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 30, 1, 20) * 3600,
-    mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 100, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 5) * 1000,
+    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 20) * 3600,
+    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 60, 1, 30) * 3600,
+    mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 10, 1, 1) * 1000,
+    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 8) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
@@ -23,6 +23,7 @@ g_savedata = {
     zone_mapped = false,
     zone_marker_id = nil,
     cpa_recurrence = property.checkbox("CPA Recurrence", true),
+    rescuees_has_strobe = property.checkbox("Rescuees has strobe", true),
     eot = true -- END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru --
 }
 
@@ -186,7 +187,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 500,
     notification_type = 1,
-    report = "トンネル火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
+    report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "民間人からの通報"
@@ -255,13 +256,13 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = {"mission:expedition_missing_%d+"},
-    sub_location_min = 3,
-    sub_location_max = 5,
+    sub_locations = {"mission:expedition_missing_%d+","^mission:raft_%d+$"},
+    sub_location_min = 1,
+    sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 1000,
+    search_radius = 750,
     notification_type = 0,
-    report = "火災\nキャンプ場で火事. たき火が森に移って燃え広がっている. 森などで遊んでいた行楽客がいまだ周辺に残っているとみられる. 消火に当たると同時に人々を退避させる必要がある.",
+    report = "火災\nキャンプ場で火事. 森林火災に発展する可能性がある. 森などで遊んでいた行楽客がいまだ周辺に残っているとみられ, 消火に当たると同時に人々を避難させる必要がある.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -271,12 +272,12 @@ location_properties = {{
     suitable_zones = {},
     is_main_location = true,
     sub_locations = {},
-    sub_location_min = 3,
-    sub_location_max = 5,
+    sub_location_min = 0,
+    sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 200,
     notification_type = 1,
-    report = "鉄道事故\n2両編成の列車が脱線転覆, 1両は崖下へ転落し水没した. 多数の負傷者が発生!.",
+    report = "鉄道事故\n2両編成の旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "運転士からの通報"
@@ -295,6 +296,36 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
+}, {
+    pattern = "^mission:chemical_storage_fire_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 250,
+    notification_type = 1,
+    report = "火災\n貨物ターミナルの倉庫から出火. この倉庫に保管されているのは爆発性の化学物質である. 十分注意せよ.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "職員からの通報"
+    -- }, {
+    --     pattern = "^mission:air_medevac_%d+$",
+    --     tracker = "sar",
+    --     suitable_zones = {"airfield", "heliport"},
+    --     is_main_location = true,
+    --     sub_locations = {"^mission:air_medevac_%d+$"},
+    --     sub_location_min = 1,
+    --     sub_location_max = 3,
+    --     is_unique_sub_location = false,
+    --     search_radius = 250,
+    --     notification_type = 1,
+    --     report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
+    --     report_timer_min = 0,
+    --     report_timer_max = 0,
+    --     note = "職員からの通報"
 }}
 
 zone_properties = {{
@@ -410,7 +441,7 @@ mission_trackers = {
             end
 
             local rescuee_count = 0
-            local risked_count = 0
+            local cpa_count = 0
             local fire_count = 0
             local wreckage_count = 0
             local underwater_count = 0
@@ -420,8 +451,8 @@ mission_trackers = {
                 if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
 
-                    if g_savedata.objects[i].vital.risk > 0 then
-                        risked_count = risked_count + 1
+                    if g_savedata.objects[i].vital.cpr_count > 0 then
+                        cpa_count = cpa_count + 1
                     end
                 elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "fire" then
                     fire_count = fire_count + 1
@@ -444,7 +475,7 @@ mission_trackers = {
                 mission.units.fire = true
             end
 
-            if not mission.units.med and (rescuee_count >= 10 or risked_count >= 1) then
+            if not mission.units.med and (rescuee_count >= 10 or cpa_count >= 1) then
                 mission.units.med = true
             end
 
@@ -560,18 +591,18 @@ object_trackers = {
             object.vital = {}
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
             object.vital.is_dead = false
-            object.vital.risk = object.vital.hp > 0 and 0 or 2
+            object.vital.cpr_count = 0
             object.on_board = 0
             object.nearby_player = false
 
             server.setCharacterData(object.id, object.vital.hp, true, false)
-            server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-            server.setCharacterItem(object.id, 4, 24, true, 0, 100)
-            server.setCharacterTooltip(object.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
 
-            if object.vital.hp == 0 then
-                server.setCharacterItem(object.id, 3, 72, false, 0, 0)
+            if g_savedata.rescuees_has_strobe then
+                server.setCharacterItem(object.id, 2, 23, false, 0, 100)
+                server.setCharacterItem(object.id, 4, 24, true, 0, 100)
             end
+
+            server.setCharacterTooltip(object.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
             server.setCharacterData(object.id, object.vital.hp, false, false)
@@ -589,42 +620,32 @@ object_trackers = {
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
             local is_in_hospital = is_in_landscape(transform, "hospital")
-            local risk = object.vital.risk
-            local nearby = nearby_players(transform, 200)
+            local nearby = nearby_players(transform, 250)
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if object.vital.hp >= 1 and vital_update.hp == 0 then
-                risk = risk + 2
-            end
-
             if g_savedata.cpa_recurrence then
-                vital_update.hp = math.max(vital_update.hp - math.ceil(risk), 0)
+                if object.vital.hp > 0 and vital_update.hp <= 0 then
+                    object.vital.cpr_count = object.vital.cpr_count + 1
+                end
+
+                vital_update.hp = math.max(vital_update.hp - math.ceil(1.25 ^ object.vital.cpr_count), 0)
             end
 
-            if (arrived and on_board == 0) or (get_off and nearby) then
-                server.setCharacterItem(object.id, 2, 23, true, 0, 100)
-                server.setCharacterItem(object.id, 4, 24, true, 0, 100)
-            end
+            if g_savedata.rescuees_has_strobe then
+                if (arrived and on_board == 0) or (get_off and nearby) then
+                    server.setCharacterItem(object.id, 2, 23, true, 0, 100)
+                    server.setCharacterItem(object.id, 4, 24, true, 0, 100)
+                end
 
-            if get_on then
-                server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-                server.setCharacterItem(object.id, 4, 24, false, 0, 100)
-            end
-
-            if object.id == 2862 then
-                console.notify(object.vital.risk)
-            end
-
-            if risk > 0 and object.vital.risk == 0 then
-                server.setCharacterItem(object.id, 3, 72, false, 0, 0)
-            elseif risk == 0 and object.vital.risk > 0 then
-                server.setCharacterItem(object.id, 3, 0, false, 0, 0)
+                if get_on then
+                    server.setCharacterItem(object.id, 2, 23, false, 0, 100)
+                    server.setCharacterItem(object.id, 4, 24, false, 0, 100)
+                end
             end
 
             object.vital.hp = vital_update.hp
             object.vital.is_dead = vital_update.dead
-            object.vital.risk = risk
 
             if is_in_hospital then
                 object.completion_timer = math.max(object.completion_timer - tick, 0)
@@ -648,11 +669,14 @@ object_trackers = {
                 value = 0
             end
 
-            if g_savedata.cpa_recurrence and object.vital.risk > 1 then
-                value = value - object.vital.risk * 1000
+            if g_savedata.cpa_recurrence and object.vital.cpr_count >= 2 then
+                value = value - object.vital.cpr_count * 1000
             end
 
             return value
+        end,
+        status = function(self, object)
+            return string.format("%s\nHP: %d/100\n蘇生回数: %d回", self.progress, object.vital.hp, object.vital.cpr_count)
         end,
         reward_base = 2500,
         progress = "要救助者を発見し病院へ移送",
@@ -681,6 +705,9 @@ object_trackers = {
         reward = function(self, object)
             return self.reward_base
         end,
+        status = function(self, object)
+            return self.progress
+        end,
         reward_base = 1000,
         progress = "炎を発見し鎮火",
         marker_type = 5
@@ -708,8 +735,11 @@ object_trackers = {
         reward = function(self, object)
             return self.reward_base
         end,
+        status = function(self, object)
+            return self.progress
+        end,
         reward_base = 25000,
-        progress = "残骸を回収し貨物ターミナルへ輸送",
+        progress = "残骸を回収し基地へ輸送",
         marker_type = 2
     },
     headquarter = {
@@ -759,6 +789,9 @@ object_trackers = {
         end,
         reward = function(self, object)
             return self.reward_base
+        end,
+        status = function(self, object)
+            return self.progress
         end,
         reward_base = 0,
         progress = "",
@@ -937,7 +970,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
         return nil
     end
-    
+
     local location_candidates = {}
 
     for i = 1, #g_savedata.locations do
@@ -1077,7 +1110,7 @@ function is_location_duplicated(location)
             dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
         end
     end
-    
+
     for i = 1, #g_savedata.locations do
         if g_savedata.locations[i].is_main_location then
             l[g_savedata.locations[i][g_savedata.location_comparer]] = true
@@ -1490,7 +1523,7 @@ function onTick(tick)
                     end
                 end
 
-                server.notify(-1, object_trackers[g_savedata.objects[i].tracker].progress, "Objective achieved", 4)
+                server.notify(-1, object_trackers[g_savedata.objects[i].tracker]:status(g_savedata.objects[i]), "Objective achieved", 4)
                 clear_object(i)
             end
         end
@@ -1659,6 +1692,11 @@ end
 
 function onPlayerRespawn(peer_id)
     teleport_to_spawn_points(peer_id)
+
+    if not server.getGameSettings().infinite_money then
+        local player = table.find(players, function(p) return p.id == peer_id end)
+        transact(-10000, string.format("%s bought a new life.", player.name))
+    end
 end
 
 function onToggleMap(peer_id, is_open)
@@ -1666,6 +1704,10 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
+    if is_world_create then
+        server.command("?clearing")
+    end
+
     load_zones()
     load_locations()
 

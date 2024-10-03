@@ -24,7 +24,9 @@ g_savedata = {
     location_comparer = "name",
     zone_mapped = false,
     zone_marker_id = nil,
-    cpa_recurrence = property.checkbox("CPA Recurrence", false)
+    cpa_recurrence = property.checkbox("CPA Recurrence", true),
+    rescuees_has_strobe = property.checkbox("Rescuees has strobe", true),
+    eot = true -- END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru --
 }
 
 location_properties = {{
@@ -250,18 +252,18 @@ object_trackers = {
             object.vital = {}
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
             object.vital.is_dead = false
-            object.vital.risk = object.vital.hp > 0 and 0 or 2
+            object.vital.cpr_count = 0
             object.on_board = 0
             object.nearby_player = false
 
             server.setCharacterData(object.id, object.vital.hp, true, false)
-            server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-            server.setCharacterItem(object.id, 4, 24, true, 0, 100)
-            server.setCharacterTooltip(object.id, string.format("Rescuee\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
 
-            if object.vital.hp == 0 then
-                server.setCharacterItem(object.id, 3, 72, false, 0, 0)
+            if g_savedata.rescuees_has_strobe then
+                server.setCharacterItem(object.id, 2, 23, false, 0, 100)
+                server.setCharacterItem(object.id, 4, 24, true, 0, 100)
             end
+
+            server.setCharacterTooltip(object.id, string.format("Rescuee\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
             server.setCharacterData(object.id, object.vital.hp, false, false)
@@ -279,42 +281,32 @@ object_trackers = {
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
             local is_in_hospital = is_in_landscape(transform, "hospital")
-            local risk = object.vital.risk
-            local nearby = nearby_players(transform, 200)
+            local nearby = nearby_players(transform, 250)
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if object.vital.hp >= 1 and vital_update.hp == 0 then
-                risk = risk + 2
-            end
-
             if g_savedata.cpa_recurrence then
-                vital_update.hp = math.max(vital_update.hp - math.ceil(risk), 0)
+                if object.vital.hp > 0 and vital_update.hp <= 0 then
+                    object.vital.cpr_count = object.vital.cpr_count + 1
+                end
+
+                vital_update.hp = math.max(vital_update.hp - math.ceil(1.25 ^ object.vital.cpr_count), 0)
             end
 
-            if (arrived and on_board == 0) or (get_off and nearby) then
-                server.setCharacterItem(object.id, 2, 23, true, 0, 100)
-                server.setCharacterItem(object.id, 4, 24, true, 0, 100)
-            end
+            if g_savedata.rescuees_has_strobe then
+                if (arrived and on_board == 0) or (get_off and nearby) then
+                    server.setCharacterItem(object.id, 2, 23, true, 0, 100)
+                    server.setCharacterItem(object.id, 4, 24, true, 0, 100)
+                end
 
-            if get_on then
-                server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-                server.setCharacterItem(object.id, 4, 24, false, 0, 100)
-            end
-
-            if object.id == 2862 then
-                console.notify(object.vital.risk)
-            end
-
-            if risk > 0 and object.vital.risk == 0 then
-                server.setCharacterItem(object.id, 3, 72, false, 0, 0)
-            elseif risk == 0 and object.vital.risk > 0 then
-                server.setCharacterItem(object.id, 3, 0, false, 0, 0)
+                if get_on then
+                    server.setCharacterItem(object.id, 2, 23, false, 0, 100)
+                    server.setCharacterItem(object.id, 4, 24, false, 0, 100)
+                end
             end
 
             object.vital.hp = vital_update.hp
             object.vital.is_dead = vital_update.dead
-            object.vital.risk = risk
 
             if is_in_hospital then
                 object.completion_timer = math.max(object.completion_timer - tick, 0)
@@ -338,11 +330,14 @@ object_trackers = {
                 value = 0
             end
 
-            if g_savedata.cpa_recurrence and object.vital.risk > 1 then
-                value = value - object.vital.risk * 1000
+            if g_savedata.cpa_recurrence and object.vital.cpr_count >= 2 then
+                value = value - object.vital.cpr_count * 1000
             end
 
             return value
+        end,
+        status = function(self, object)
+            return string.format("%s\nHP: %d/100\nCPR: %d", self.progress, object.vital.hp, object.vital.cpr_count)
         end,
         reward_base = 2500,
         progress = "Search rescuees\nand admit into medical settings",
@@ -371,6 +366,9 @@ object_trackers = {
         reward = function(self, object)
             return self.reward_base
         end,
+        status = function(self, object)
+            return self.progress
+        end,
         reward_base = 1000,
         progress = "Extinguish fires",
         marker_type = 5
@@ -396,6 +394,9 @@ object_trackers = {
         end,
         reward = function(self, object)
             return self.reward_base
+        end,
+        status = function(self, object)
+            return self.progress
         end,
         reward_base = 0,
         progress = "",
@@ -574,7 +575,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
         return nil
     end
-    
+
     local location_candidates = {}
 
     for i = 1, #g_savedata.locations do
@@ -714,7 +715,7 @@ function is_location_duplicated(location)
             dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
         end
     end
-    
+
     for i = 1, #g_savedata.locations do
         if g_savedata.locations[i].is_main_location then
             l[g_savedata.locations[i][g_savedata.location_comparer]] = true
@@ -1127,7 +1128,7 @@ function onTick(tick)
                     end
                 end
 
-                server.notify(-1, object_trackers[g_savedata.objects[i].tracker].progress, "Objective achieved", 4)
+                server.notify(-1, object_trackers[g_savedata.objects[i].tracker]:status(g_savedata.objects[i]), "Objective achieved", 4)
                 clear_object(i)
             end
         end
@@ -1296,6 +1297,11 @@ end
 
 function onPlayerRespawn(peer_id)
     teleport_to_spawn_points(peer_id)
+
+    if not server.getGameSettings().infinite_money then
+        local player = table.find(players, function(p) return p.id == peer_id end)
+        transact(-10000, string.format("%s bought a new life.", player.name))
+    end
 end
 
 function onToggleMap(peer_id, is_open)
@@ -1303,6 +1309,10 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
+    if is_world_create then
+        server.command("?clearing")
+    end
+
     load_zones()
     load_locations()
 
