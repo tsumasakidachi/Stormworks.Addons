@@ -1,7 +1,7 @@
 g_savedata = {
     mode = "prod",
     active = true,
-    probability_of_clear = 25,
+    probability_of_clear = 10,
     probability_of_clear_today = 20,
     meteorologicals = {
         wind = {
