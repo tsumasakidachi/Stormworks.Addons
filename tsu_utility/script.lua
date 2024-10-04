@@ -28,15 +28,6 @@ function onTick()
 end
 
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, target, ...)
-    -- kill
-    if command == "?kill" and g_savedata.vehicle_clearing then
-        local player = get_player(peer_id)
-        local object_id, is_success = server.getPlayerCharacterID(peer_id)
-
-        despawn_players_vehicle(player)
-        server.killCharacter(object_id)
-    end
-
     -- hop
     if command == "?hop" then
         -- local peer_id = tonumber(peer_id) or peer_id
@@ -260,13 +251,6 @@ end
 function onVehicleLoad()
 end
 
-function onPlayerRespawn(peer_id)
-    if g_savedata.vehicle_clearing then
-        local player = get_player(peer_id)
-        despawn_players_vehicle(player)
-    end
-end
-
 function despawn_players_vehicle(player)
     for i = #g_savedata.vehicles, 1, -1 do
         if g_savedata.vehicles[i].player.steam_id == player.steam_id then
@@ -278,6 +262,7 @@ end
 function get_player(peer_id)
     for k, player in pairs(server.getPlayers()) do
         if player.id == peer_id then
+            player.steam_id = tostring(player.steam_id)
             return table.copy(player)
         end
     end
