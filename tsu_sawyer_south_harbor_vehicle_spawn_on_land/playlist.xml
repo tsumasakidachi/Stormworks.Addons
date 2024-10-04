@@ -14,7 +14,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="2" display_name="vehicle_spawn_zone_land" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="0.483798" 02="-0.87518" 20="0.87518" 22="0.483798" 30="186.333527" 31="10.541994" 32="-385.909943"/>
+						<spawn_transform 00="0.483798" 02="-0.87518" 20="0.87518" 22="0.483798" 30="186.333527" 31="9.67207" 32="-385.909943"/>
 						<spawn_bounds>
 							<min x="-8.512435" y="-3.867395" z="-12.232444"/>
 							<max x="8.512435" y="3.867395" z="12.232444"/>
