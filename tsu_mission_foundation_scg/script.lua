@@ -4,6 +4,7 @@ g_savedata = {
     missions = {},
     objects = {},
     players = {},
+    players_map = {},
     locations = {},
     locations_history = {},
     zones = {},
@@ -604,6 +605,8 @@ object_trackers = {
         end,
         clear = function(self, object)
         end,
+        load = function(self, object)
+        end,
         tick = function(self, object, tick)
             local transform = self:position(object)
             local on_board = server.getCharacterVehicle(object.id)
@@ -683,6 +686,8 @@ object_trackers = {
         end,
         clear = function(self, object)
         end,
+        load = function(self, object)
+        end,
         tick = function(self, object, tick)
             local is_lit, is_success = server.getFireData(object.id)
             object.is_lit = is_success and is_lit
@@ -710,9 +715,11 @@ object_trackers = {
         end,
         init = function(self, object)
             object.is_in_freight_terminal = false
-            server.setVehicleTooltip(object.main_body_id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(object.main_body_id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
+        end,
+        load = function(self, object)
         end,
         tick = function(self, object, tick)
             local transform, is_success = server.getVehiclePos(object.main_body_id)
@@ -739,8 +746,52 @@ object_trackers = {
             return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "headquarter"
         end,
         init = function(self, object)
+            object.components_checked = false
+            object.alert = nil
+            object.mission_datalink = {}
         end,
         clear = function(self, object)
+        end,
+        load = function(self, object)
+            
+
+            if not object.components_checked then
+                local d, s = server.getVehicleComponents(object.id)
+
+                object.alert = table.find(d.components.buttons, function(t)
+                    return string.lower(t.name) == "alert"
+                end)
+
+                for i = 1, 6 do
+                    object.mission_datalink[i] = {}
+                    object.mission_datalink[i].id = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_id", i)
+                    end)
+                    object.mission_datalink[i].x = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_x", i)
+                    end)
+                    object.mission_datalink[i].y = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_y", i)
+                    end)
+                    object.mission_datalink[i].r = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_r", i)
+                    end)
+                    object.mission_datalink[i].sar = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_sar", i)
+                    end)
+                    object.mission_datalink[i].med = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_med", i)
+                    end)
+                    object.mission_datalink[i].fire = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_fire", i)
+                    end)
+                    object.mission_datalink[i].spc = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_spc", i)
+                    end)
+                end
+
+                object.components_checked = true
+            end
         end,
         tick = function(self, object, tick)
             for index = 1, math.max(#g_savedata.missions, 6) do
@@ -749,32 +800,36 @@ object_trackers = {
                 if mission ~= nil then
                     local x, y, z = matrix.position(mission.locations[1].transform)
 
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_id", index), mission.id)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_x", index), x)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_y", index), z)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_r", index), mission.search_radius)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].id, mission.id)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].x, x)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].y, z)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].r, mission.search_radius)
 
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_sar", index), mission.units.sar)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_med", index), mission.units.med)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_fire", index), mission.units.fire)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_spc", index), mission.units.spc)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].sar, mission.units.sar)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].med, mission.units.med)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].fire, mission.units.fire)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].spc, mission.units.spc)
                 else
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_id", index), 0)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_x", index), 0)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_y", index), 0)
-                    server.setVehicleKeypad(object.main_body_id, string.format("mission_%d_r", index), 0)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_sar", index), false)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_med", index), false)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_fire", index), false)
-                    toggle_vehicle_button(object.main_body_id, string.format("mission_%d_spc", index), false)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].id, 0)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].x, 0)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].y, 0)
+                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].r, 0)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].sar, false)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].med, false)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].fire, false)
+                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].spc, false)
                 end
             end
         end,
         alert = function(self, object)
-            server.pressVehicleButton(object.main_body_id, "Alert")
+            if object.alert == nil then
+                return
+            end
+
+            press_vehicle_button(object.id, object.alert)
         end,
         position = function(self, object)
-            return server.getVehiclePos(object.main_body_id)
+            return server.getVehiclePos(object.id)
         end,
         completed = function(self, object)
             return false
@@ -908,7 +963,7 @@ function initialize_object(object, mission, tracker)
     object.marker_id = server.getMapID()
 
     if object.type == "vehicle" then
-        object.id = object.group_id
+        object.id = object.vehicle_ids[1]
         object.main_body_id = object.vehicle_ids[1]
     else
         object.id = object.object_id
@@ -1021,6 +1076,10 @@ function spawn_equipment(transform, type, int, flt)
     object.transform = server.getObjectPos(object.object_id)
 
     return object
+end
+
+function loaded_vehicle(vehicle)
+    object_trackers[vehicle.tracker]:load(vehicle)
 end
 
 -- locations
@@ -1467,7 +1526,7 @@ function is_headquarter_overlap(group_id)
     local is = false
 
     for i = 1, #g_savedata.objects do
-        is = is or g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects.id == group_id
+        is = is or g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects[i].group_id == group_id
     end
 
     return is
@@ -1527,7 +1586,6 @@ end
 -- players
 
 players = {}
-players_map = {}
 
 -- callbacks
 
@@ -1558,7 +1616,7 @@ function onTick(tick)
                 players[i].transform = transform
             end
 
-            players[i].map_open = players_map[players[i].id] or false
+            players[i].map_open = g_savedata.players_map[players[i].id] or false
         end
     end
 
@@ -1726,8 +1784,18 @@ function onPlayerRespawn(peer_id)
     end
 end
 
+function onVehicleLoad(vehicle_id)
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+            if g_savedata.objects[i].tracker ~= nil then
+                loaded_vehicle(g_savedata.objects[i])
+            end
+        end
+    end
+end
+
 function onToggleMap(peer_id, is_open)
-    players_map[peer_id] = is_open
+    g_savedata.players_map[peer_id] = is_open
 end
 
 function onCreate(is_world_create)
@@ -1743,6 +1811,13 @@ function onCreate(is_world_create)
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].tracker == "headquarter" then
+            g_savedata.objects[i].components_checked = false
+            object_trackers.headquarter:load(g_savedata.objects[i])
+        end
+    end
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, equipment_id)
@@ -1757,12 +1832,21 @@ end
 
 -- utils
 
-function toggle_vehicle_button(vehicle_id, button_name, value)
-    local data, s = server.getVehicleButton(vehicle_id, button_name)
+function set_vehicle_button(vehicle_id, button, value)
+    local data, s = server.getVehicleButton(vehicle_id, button.pos.x, button.pos.y, button.pos.z)
 
     if s and ((value or data.on) and (not value or not data.on)) then
-        server.pressVehicleButton(vehicle_id, button_name)
+        press_vehicle_button(vehicle_id, button)
     end
+end
+
+function press_vehicle_button(vehicle_id, button)
+    -- server.pressVehicleButton(vehicle_id, 0, 0, 0)
+    server.pressVehicleButton(vehicle_id, button.name)
+end
+
+function set_vehicle_keypad(vehicle_id, keypad, value)
+    server.setVehicleKeypad(vehicle_id, keypad.pos.x, keypad.pos.y, keypad.pos.z, value)
 end
 
 function missions_less_than_limit()

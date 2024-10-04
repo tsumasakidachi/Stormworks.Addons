@@ -202,15 +202,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 end
 
 function onGroupSpawn(group_id, peer_id, x, y, z, cost)
-    if peer_id < 0 then
-        return
-    end
-
     local player = get_player(peer_id)
-
-    if not player then
-        return
-    end
 
     for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
         local data, s = server.getVehicleData(vehicle_id)
@@ -253,7 +245,7 @@ end
 
 function despawn_players_vehicle(player)
     for i = #g_savedata.vehicles, 1, -1 do
-        if g_savedata.vehicles[i].player.steam_id == player.steam_id then
+        if g_savedata.vehicles[i].player ~= nil and g_savedata.vehicles[i].player.steam_id == player.steam_id then
             server.despawnVehicle(g_savedata.vehicles[i].vehicle_id, true)
         end
     end
@@ -287,7 +279,15 @@ function clear_vehicle_tooltip(vehicle)
 end
 
 function vehicle_spec_table(vehicle)
-    return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, vehicle.player.name, vehicle.group_id, vehicle.id, vehicle.cost)
+    local owner = ""
+
+    if vehicle.player ~= nil then
+        owner = vehicle.player.name
+    else
+        owner = "Addon"
+    end
+
+    return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, owner, vehicle.group_id, vehicle.id, vehicle.cost)
 end
 
 function table.copy(t)
