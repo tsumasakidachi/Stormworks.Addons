@@ -628,7 +628,7 @@ function initialize_object(id, type, object, ...)
     object.id = id
     object.type = type
     object.marker_id = server.getMapID()
-    object.exists = true
+    object.cleared = false
 
     for k, v in pairs(object_trackers) do
         if v:test_type(object, table.unpack(params)) then
@@ -646,7 +646,7 @@ function initialize_object(id, type, object, ...)
 end
 
 function clear_object(object)
-    if not object.exists then
+    if object.cleared then
         return
     end
 
@@ -654,7 +654,7 @@ function clear_object(object)
         object_trackers[object.tracker]:clear(object)
     end
 
-    object.exists = false
+    object.cleared = true
     console.notify(string.format("Cleared object %s#%d.", object.type, object.id))
 end
 
@@ -1140,7 +1140,7 @@ function onTick(tick)
         if i % cycle == timing then
             tick_object(g_savedata.objects[i], tick)
 
-            if not g_savedata.objects[i].exists then
+            if g_savedata.objects[i].cleared then
                 table.remove(g_savedata.objects, i)
             end
         end
