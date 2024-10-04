@@ -1,3 +1,5 @@
+-- TSU Mission Foundation SCG 1.1.4
+
 -- properties
 g_savedata = {
     mode = "prod",
@@ -618,8 +620,8 @@ object_trackers = {
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if g_savedata.cpa_recurrence then
-                if object.vital.hp > 0 and vital_update.hp <= 0 then
+            if g_savedata.cpa_recurrence and not is_in_hospital then
+                if object.vital.hp == 0 and vital_update.hp > 0 then
                     object.cpr_count = object.cpr_count + 1
                 end
 
@@ -638,14 +640,13 @@ object_trackers = {
                 end
             end
 
-            object.vital.hp = vital_update.hp
-            object.vital.is_dead = vital_update.dead
+            object.vital = vital_update
 
             if is_in_hospital then
                 object.time_admission = object.time_admission + tick
             end
 
-            server.setCharacterData(object.id, vital_update.hp, not is_in_hospital, vital_update.ai)
+            server.setCharacterData(object.id, object.vital.hp, not is_in_hospital, object.vital.ai)
 
             object.on_board = on_board
             object.nearby_player = nearby
@@ -670,7 +671,7 @@ object_trackers = {
             return value
         end,
         status = function(self, object)
-            -- return string.format("%s\nHP: %d/100\n蘇生回数: %d回", self.progress, object.vital.hp, object.cpr_count)
+            -- return string.format("%s\n\nHP: %.00f/100\n蘇生回数: %.00f回", self.progress, object.vital.hp, object.cpr_count)
             return self.progress
         end,
         reward_base = 2500,
