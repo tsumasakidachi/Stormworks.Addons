@@ -454,7 +454,7 @@ mission_trackers = {
                 if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
 
-                    if g_savedata.objects[i].cpr_count > 0 then
+                    if g_savedata.objects[i].cpa_count > 0 then
                         cpa_count = cpa_count + 1
                     end
                 elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "fire" then
@@ -591,12 +591,18 @@ object_trackers = {
 
             object.vital = server.getCharacterData(object.id)
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
-            object.cpr_count = 0
+
+            if object.vital.hp == 0 then
+                object.cpa_count =  1
+            else
+                object.cpa_count =  0
+            end
+            
             object.on_board = 0
             object.nearby_player = false
             object.time_admission = 0
 
-            server.setCharacterData(object.id, object.vital.hp, object.interactable, object.vital.ai)
+            server.setCharacterData(object.id, object.vital.hp, object.vital.interactable, object.vital.ai)
 
             if g_savedata.rescuees_has_strobe then
                 server.setCharacterItem(object.id, 2, 23, false, 0, 100)
@@ -621,11 +627,11 @@ object_trackers = {
             local leaved = not nearby and object.nearby_player
 
             if g_savedata.cpa_recurrence and not is_in_hospital then
-                if object.vital.hp == 0 and vital_update.hp > 0 then
-                    object.cpr_count = object.cpr_count + 1
+                if object.vital.hp > 0 and vital_update.hp == 0 then
+                    object.cpa_count = object.cpa_count + 1
                 end
 
-                vital_update.hp = math.max(vital_update.hp - math.ceil(1.5 ^ object.cpr_count - 1), 0)
+                vital_update.hp = math.ceil(math.max(vital_update.hp - object.cpa_count, 0))
             end
 
             if g_savedata.rescuees_has_strobe then
@@ -664,14 +670,14 @@ object_trackers = {
                 value = 0
             end
 
-            if g_savedata.cpa_recurrence and object.cpr_count >= 2 then
-                value = value - object.cpr_count * 1000
+            if g_savedata.cpa_recurrence and object.cpa_count >= 2 then
+                value = value - object.cpa_count * 1000
             end
 
             return value
         end,
         status = function(self, object)
-            -- return string.format("%s\n\nHP: %.00f/100\n蘇生回数: %.00f回", self.progress, object.vital.hp, object.cpr_count)
+            -- return string.format("%s\n\nHP: %.00f/100\n蘇生回数: %.00f回", self.progress, object.vital.hp, object.cpa_count)
             return self.progress
         end,
         reward_base = 2500,
@@ -716,18 +722,18 @@ object_trackers = {
         end,
         init = function(self, object)
             object.is_in_freight_terminal = false
-            server.setVehicleTooltip(object.main_body_id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(object.id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
         end,
         load = function(self, object)
         end,
         tick = function(self, object, tick)
-            local transform, is_success = server.getVehiclePos(object.main_body_id)
+            local transform, is_success = server.getVehiclePos(object.id)
             object.is_in_freight_terminal = not is_success or is_in_landscape(transform, "base")
         end,
         position = function(self, object)
-            return server.getVehiclePos(object.main_body_id)
+            return server.getVehiclePos(object.id)
         end,
         completed = function(self, object)
             return object.is_in_freight_terminal
@@ -801,24 +807,24 @@ object_trackers = {
                 if mission ~= nil then
                     local x, y, z = matrix.position(mission.locations[1].transform)
 
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].id, mission.id)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].x, x)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].y, z)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].r, mission.search_radius)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].id, mission.id)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].r, mission.search_radius)
 
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].sar, mission.units.sar)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].med, mission.units.med)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].fire, mission.units.fire)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].spc, mission.units.spc)
+                    set_vehicle_button(object.id, object.mission_datalink[index].sar, mission.units.sar)
+                    set_vehicle_button(object.id, object.mission_datalink[index].med, mission.units.med)
+                    set_vehicle_button(object.id, object.mission_datalink[index].fire, mission.units.fire)
+                    set_vehicle_button(object.id, object.mission_datalink[index].spc, mission.units.spc)
                 else
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].id, 0)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].x, 0)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].y, 0)
-                    set_vehicle_keypad(object.main_body_id, object.mission_datalink[index].r, 0)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].sar, false)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].med, false)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].fire, false)
-                    set_vehicle_button(object.main_body_id, object.mission_datalink[index].spc, false)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
+                    set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
+                    set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
+                    set_vehicle_button(object.id, object.mission_datalink[index].med, false)
+                    set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
+                    set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
                 end
             end
         end,
@@ -1293,7 +1299,7 @@ function spawn_component(component, transform, mission_id)
 
     if component.vehicle_parent_component_id > 0 then
         local parent_object = find_parent_object(component.vehicle_parent_component_id, mission_id)
-        parent_object_id = parent_object.main_body_id
+        parent_object_id = parent_object.id
     end
 
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
@@ -1800,10 +1806,6 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
-    if is_world_create then
-        server.command("?clearing")
-    end
-
     load_zones()
     load_locations()
 
