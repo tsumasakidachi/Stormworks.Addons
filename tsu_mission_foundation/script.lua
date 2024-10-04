@@ -285,12 +285,12 @@ object_trackers = {
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
-            if g_savedata.cpa_recurrence then
-                if object.vital.hp > 0 and vital_update.hp <= 0 then
-                    object.vital.cpr_count = object.vital.cpr_count + 1
+            if g_savedata.cpa_recurrence and not is_in_hospital then
+                if object.vital.hp == 0 and vital_update.hp > 0 then
+                    object.cpr_count = object.cpr_count + 1
                 end
 
-                vital_update.hp = math.max(vital_update.hp - math.ceil(1.25 ^ object.vital.cpr_count), 0)
+                vital_update.hp = math.max(vital_update.hp - math.ceil(1.5 ^ object.cpr_count - 1), 0)
             end
 
             if g_savedata.rescuees_has_strobe then
@@ -305,14 +305,13 @@ object_trackers = {
                 end
             end
 
-            object.vital.hp = vital_update.hp
-            object.vital.is_dead = vital_update.dead
+            object.vital = vital_update
 
             if is_in_hospital then
                 object.completion_timer = math.max(object.completion_timer - tick, 0)
             end
 
-            server.setCharacterData(object.id, vital_update.hp, not is_in_hospital, vital_update.ai)
+            server.setCharacterData(object.id, object.vital.hp, not is_in_hospital, object.vital.ai)
 
             object.on_board = on_board
             object.nearby_player = nearby
