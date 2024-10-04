@@ -451,7 +451,7 @@ mission_trackers = {
                 if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
 
-                    if g_savedata.objects[i].vital.cpr_count > 0 then
+                    if g_savedata.objects[i].cpr_count > 0 then
                         cpa_count = cpa_count + 1
                     end
                 elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "fire" then
@@ -586,13 +586,12 @@ object_trackers = {
             local hp_min = -20
             local hp_max = 100
 
-            object.exists = true
-            object.completion_timer = 300
             object.vital = server.getCharacterData(object.id)
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
-            object.vital.cpr_count = 0
+            object.cpr_count = 0
             object.on_board = 0
             object.nearby_player = false
+            object.time_admission = 0
 
             server.setCharacterData(object.id, object.vital.hp, object.interactable, object.vital.ai)
 
@@ -604,31 +603,24 @@ object_trackers = {
             server.setCharacterTooltip(object.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
-            despawn_object(object)
         end,
         tick = function(self, object, tick)
-            local transform, is_success = self:position(object)
-            object.exists = is_success
-
-            if not object.exists then
-                return
-            end
-
+            local transform = self:position(object)
             local on_board = server.getCharacterVehicle(object.id)
             local get_on = on_board ~= 0 and object.on_board == 0
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
-            local is_in_hospital = is_in_landscape(transform, "hospital")
+            local is_in_hospital, s = is_in_landscape(transform, "hospital")
             local nearby = nearby_players(transform, 250)
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
             if g_savedata.cpa_recurrence then
                 if object.vital.hp > 0 and vital_update.hp <= 0 then
-                    object.vital.cpr_count = object.vital.cpr_count + 1
+                    object.cpr_count = object.cpr_count + 1
                 end
 
-                vital_update.hp = math.max(vital_update.hp - math.ceil(1.5 ^ object.vital.cpr_count - 1), 0)
+                vital_update.hp = math.max(vital_update.hp - math.ceil(1.5 ^ object.cpr_count - 1), 0)
             end
 
             if g_savedata.rescuees_has_strobe then
@@ -647,7 +639,7 @@ object_trackers = {
             object.vital.is_dead = vital_update.dead
 
             if is_in_hospital then
-                object.completion_timer = math.max(object.completion_timer - tick, 0)
+                object.time_admission = object.time_admission + tick
             end
 
             server.setCharacterData(object.id, vital_update.hp, not is_in_hospital, vital_update.ai)
@@ -659,7 +651,7 @@ object_trackers = {
             return server.getObjectPos(object.id)
         end,
         completed = function(self, object)
-            return not object.exists or object.completion_timer == 0
+            return object.time_admission >= 300
         end,
         reward = function(self, object)
             local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
@@ -668,14 +660,14 @@ object_trackers = {
                 value = 0
             end
 
-            if g_savedata.cpa_recurrence and object.vital.cpr_count >= 2 then
-                value = value - object.vital.cpr_count * 1000
+            if g_savedata.cpa_recurrence and object.cpr_count >= 2 then
+                value = value - object.cpr_count * 1000
             end
 
             return value
         end,
         status = function(self, object)
-            -- return string.format("%s\nHP: %d/100\n蘇生回数: %d回", self.progress, object.vital.hp, object.vital.cpr_count)
+            -- return string.format("%s\nHP: %d/100\n蘇生回数: %d回", self.progress, object.vital.hp, object.cpr_count)
             return self.progress
         end,
         reward_base = 2500,
@@ -690,7 +682,6 @@ object_trackers = {
             object.is_lit = server.getFireData(object.id)
         end,
         clear = function(self, object)
-            despawn_object(object)
         end,
         tick = function(self, object, tick)
             local is_lit, is_success = server.getFireData(object.id)
@@ -722,7 +713,6 @@ object_trackers = {
             server.setVehicleTooltip(object.main_body_id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle Group ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
-            despawn_object(object)
         end,
         tick = function(self, object, tick)
             local transform, is_success = server.getVehiclePos(object.main_body_id)
@@ -751,7 +741,6 @@ object_trackers = {
         init = function(self, object)
         end,
         clear = function(self, object)
-            despawn_object(object)
         end,
         tick = function(self, object, tick)
             for index = 1, math.max(#g_savedata.missions, 6) do
@@ -817,6 +806,7 @@ end
 
 function initialize_mission(center, range_min, tracker, location, report_timer)
     local mission = {}
+    mission.cleared = false
     mission.id = g_savedata.mission_count + 1
 
     console.notify(string.format("Initializing mission #%d...", mission.id))
@@ -830,7 +820,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
     mission.spawned = false
     mission.closed = false
-    mission.marker = server.getMapID()
+    mission.marker_id = server.getMapID()
     mission.units = {
         sar = false,
         medic = false,
@@ -855,25 +845,58 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     end
 end
 
-function clear_mission(index)
+function clear_mission(mission)
     for i = #g_savedata.objects, 1, -1 do
-        if g_savedata.objects[i].mission == g_savedata.missions[index].id then
+        if g_savedata.objects[i].mission == mission.id then
             clear_object(g_savedata.objects[i])
         end
     end
 
-    server.removeMapID(-1, g_savedata.missions[index].marker)
-    mission_trackers[g_savedata.missions[index].tracker]:clear(g_savedata.missions[index])
+    server.removeMapID(-1, mission.marker_id)
+    mission_trackers[mission.tracker]:clear(mission)
+    mission.cleared = true
 
-    console.notify(string.format("Cleared mission #%d.", g_savedata.missions[index].id))
-
-    table.remove(g_savedata.missions, index)
+    console.notify(string.format("Cleared mission #%d.", mission.id))
 end
 
-function reward_mission(index)
-    local reward = mission_trackers[g_savedata.missions[index].tracker]:reward(g_savedata.missions[index])
+function tick_mission(mission, tick)
+    mission_trackers[mission.tracker]:tick(mission, tick)
 
-    transact(reward, string.format("Completed mission #%d.", g_savedata.missions[index].id))
+    if g_savedata.mission_mapped and mission.search_center then
+        local label = mission_trackers[mission.tracker]:report(mission)
+        local label_hover = mission_trackers[mission.tracker]:status(mission)
+        local x, y, z = matrix.position(mission.search_center)
+
+        for i = 1, #players do
+            if players[i].map_open then
+                server.removeMapID(players[i].id, mission.marker_id)
+                server.addMapObject(players[i].id, mission.marker_id, 0, 8, x, z, 0, 0, nil, nil, label, mission.locations[1].search_radius, label_hover, 255, 0, 255, 255)
+            end
+        end
+    end
+
+    -- mission.report_timer = math.max(mission.report_timer - tick, 0)
+
+    if not mission.reported and mission.report_timer == 0 then
+        alert_headquarter()
+        server.notify(-1, mission_trackers[mission.tracker]:report(mission), mission.locations[1].note, mission.locations[1].notification_type)
+        mission.reported = true
+    end
+
+    if mission_trackers[mission.tracker]:completed(mission) then
+        reward_mission(mission)
+        clear_mission(mission)
+    end
+end
+
+function reward_mission(mission)
+    local reward = mission_trackers[mission.tracker]:reward(mission)
+
+    transact(reward, string.format("Completed mission #%d.", mission.id))
+end
+
+function close_mission(mission)
+    mission.closed = true
 end
 
 -- objects
@@ -882,6 +905,7 @@ function initialize_object(object, mission, tracker)
     object.cleared = false
     object.tracker = tracker or nil
     object.mission = mission
+    object.marker_id = server.getMapID()
 
     if object.type == "vehicle" then
         object.id = object.group_id
@@ -891,23 +915,21 @@ function initialize_object(object, mission, tracker)
     end
 
     if object.tracker ~= nil then
-        object.marker = server.getMapID()
         object_trackers[object.tracker]:init(object)
     end
 
     table.insert(g_savedata.objects, object)
-
     console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
 end
 
 function clear_object(object)
-    if object.cleared then
-        return
-    end
-
     if object.tracker ~= nil then
         object_trackers[object.tracker]:clear(object)
     end
+
+    despawn_object(object)
+
+    server.removeMapID(-1, object.marker_id)
 
     object.cleared = true
     console.notify(string.format("Cleared object %s#%d.", object.type, object.id))
@@ -924,7 +946,7 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
-    -- server.removeMapID(-1, object.marker)
+    -- server.removeMapID(-1, object.marker_id)
 
     -- if g_savedata.object_mapped then
     --     local transform = object_trackers[object.tracker]:position(object)
@@ -934,7 +956,7 @@ function tick_object(object, tick)
     --     local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
     --     local marker_type = object_trackers[object.tracker].marker_type
 
-    --     server.addMapObject(-1, object.marker, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
+    --     server.addMapObject(-1, object.marker_id, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     -- end
 
     if object.tracker ~= nil then
@@ -1374,13 +1396,13 @@ function map_zone(zone, peer_id)
             name = zone.landscape
         end
 
-        server.addMapLabel(peer_id, zone.marker, zone.icon, name, x, z, color, color, color, 255)
+        server.addMapLabel(peer_id, zone.marker_id, zone.icon, name, x, z, color, color, color, 255)
     end
 end
 
 function load_zones()
     for i = 1, #g_savedata.zones do
-        server.removeMapID(-1, g_savedata.zones[i].marker)
+        server.removeMapID(-1, g_savedata.zones[i].marker_id)
     end
 
     g_savedata.zones = {}
@@ -1396,7 +1418,7 @@ function load_zones()
                 zone.id = id
                 zone.tags = tags
                 zone.landscape = zone_properties[i].landscape
-                zone.marker = server.getMapID()
+                zone.marker_id = server.getMapID()
                 zone.mapped = zone_properties[i].mapped or false
                 zone.icon = zone_properties[i].icon or 0
 
@@ -1536,44 +1558,26 @@ function onTick(tick)
                 players[i].transform = transform
             end
 
-            players[i].map_open = players_map[players[i].id]
+            players[i].map_open = players_map[players[i].id] or false
         end
     end
 
     for i = #g_savedata.objects, 1, -1 do
-        if i % cycle == timing and g_savedata.objects[i].tracker ~= nil then
-            tick_object(g_savedata.objects[i], tick * cycle)
-
+        if i % cycle == timing then
             if g_savedata.objects[i].cleared then
                 table.remove(g_savedata.objects, i)
+            else
+                tick_object(g_savedata.objects[i], tick * cycle)
             end
         end
     end
 
     for i = #g_savedata.missions, 1, -1 do
         if i % cycle == timing then
-            mission_trackers[g_savedata.missions[i].tracker]:tick(g_savedata.missions[i], tick * cycle)
-            server.removeMapID(-1, g_savedata.missions[i].marker)
-
-            if g_savedata.mission_mapped and g_savedata.missions[i].search_center then
-                local label = mission_trackers[g_savedata.missions[i].tracker]:report(g_savedata.missions[i])
-                local label_hover = mission_trackers[g_savedata.missions[i].tracker]:status(g_savedata.missions[i])
-                local x, y, z = matrix.position(g_savedata.missions[i].search_center)
-
-                server.addMapObject(-1, g_savedata.missions[i].marker, 0, 8, x, z, 0, 0, nil, nil, label, g_savedata.missions[i].locations[1].search_radius, label_hover, 255, 0, 255, 255)
-            end
-
-            g_savedata.missions[i].report_timer = math.max(g_savedata.missions[i].report_timer - tick * cycle, 0)
-
-            if not g_savedata.missions[i].reported and g_savedata.missions[i].report_timer == 0 then
-                alert_headquarter()
-                server.notify(-1, mission_trackers[g_savedata.missions[i].tracker]:report(g_savedata.missions[i]), g_savedata.missions[i].locations[1].note, g_savedata.missions[i].locations[1].notification_type)
-                g_savedata.missions[i].reported = true
-            end
-
-            if mission_trackers[g_savedata.missions[i].tracker]:completed(g_savedata.missions[i]) then
-                reward_mission(i)
-                clear_mission(i)
+            if g_savedata.missions[i].cleared then
+                table.remove(g_savedata.missions, i)
+            else
+                tick_mission(g_savedata.missions[i], tick * cycle)
             end
         end
     end
@@ -1609,21 +1613,21 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             initialize_mission(center, g_savedata.mission_range_min, location.tracker, location, report_timer)
         elseif verb == "clear-all" and is_admin then
             for i = #g_savedata.missions, 1, -1 do
-                clear_mission(i)
+                clear_mission(g_savedata.missions[i])
             end
         elseif verb == "clear" and is_admin then
             local id = ...
             id = tonumber(id)
-            local index = table.find_index(g_savedata.missions, function(x)
+            local mission = table.find(g_savedata.missions, function(x)
                 return x.id == id
             end)
 
-            if index == nil then
+            if mission == nil then
                 console.error(string.format("Mission #%d is not exist.", id))
                 return
             end
 
-            clear_mission(index)
+            clear_mission(mission)
         elseif verb == "next" and is_admin then
             g_savedata.mission_interval = 0
         elseif verb == "close" and is_admin then
@@ -1638,7 +1642,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 return
             end
 
-            mission_trackers[mission.tracker]:close(mission)
+            close_mission(mission)
         elseif verb == "register-hq" and is_admin then
             local group_id = ...
             local group_id = tonumber(group_id)
@@ -1662,7 +1666,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 g_savedata.zone_mapped = not g_savedata.zone_mapped
 
                 for i = 1, #g_savedata.zones do
-                    server.removeMapID(-1, g_savedata.zones[i].marker)
+                    server.removeMapID(-1, g_savedata.zones[i].marker_id)
                     map_zone(g_savedata.zones[i])
                 end
             elseif target == "object" then
