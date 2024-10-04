@@ -491,7 +491,7 @@ mission_trackers = {
 
             for k, object in pairs(g_savedata.objects) do
                 if object.mission == mission.id and object.tracker ~= nil then
-                    completed = completed and object_trackers[object.tracker]:completed(object)
+                    completed = completed and (object_trackers[object.tracker]:dispensable(object) or object_trackers[object.tracker]:completed(object))
                 end
             end
 
@@ -660,6 +660,9 @@ object_trackers = {
         position = function(self, object)
             return server.getObjectPos(object.id)
         end,
+        dispensable = function(self, object)
+            return false
+        end,
         completed = function(self, object)
             return object.time_admission >= 300
         end,
@@ -702,6 +705,9 @@ object_trackers = {
         position = function(self, object)
             return server.getObjectPos(object.id)
         end,
+        dispensable = function(self, object)
+            return false
+        end,
         completed = function(self, object)
             local is_lit, is_success = server.getFireData(object.object_id)
             return not is_lit
@@ -735,6 +741,9 @@ object_trackers = {
         position = function(self, object)
             return server.getVehiclePos(object.id)
         end,
+        dispensable = function(self, object)
+            return true
+        end,
         completed = function(self, object)
             return object.is_in_freight_terminal
         end,
@@ -760,8 +769,6 @@ object_trackers = {
         clear = function(self, object)
         end,
         load = function(self, object)
-            
-
             if not object.components_checked then
                 local d, s = server.getVehicleComponents(object.id)
 
@@ -837,6 +844,9 @@ object_trackers = {
         end,
         position = function(self, object)
             return server.getVehiclePos(object.id)
+        end,
+        dispensable = function(self, object)
+            return false
         end,
         completed = function(self, object)
             return false
