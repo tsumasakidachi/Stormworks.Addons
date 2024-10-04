@@ -337,7 +337,8 @@ object_trackers = {
             return value
         end,
         status = function(self, object)
-            return string.format("%s\nHP: %d/100\nCPR: %d", self.progress, object.vital.hp, object.vital.cpr_count)
+            -- return string.format("%s\nHP: %d/100\nCPR: %d", self.progress, object.vital.hp, object.vital.cpr_count)
+            return self.progress
         end,
         reward_base = 2500,
         progress = "Search rescuees\nand admit into medical settings",
