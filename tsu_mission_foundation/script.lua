@@ -249,14 +249,19 @@ object_trackers = {
 
             object.exists = true
             object.completion_timer = 300
-            object.vital = {}
+            object.vital = server.getCharacterData(object.id)
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
-            object.vital.is_dead = false
-            object.vital.cpr_count = 0
+
+            if object.vital.hp == 0 then
+                object.cpa_count =  1
+            else
+                object.cpa_count =  0
+            end
+            
             object.on_board = 0
             object.nearby_player = false
 
-            server.setCharacterData(object.id, object.vital.hp, true, false)
+            server.setCharacterData(object.id, object.vital.hp, true, object.vital.ai)
 
             if g_savedata.rescuees_has_strobe then
                 server.setCharacterItem(object.id, 2, 23, false, 0, 100)
@@ -286,11 +291,11 @@ object_trackers = {
             local leaved = not nearby and object.nearby_player
 
             if g_savedata.cpa_recurrence and not is_in_hospital then
-                if object.vital.hp == 0 and vital_update.hp > 0 then
-                    object.cpr_count = object.cpr_count + 1
+                if object.vital.hp > 0 and vital_update.hp == 0 then
+                    object.cpa_count = object.cpa_count + 1
                 end
 
-                vital_update.hp = math.max(vital_update.hp - math.ceil(1.5 ^ object.cpr_count - 1), 0)
+                vital_update.hp = math.ceil(math.max(vital_update.hp - object.cpa_count, 0))
             end
 
             if g_savedata.rescuees_has_strobe then
@@ -315,6 +320,8 @@ object_trackers = {
 
             object.on_board = on_board
             object.nearby_player = nearby
+
+            console.notify(string.format("%.00f %.00f", object.cpa_count, object.vital.hp))
         end,
         position = function(self, object)
             return server.getObjectPos(object.id)
@@ -329,14 +336,14 @@ object_trackers = {
                 value = 0
             end
 
-            if g_savedata.cpa_recurrence and object.vital.cpr_count >= 2 then
-                value = value - object.vital.cpr_count * 1000
+            if g_savedata.cpa_recurrence and object.cpa_count >= 2 then
+                value = value - object.cpa_count * 1000
             end
 
             return value
         end,
         status = function(self, object)
-            -- return string.format("%s\nHP: %d/100\nCPR: %d", self.progress, object.vital.hp, object.vital.cpr_count)
+            -- return string.format("%s\nHP: %d/100\nCPR: %d", self.progress, object.vital.hp, object.cpa_count)
             return self.progress
         end,
         reward_base = 2500,
