@@ -994,6 +994,7 @@ function clear_mission(mission)
     mission_trackers[mission.tracker]:clear(mission)
     mission.cleared = true
 
+    server.notify(-1, string.format("Mission #%d completed.", mission.id), mission_trackers[mission.tracker]:report(mission), 4)
     console.notify(string.format("Cleared mission #%d.", mission.id))
 end
 
