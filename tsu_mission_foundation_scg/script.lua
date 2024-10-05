@@ -178,21 +178,21 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
-}, {
-    pattern = "^mission:tunnel_fire$",
-    tracker = "sar",
-    suitable_zones = {},
-    is_main_location = true,
-    sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
-    sub_location_min = 3,
-    sub_location_max = 5,
-    is_unique_sub_location = false,
-    search_radius = 500,
-    notification_type = 1,
-    report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
-    report_timer_min = 0,
-    report_timer_max = 0,
-    note = "民間人からの通報"
+-- }, {
+--     pattern = "^mission:tunnel_fire$",
+--     tracker = "sar",
+--     suitable_zones = {},
+--     is_main_location = true,
+--     sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
+--     sub_location_min = 3,
+--     sub_location_max = 5,
+--     is_unique_sub_location = false,
+--     search_radius = 500,
+--     notification_type = 1,
+--     report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
+--     report_timer_min = 0,
+--     report_timer_max = 0,
+--     note = "民間人からの通報"
 }, {
     pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
