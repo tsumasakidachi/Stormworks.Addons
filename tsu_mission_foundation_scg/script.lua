@@ -1,7 +1,7 @@
 -- TSU Mission Foundation SCG 1.1.4
 -- properties
 g_savedata = {
-    mode = "prod",
+    mode = "debug",
     missions = {},
     objects = {},
     players = {},
@@ -581,8 +581,8 @@ mission_trackers = {
 
 object_trackers = {
     rescuee = {
-        test_type = function(self, component)
-            return component.type == "character" and component.tags.tracker and component.tags.tracker == "rescuee"
+        test_type = function(self, object)
+            return object.type == "character" and object.tags.tracker and object.tags.tracker == "rescuee"
         end,
         init = function(self, object)
             local hp_min = -20
@@ -689,8 +689,8 @@ object_trackers = {
         clear_timer = 300
     },
     fire = {
-        test_type = function(self, component)
-            return component.type == "fire"
+        test_type = function(self, object)
+            return object.type == "fire"
         end,
         init = function(self, object)
             object.is_lit = server.getFireData(object.id)
@@ -725,8 +725,8 @@ object_trackers = {
         clear_timer = 0
     },
     wreckage = {
-        test_type = function(self, component)
-            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "wreckage"
+        test_type = function(self, object)
+            return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "wreckage"
         end,
         init = function(self, object)
             object.components_checked = false
@@ -774,8 +774,8 @@ object_trackers = {
         clear_timer = 18000
     },
     headquarter = {
-        test_type = function(self, component)
-            return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "headquarter"
+        test_type = function(self, object)
+            return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "headquarter"
         end,
         init = function(self, object)
             object.components_checked = false
@@ -1039,23 +1039,27 @@ end
 
 -- objects
 
-function initialize_object(object, mission, tracker)
+function initialize_object(id, type, object, component_id, mission_id, ...)
+    local params = {...}
+
+    object.id = id
+    object.type = type
+    object.marker_id = server.getMapID()
+    object.component_id = component_id
+    object.mission = mission_id
     object.completed = false
     object.cleared = false
     object.clear_timer = 0
-    object.tracker = tracker or nil
-    object.mission = mission
-    object.marker_id = server.getMapID()
 
-    if object.type == "vehicle" then
-        object.id = object.vehicle_ids[1]
-        object.main_body_id = object.vehicle_ids[1]
-    else
-        object.id = object.object_id
+    for k, v in pairs(object_trackers) do
+        if v:test_type(object, table.unpack(params)) then
+            object.tracker = k
+            break
+        end
     end
 
     if object.tracker ~= nil then
-        object_trackers[object.tracker]:init(object)
+        object_trackers[object.tracker]:init(object, table.unpack(params))
     end
 
     table.insert(g_savedata.objects, object)
@@ -1387,6 +1391,7 @@ function spawn_component(component, transform, mission_id)
     local obj_types = table.keys(object_trackers)
     local transform = matrix.multiply(transform, component.transform)
     local parent_object_id = nil
+    local id = nil
 
     if component.vehicle_parent_component_id > 0 then
         local parent_object = find_parent_object(component.vehicle_parent_component_id, mission_id)
@@ -1394,19 +1399,10 @@ function spawn_component(component, transform, mission_id)
     end
 
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
-    local tracker = nil
-
-    for k, v in pairs(object_trackers) do
-        if v:test_type(component) then
-            tracker = k
-            break
-        end
-    end
 
     object.tags = parse_tags(object.tags_full)
-    object.component_id = component.id
 
-    initialize_object(object, mission_id, tracker)
+    initialize_object(object.id, object.type, object, component.id, mission_id)
 end
 
 function load_locations()
@@ -1598,18 +1594,18 @@ function initialize_headquarter(group_id)
         return
     end
 
-    local transform = server.getVehiclePos(vehicle_ids[1])
-
-    hq.tags_full = ""
-    hq.tags = {}
+    hq.tags_full = "tracker=headquarter"
+    hq.tags = parse_tags(hq.tags_full)
     hq.display_name = ""
-    hq.transform = transform
     hq.type = "vehicle"
+    hq.transform = server.getVehiclePos(vehicle_ids[1])
+    hq.id = vehicle_ids[1]
+    hq.object_id = nil
     hq.group_id = group_id
     hq.vehicle_ids = vehicle_ids
     hq.component_id = nil
 
-    initialize_object(hq, nil, "headquarter")
+    initialize_object(hq.id, hq.type, hq, nil, nil)
 end
 
 function alert_headquarter()
@@ -1733,7 +1729,7 @@ function onTick(tick)
             if g_savedata.objects[i].cleared then
                 table.remove(g_savedata.objects, i)
             else
-                -- tick_object(g_savedata.objects[i], tick * cycle)
+                tick_object(g_savedata.objects[i], tick * cycle)
             end
         end
     end
