@@ -1,5 +1,4 @@
 -- TSU Mission Foundation SCG 1.1.4
-
 -- properties
 g_savedata = {
     mode = "prod",
@@ -593,11 +592,11 @@ object_trackers = {
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
             if object.vital.hp == 0 then
-                object.cpa_count =  1
+                object.cpa_count = 1
             else
-                object.cpa_count =  0
+                object.cpa_count = 0
             end
-            
+
             object.on_board = 0
             object.nearby_player = false
             object.time_admission = 0
@@ -622,7 +621,7 @@ object_trackers = {
             local get_off = on_board == 0 and object.on_board ~= 0
             local vital_update = server.getCharacterData(object.id)
             local is_in_hospital, s = is_in_landscape(transform, "hospital")
-            local nearby = nearby_players(transform, 250)
+            local nearby = nearby_players(transform, 100)
             local arrived = nearby and not object.nearby_player
             local leaved = not nearby and object.nearby_player
 
@@ -652,7 +651,7 @@ object_trackers = {
                 object.time_admission = object.time_admission + tick
             end
 
-            server.setCharacterData(object.id, object.vital.hp, not is_in_hospital, object.vital.ai)
+            server.setCharacterData(object.id, object.vital.hp, not object.completed, object.vital.ai)
 
             object.on_board = on_board
             object.nearby_player = nearby
@@ -664,7 +663,8 @@ object_trackers = {
             return false
         end,
         completed = function(self, object)
-            return object.time_admission >= 300
+            return object.time_admission > 120
+
         end,
         reward = function(self, object)
             local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
@@ -680,12 +680,13 @@ object_trackers = {
             return value
         end,
         status = function(self, object)
-            -- return string.format("%s\n\nHP: %.00f/100\n蘇生回数: %.00f回", self.progress, object.vital.hp, object.cpa_count)
-            return self.progress
+            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.progress, object.vital.hp, object.cpa_count)
+            -- return self.progress
         end,
-        reward_base = 2500,
+        reward_base = 1000,
         progress = "要救助者を発見し病院へ移送",
-        marker_type = 1
+        marker_type = 1,
+        clear_timer = 300
     },
     fire = {
         test_type = function(self, component)
@@ -718,44 +719,59 @@ object_trackers = {
         status = function(self, object)
             return self.progress
         end,
-        reward_base = 1000,
+        reward_base = 500,
         progress = "炎を発見し鎮火",
-        marker_type = 5
+        marker_type = 5,
+        clear_timer = 0,
     },
     wreckage = {
         test_type = function(self, component)
             return component.type == "vehicle" and component.tags.tracker and component.tags.tracker == "wreckage"
         end,
         init = function(self, object)
-            object.is_in_freight_terminal = false
+            object.components_checked = false
+            object.completion_timer = 0
+            object.initial_transform = server.getVehiclePos(object.id)
+            object.transform = server.getVehiclePos(object.id)
+            object.mass = 0
+
             server.setVehicleTooltip(object.id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
         end,
         load = function(self, object)
+            if not object.components_checked then
+                local d, s = server.getVehicleComponents(object.id)
+                object.mass = d.mass
+                object.components_checked = true
+            end
         end,
         tick = function(self, object, tick)
-            local transform, is_success = server.getVehiclePos(object.id)
-            object.is_in_freight_terminal = not is_success or is_in_landscape(transform, "base")
+            object.transform = server.getVehiclePos(object.id)
+
+            if is_in_landscape(object.transform, "freight_terminal") then
+                object.completion_timer = object.completion_timer + tick
+            end
         end,
         position = function(self, object)
             return server.getVehiclePos(object.id)
         end,
         dispensable = function(self, object)
-            return true
+            return matrix.distance(object.initial_transform, object.transform) <= 100
         end,
         completed = function(self, object)
-            return object.is_in_freight_terminal
+            return object.completion_timer >= 300
         end,
         reward = function(self, object)
-            return self.reward_base
+            return math.ceil(object.mass * self.reward_base / 100) * 100
         end,
         status = function(self, object)
             return self.progress
         end,
-        reward_base = 25000,
+        reward_base = 2,
         progress = "残骸を回収し基地へ輸送",
-        marker_type = 2
+        marker_type = 2,
+        clear_timer = 18000
     },
     headquarter = {
         test_type = function(self, component)
@@ -974,7 +990,9 @@ end
 -- objects
 
 function initialize_object(object, mission, tracker)
+    object.completed = false
     object.cleared = false
+    object.clear_timer = 0
     object.tracker = tracker or nil
     object.mission = mission
     object.marker_id = server.getMapID()
@@ -1018,6 +1036,10 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
+    if object.tracker == nil then
+        return
+    end
+
     -- server.removeMapID(-1, object.marker_id)
 
     -- if g_savedata.object_mapped then
@@ -1031,18 +1053,27 @@ function tick_object(object, tick)
     --     server.addMapObject(-1, object.marker_id, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     -- end
 
-    if object.tracker ~= nil then
-        object_trackers[object.tracker]:tick(object, tick)
+    object_trackers[object.tracker]:tick(object, tick)
 
-        if object.mission and object_trackers[object.tracker]:completed(object) then
-            for j = 1, #g_savedata.missions do
-                if g_savedata.missions[j].id == object.mission then
-                    g_savedata.missions[j].reward = g_savedata.missions[j].reward + object_trackers[object.tracker]:reward(object)
-                end
+    if object.mission and not object.completed and object_trackers[object.tracker]:completed(object) then
+        for j = 1, #g_savedata.missions do
+            if g_savedata.missions[j].id == object.mission then
+                local reward = object_trackers[object.tracker]:reward(object)
+                g_savedata.missions[j].reward = g_savedata.missions[j].reward + reward
+
+                console.notify(string.format("Reward: %d", reward))
             end
+        end
 
-            server.notify(-1, object_trackers[object.tracker]:status(object), "Objective achieved", 4)
+        server.notify(-1, object_trackers[object.tracker]:status(object), "Objective achieved", 4)
+        object.completed = true
+    end
+
+    if object.mission and object.completed then
+        if object.clear_timer >= object_trackers[object.tracker].clear_timer then
             clear_object(object)
+        else
+            object.clear_timer = object.clear_timer + tick
         end
     end
 end
@@ -1233,7 +1264,7 @@ function match_location_name(location, patterns)
 end
 
 function is_location_free(location, mission)
-    return location.id ~= mission.locations[1].id;
+    return location.id ~= mission.locations[1].id
 end
 
 function is_location_duplicated(location)
@@ -1824,13 +1855,6 @@ function onCreate(is_world_create)
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
-
-    for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].tracker == "headquarter" then
-            g_savedata.objects[i].components_checked = false
-            object_trackers.headquarter:load(g_savedata.objects[i])
-        end
-    end
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, equipment_id)
