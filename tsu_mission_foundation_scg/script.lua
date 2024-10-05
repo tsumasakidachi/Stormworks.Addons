@@ -608,7 +608,7 @@ object_trackers = {
                 server.setCharacterItem(object.id, 4, 24, true, 0, 100)
             end
 
-            server.setCharacterTooltip(object.id, string.format("要救助者\n%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
+            server.setCharacterTooltip(object.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
         end,
@@ -722,7 +722,7 @@ object_trackers = {
         reward_base = 500,
         progress = "炎を発見し鎮火",
         marker_type = 5,
-        clear_timer = 0,
+        clear_timer = 0
     },
     wreckage = {
         test_type = function(self, component)
@@ -735,7 +735,7 @@ object_trackers = {
             object.transform = server.getVehiclePos(object.id)
             object.mass = 0
 
-            server.setVehicleTooltip(object.id, string.format("残骸\n%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(object.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
         end,
@@ -769,7 +769,7 @@ object_trackers = {
             return self.progress
         end,
         reward_base = 2,
-        progress = "残骸を回収し基地へ輸送",
+        progress = "残骸を回収し貨物ターミナルへ輸送",
         marker_type = 2,
         clear_timer = 18000
     },
@@ -787,6 +787,10 @@ object_trackers = {
         load = function(self, object)
             if not object.components_checked then
                 local d, s = server.getVehicleComponents(object.id)
+
+                if not s then
+                    return
+                end
 
                 object.alert = table.find(d.components.buttons, function(t)
                     return string.lower(t.name) == "alert"
@@ -830,24 +834,69 @@ object_trackers = {
                 if mission ~= nil then
                     local x, y, z = matrix.position(mission.locations[1].transform)
 
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].id, mission.id)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].r, mission.search_radius)
+                    if object.mission_datalink[index].id ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].id, mission.id)
+                    end
 
-                    set_vehicle_button(object.id, object.mission_datalink[index].sar, mission.units.sar)
-                    set_vehicle_button(object.id, object.mission_datalink[index].med, mission.units.med)
-                    set_vehicle_button(object.id, object.mission_datalink[index].fire, mission.units.fire)
-                    set_vehicle_button(object.id, object.mission_datalink[index].spc, mission.units.spc)
+                    if object.mission_datalink[index].x ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
+                    end
+
+                    if object.mission_datalink[index].y ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
+                    end
+
+                    if object.mission_datalink[index].t ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].r, mission.search_radius)
+                    end
+
+                    if object.mission_datalink[index].sar ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].sar, mission.units.sar)
+                    end
+
+                    if object.mission_datalink[index].med ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].med, mission.units.med)
+                    end
+
+                    if object.mission_datalink[index].fire ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].fire, mission.units.fire)
+                    end
+
+                    if object.mission_datalink[index].spc ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].spc, mission.units.spc)
+                    end
                 else
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
-                    set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
-                    set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
-                    set_vehicle_button(object.id, object.mission_datalink[index].med, false)
-                    set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
-                    set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
+                    if object.mission_datalink[index].id ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
+                    end
+
+                    if object.mission_datalink[index].x ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
+                    end
+
+                    if object.mission_datalink[index].y ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
+                    end
+
+                    if object.mission_datalink[index].r ~= nil then
+                        set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
+                    end
+
+                    if object.mission_datalink[index].sar ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
+                    end
+
+                    if object.mission_datalink[index].med ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].med, false)
+                    end
+
+                    if object.mission_datalink[index].fire ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
+                    end
+
+                    if object.mission_datalink[index].spc ~= nil then
+                        set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
+                    end
                 end
             end
         end,
@@ -875,7 +924,8 @@ object_trackers = {
         end,
         reward_base = 0,
         progress = "",
-        marker_type = 11
+        marker_type = 11,
+        clear_timer = 0
     }
 }
 
@@ -1055,7 +1105,7 @@ function tick_object(object, tick)
 
     object_trackers[object.tracker]:tick(object, tick)
 
-    if object.mission and not object.completed and object_trackers[object.tracker]:completed(object) then
+    if object.mission ~= nil and not object.completed and object_trackers[object.tracker]:completed(object) then
         for j = 1, #g_savedata.missions do
             if g_savedata.missions[j].id == object.mission then
                 local reward = object_trackers[object.tracker]:reward(object)
@@ -1069,7 +1119,7 @@ function tick_object(object, tick)
         object.completed = true
     end
 
-    if object.mission and object.completed then
+    if object.mission ~= nil and object.completed then
         if object.clear_timer >= object_trackers[object.tracker].clear_timer then
             clear_object(object)
         else
@@ -1655,6 +1705,10 @@ function onTick(tick)
     if timing % 10 == 0 then
         players = server.getPlayers()
 
+        if #players > 0 and players[1].name == "Server" then
+            table.remove(players, 1)
+        end
+
         for i = 1, #players do
             players[i].steam_id = tostring(players[i].steam_id)
 
@@ -1662,9 +1716,15 @@ function onTick(tick)
 
             if is_success then
                 players[i].transform = transform
+            else
+                players[i].transform = matrix.identity()
             end
 
-            players[i].map_open = g_savedata.players_map[players[i].id] or false
+            if g_savedata.players_map[players[i].id] ~= nil then
+                players[i].map_open = g_savedata.players_map[players[i].id]
+            else
+                players[i].map_open = false
+            end
         end
     end
 
@@ -1673,7 +1733,7 @@ function onTick(tick)
             if g_savedata.objects[i].cleared then
                 table.remove(g_savedata.objects, i)
             else
-                tick_object(g_savedata.objects[i], tick * cycle)
+                -- tick_object(g_savedata.objects[i], tick * cycle)
             end
         end
     end
