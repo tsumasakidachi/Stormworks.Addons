@@ -494,10 +494,7 @@ mission_trackers = {
                 end
             end
 
-            return completed or mission.closed
-        end,
-        close = function(self, mission)
-            mission.closed = true
+            return completed or mission.terminated
         end,
         reward = function(self, mission)
             local reward = mission.reward
@@ -957,7 +954,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.reported = false
     mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
     mission.spawned = false
-    mission.closed = false
+    mission.terminated = false
     mission.marker_id = server.getMapID()
     mission.units = {
         sar = false,
@@ -994,7 +991,7 @@ function clear_mission(mission)
     mission_trackers[mission.tracker]:clear(mission)
     mission.cleared = true
 
-    server.notify(-1, string.format("Mission #%d completed.", mission.id), mission_trackers[mission.tracker]:report(mission), 4)
+    server.notify(-1, string.format("Cleared mission #%d.", mission.id), mission_trackers[mission.tracker]:report(mission), 4)
     console.notify(string.format("Cleared mission #%d.", mission.id))
 end
 
@@ -1031,11 +1028,11 @@ end
 function reward_mission(mission)
     local reward = mission_trackers[mission.tracker]:reward(mission)
 
-    transact(reward, string.format("Completed mission #%d.", mission.id))
+    transact(reward, string.format("Cleared mission #%d.", mission.id))
 end
 
-function close_mission(mission)
-    mission.closed = true
+function terminate_mission(mission)
+    mission.terminated = true
 end
 
 -- objects
@@ -1064,7 +1061,7 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
     end
 
     table.insert(g_savedata.objects, object)
-    console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
+    console.notify(string.format("Initialized object %s#%d.", object.type, object.id))
 end
 
 function clear_object(object)
@@ -1794,6 +1791,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "next" and is_admin then
             g_savedata.mission_interval = 0
         elseif verb == "close" and is_admin then
+            console.error("'?mission close' is replaced to '?mission terminate'")
+        elseif verb == "terminate" and is_admin then
             local id = ...
             id = tonumber(id)
             local mission = table.find(g_savedata.missions, function(x)
@@ -1805,7 +1804,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 return
             end
 
-            close_mission(mission)
+            terminate_mission(mission)
         elseif verb == "register-hq" and is_admin then
             local group_id = ...
             local group_id = tonumber(group_id)
