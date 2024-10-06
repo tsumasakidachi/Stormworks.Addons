@@ -771,7 +771,7 @@ object_trackers = {
         reward_base = 2,
         progress = "残骸を回収し貨物ターミナルへ輸送",
         marker_type = 2,
-        clear_timer = 18000
+        clear_timer = 7200
     },
     headquarter = {
         test_type = function(self, id, type, object, component_id, mission_id)
@@ -1619,7 +1619,7 @@ function initialize_headquarter(group_id)
     local vehicle_ids, is_success = server.getVehicleGroup(group_id)
     local hq = {}
 
-    if not is_success or is_headquarter_overlap(group_id) then
+    if not is_success or is_headquarter_dupe(group_id) then
         return
     end
 
@@ -1639,13 +1639,13 @@ end
 
 function alert_headquarter()
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].tracker == "headquarter" then
+        if g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects[i].alert ~= nil then
             press_vehicle_button(g_savedata.objects[i].id, g_savedata.objects[i].alert)
         end
     end
 end
 
-function is_headquarter_overlap(group_id)
+function is_headquarter_dupe(group_id)
     local is = false
 
     for i = 1, #g_savedata.objects do
