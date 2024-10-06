@@ -26,6 +26,7 @@ g_savedata = {
     zone_marker_id = nil,
     cpa_recurrence = property.checkbox("CPA Recurrence", true),
     rescuees_has_strobe = property.checkbox("Rescuees has strobe", true),
+    splillage = false,
     eot = true -- END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru --
 }
 
@@ -264,7 +265,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 750,
     notification_type = 0,
-    report = "火災\nキャンプ場で火事. 森林火災に発展する可能性がある. 森などで遊んでいた行楽客がいまだ周辺に残っているとみられ, 消火に当たると同時に人々を避難させる必要がある.",
+    report = "火災\nキャンプ場で火事. 森林火災に発展する可能性がある. 行楽客がいまだ周辺に残っているとみられ, 消火に当たると同時に人々を避難させる必要がある.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -447,6 +448,7 @@ mission_trackers = {
             local fire_count = 0
             local wreckage_count = 0
             local underwater_count = 0
+            local hostile_count = 0
             local radiation_count = 0
 
             for i = 1, #g_savedata.objects do
@@ -481,7 +483,7 @@ mission_trackers = {
                 mission.units.med = true
             end
 
-            if not mission.units.spc and (wreckage_count >= 1 or underwater_count >= 1) then
+            if not mission.units.spc and (hostile_count >= 1 or underwater_count >= 1) then
                 mission.units.spc = true
             end
         end,
@@ -578,10 +580,10 @@ mission_trackers = {
 
 object_trackers = {
     rescuee = {
-        test_type = function(self, object)
+        test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "character" and object.tags.tracker and object.tags.tracker == "rescuee"
         end,
-        init = function(self, object)
+        init = function(self, id, type, object, component_id, mission_id)
             local hp_min = -20
             local hp_max = 100
 
@@ -686,10 +688,10 @@ object_trackers = {
         clear_timer = 300
     },
     fire = {
-        test_type = function(self, object)
+        test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "fire"
         end,
-        init = function(self, object)
+        init = function(self, id, type, object, component_id, mission_id)
             object.is_lit = server.getFireData(object.id)
         end,
         clear = function(self, object)
@@ -722,10 +724,10 @@ object_trackers = {
         clear_timer = 0
     },
     wreckage = {
-        test_type = function(self, object)
+        test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "wreckage"
         end,
-        init = function(self, object)
+        init = function(self, id, type, object, component_id, mission_id)
             object.components_checked = false
             object.completion_timer = 0
             object.initial_transform = server.getVehiclePos(object.id)
@@ -771,10 +773,10 @@ object_trackers = {
         clear_timer = 18000
     },
     headquarter = {
-        test_type = function(self, object)
+        test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "headquarter"
         end,
-        init = function(self, object)
+        init = function(self, id, type, object, component_id, mission_id)
             object.components_checked = false
             object.alert = nil
             object.mission_datalink = {}
@@ -897,12 +899,39 @@ object_trackers = {
                 end
             end
         end,
-        alert = function(self, object)
-            if object.alert == nil then
-                return
-            end
-
-            press_vehicle_button(object.id, object.alert)
+        position = function(self, object)
+            return server.getVehiclePos(object.id)
+        end,
+        dispensable = function(self, object)
+            return false
+        end,
+        completed = function(self, object)
+            return false
+        end,
+        reward = function(self, object)
+            return self.reward_base
+        end,
+        status = function(self, object)
+            return self.progress
+        end,
+        reward_base = 0,
+        progress = "",
+        marker_type = 11,
+        clear_timer = 0
+    },
+    unit = {
+        test_type = function(self, id, type, object, component_id, mission_id, owner, cost)
+            return object.type == "vehicle" and owner ~= nil and cost ~= nil
+        end,
+        init = function(self, id, type, object, component_id, mission_id, owner, cost)
+            object.owner_steam_id = owner
+            object.cost = cost
+        end,
+        clear = function(self, object)
+        end,
+        load = function(self, object)
+        end,
+        tick = function(self, object, tick)
         end,
         position = function(self, object)
             return server.getVehiclePos(object.id)
@@ -983,7 +1012,7 @@ end
 function clear_mission(mission)
     for i = #g_savedata.objects, 1, -1 do
         if g_savedata.objects[i].mission == mission.id then
-            clear_object(g_savedata.objects[i])
+            despawn_object(g_savedata.objects[i])
         end
     end
 
@@ -1050,14 +1079,14 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
     object.clear_timer = 0
 
     for k, v in pairs(object_trackers) do
-        if v:test_type(object, table.unpack(params)) then
+        if v:test_type(id, type, object, component_id, mission_id, table.unpack(params)) then
             object.tracker = k
             break
         end
     end
 
     if object.tracker ~= nil then
-        object_trackers[object.tracker]:init(object, table.unpack(params))
+        object_trackers[object.tracker]:init(id, type, object, component_id, mission_id, table.unpack(params))
     end
 
     table.insert(g_savedata.objects, object)
@@ -1069,7 +1098,7 @@ function clear_object(object)
         object_trackers[object.tracker]:clear(object)
     end
 
-    despawn_object(object)
+    -- despawn_object(object)
 
     server.removeMapID(-1, object.marker_id)
 
@@ -1078,12 +1107,11 @@ function clear_object(object)
 end
 
 function despawn_object(object)
-    if object.type == "character" then
-        server.despawnObject(object.id, true)
-    elseif object.type == "vehicle" then
+    if object.type == "vehicle" then
         server.despawnVehicle(object.id, true)
     else
         server.despawnObject(object.id, true)
+        clear_object(object)
     end
 end
 
@@ -1123,7 +1151,7 @@ function tick_object(object, tick)
 
     if object.mission ~= nil and object.completed then
         if object.clear_timer >= object_trackers[object.tracker].clear_timer then
-            clear_object(object)
+            despawn_object(object)
         else
             object.clear_timer = object.clear_timer + tick
         end
@@ -1371,9 +1399,9 @@ function spawn_location(location, mission_id)
     end
 
     if location.zone then
-        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.name, location.zone.id))
+        console.notify(string.format("Spawning dynamic location %s in zone %s#%d", location.name, location.zone.tags.landscape, location.zone.id))
     else
-        console.notify(string.format("Spawning fixed location %s", location.name))
+        console.notify(string.format("Spawning static location %s", location.name))
     end
 
     for k, v in pairs(vehicles) do
@@ -1396,7 +1424,9 @@ function spawn_component(component, transform, mission_id)
         parent_object_id = parent_object.id
     end
 
+    spawn_by_foundation = true
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
+    spawn_by_foundation = false
 
     object.tags = parse_tags(object.tags_full)
 
@@ -1609,7 +1639,7 @@ end
 function alert_headquarter()
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker == "headquarter" then
-            object_trackers.headquarter:alert(g_savedata.objects[i])
+            press_vehicle_button(g_savedata.objects[i].id, g_savedata.objects[i].alert)
         end
     end
 end
@@ -1791,7 +1821,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "next" and is_admin then
             g_savedata.mission_interval = 0
         elseif verb == "close" and is_admin then
-            console.error("'?mission close' is replaced to '?mission terminate'")
+            console.error("'?mission close' replaced to '?mission terminate'")
         elseif verb == "terminate" and is_admin then
             local id = ...
             id = tonumber(id)
@@ -1806,15 +1836,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
             terminate_mission(mission)
         elseif verb == "register-hq" and is_admin then
-            local group_id = ...
-            local group_id = tonumber(group_id)
-
-            if not group_id then
-                console.error("Vehicle Group ID is not a number.")
-                return
-            end
-
-            initialize_headquarter(group_id)
+            console.error("'?mission register-hq' removed. Please read to manual for new methods.")
         elseif verb == "prod" and is_admin then
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
@@ -1838,7 +1860,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mission_count_limited = not g_savedata.mission_count_limited
         elseif verb == "limit-range" and is_admin then
             g_savedata.mission_range_limited = not g_savedata.mission_range_limited
-        elseif verb == "close-in" and is_admin then
+        elseif verb == "gather" and is_admin then
             local mission_id = ...
             mission_id = tonumber(mission_id)
             local transform, is_success = server.getPlayerPos(peer_id)
@@ -1855,6 +1877,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "clear-history" and is_admin then
             g_savedata.locations_history = {}
         end
+    elseif command == "?clear" then
+        server.command(string.format("?clpv %d", peer_id))
     end
 end
 
@@ -1888,12 +1912,51 @@ function onPlayerRespawn(peer_id)
     end
 end
 
+spawn_by_foundation = false
+
+function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
+    if spawn_by_foundation then
+        return
+    end
+
+    local vehicle_ids = server.getVehicleGroup(group_id)
+    local data = server.getVehicleData(vehicle_ids[1])
+    local object = {}
+    local owner = nil
+    local cost = 0
+
+    if peer_id > 0 then
+        owner = get_player(peer_id).steam_id
+        cost = group_cost
+    end
+
+    object.tags_full = data.tags_full
+    object.tags = parse_tags(object.tags_full)
+    object.display_name = ""
+    object.type = "vehicle"
+    object.transform = server.getVehiclePos(vehicle_ids[1])
+    object.id = vehicle_ids[1]
+    object.object_id = nil
+    object.group_id = group_id
+    object.vehicle_ids = vehicle_ids
+
+    initialize_object(object.id, object.type, object, nil, nil, owner, cost)
+end
+
 function onVehicleLoad(vehicle_id)
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
             if g_savedata.objects[i].tracker ~= nil then
                 loaded_vehicle(g_savedata.objects[i])
             end
+        end
+    end
+end
+
+function onVehicleDespawn(vehicle_id, peer_id)
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+            clear_object(g_savedata.objects[i])
         end
     end
 end
