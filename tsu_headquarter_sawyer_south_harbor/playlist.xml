@@ -29,7 +29,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="3" id="11" display_name="headquarter" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_11.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
+					<c component_type="3" id="11" name="tracker=headquarter" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_11.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
 						<spawn_transform 00="0.4854" 02="-0.874292" 20="0.874292" 22="0.4854" 30="151.72467" 31="11.244499" 32="-404.841949"/>
 						<spawn_bounds>
 							<min x="-5.875" y="-5.875" z="-17.875"/>
