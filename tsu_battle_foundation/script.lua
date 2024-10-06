@@ -1,7 +1,7 @@
--- TSU Battle Foundation 1.0
+-- TSU Battle Foundation 1.0.1
 -- properties
 g_savedata = {
-    mode = "debug",
+    mode = "prod",
     objects = {},
     game = nil,
     zones = {},
