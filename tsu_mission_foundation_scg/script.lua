@@ -449,6 +449,7 @@ mission_trackers = {
             local wreckage_count = 0
             local underwater_count = 0
             local hostile_count = 0
+            local suspect_count = 0
             local radiation_count = 0
 
             for i = 1, #g_savedata.objects do
@@ -483,7 +484,7 @@ mission_trackers = {
                 mission.units.med = true
             end
 
-            if not mission.units.spc and (hostile_count >= 1 or underwater_count >= 1) then
+            if not mission.units.spc and (hostile_count >= 1 or suspect_count >= 1 or underwater_count >= 1) then
                 mission.units.spc = true
             end
         end,
