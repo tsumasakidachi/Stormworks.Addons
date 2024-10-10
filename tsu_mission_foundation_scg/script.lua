@@ -683,8 +683,8 @@ object_trackers = {
             return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.progress, object.vital.hp, object.cpa_count)
             -- return self.progress
         end,
-        reward_base = 1000,
-        progress = "要救助者を発見し病院へ移送",
+        reward_base = 2000,
+        progress = "要救助者を捜索・治療し病院へ移送",
         marker_type = 1,
         clear_timer = 300
     },
