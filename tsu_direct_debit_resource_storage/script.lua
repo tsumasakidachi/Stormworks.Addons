@@ -105,6 +105,10 @@ end
 -- budgets
 
 function transact(amount, title)
+    if server.getGameSettings().infinite_money then
+        return
+    end
+
     local not_type = 4
     local text = "Accepted $%d"
 
