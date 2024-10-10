@@ -1,7 +1,7 @@
 -- TSU Mission Foundation SCG 1.1.4
 -- properties
 g_savedata = {
-    mode = "debug",
+    mode = "prod",
     missions = {},
     objects = {},
     players = {},
@@ -179,21 +179,21 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
--- }, {
---     pattern = "^mission:tunnel_fire$",
---     tracker = "sar",
---     suitable_zones = {},
---     is_main_location = true,
---     sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
---     sub_location_min = 3,
---     sub_location_max = 5,
---     is_unique_sub_location = false,
---     search_radius = 500,
---     notification_type = 1,
---     report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
---     report_timer_min = 0,
---     report_timer_max = 0,
---     note = "民間人からの通報"
+    -- }, {
+    --     pattern = "^mission:tunnel_fire$",
+    --     tracker = "sar",
+    --     suitable_zones = {},
+    --     is_main_location = true,
+    --     sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
+    --     sub_location_min = 3,
+    --     sub_location_max = 5,
+    --     is_unique_sub_location = false,
+    --     search_radius = 500,
+    --     notification_type = 1,
+    --     report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
+    --     report_timer_min = 0,
+    --     report_timer_max = 0,
+    --     note = "民間人からの通報"
 }, {
     pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
@@ -1658,6 +1658,10 @@ end
 -- budgets
 
 function transact(amount, title)
+    if server.getGameSettings().infinite_money then
+        return
+    end
+
     local not_type = 4
     local text = "Accepted $%d"
 
@@ -1905,12 +1909,10 @@ end
 function onPlayerRespawn(peer_id)
     teleport_to_spawn_points(peer_id)
 
-    if not server.getGameSettings().infinite_money then
-        local player = table.find(players, function(p)
-            return p.id == peer_id
-        end)
-        transact(-10000, string.format("%s bought a new life.", player.name))
-    end
+    local player = table.find(players, function(p)
+        return p.id == peer_id
+    end)
+    transact(-10000, string.format("%s bought a new life.", player.name))
 end
 
 spawn_by_foundation = false

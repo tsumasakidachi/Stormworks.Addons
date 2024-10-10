@@ -57,6 +57,12 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         })
     end
 
+    -- kill
+    if command == "?kill" then
+        local object = server.getPlayerCharacterID(peer_id)
+        server.killCharacter(object)
+    end
+
     -- list vehicles
     if command == "?liv" and is_admin then
         for i = 1, #g_savedata.vehicles do
@@ -192,12 +198,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         end
 
         server.announce("[Utility]", string.format("Vehicle detail tooltip: %s", g_savedata.vehicle_tooltip))
-    end
-
-    if command == "?clearing" and is_admin then
-        g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
-
-        server.announce("[Utility]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
     end
 end
 
