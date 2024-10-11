@@ -1,4 +1,6 @@
--- TSU Battle Foundation 1.0.1
+-- TSU Battle Foundation
+-- version 1.0.1
+
 -- properties
 g_savedata = {
     mode = "prod",
@@ -537,8 +539,8 @@ function map_game_stats(game)
     text = text .. "\n\n" .. game_trackers[game.tracker]:status(game)
 
     for i = 1, #game.team_members do
-        server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.8, -0.6)
-        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "TEAM", true, team_stats(game, game.team_members[i]), 0.6, -0.6)
+        server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.8, -0.7)
+        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "TEAM", true, team_stats(game, game.team_members[i]), 0.6, -0.7)
     end
 end
 
@@ -551,6 +553,8 @@ end
 
 function team_stats(game, member)
     local text = string.upper(game.teams[member.team_id].name) .. "\n"
+
+    text = text .. string.format("%d tickets", game.teams[member.team_id].tickets) .. "\n"
 
     for i = 1, #game.team_members do
         if game.team_members[i].team_id == member.team_id then
@@ -596,6 +600,35 @@ function ready(game, player, r)
     end
 
     server.notify(-1, string.format("%s TEAM IS %s", string.upper(game.teams[member.team_id].name), text), player.name, type)
+end
+
+function ticket(game, player, amount)
+    local amount = math.ceil(tonumber(amount))
+
+    if amount == nil then
+        console.error("Amount is not number.")
+        return
+    end
+
+    local member = table.find(game.team_members, function(x)
+        return x.steam_id == tostring(player.steam_id)
+    end)
+
+    if member == nil then
+        return
+    end
+
+    local type = 5
+
+    if amount >= 0 then
+        type = 5
+    else
+        type = 6
+    end
+
+    game.teams[member.team_id].tickets = game.teams[member.team_id].tickets + amount
+
+    server.notify(-1, string.format("%s TEAM TICKETS %+d", string.upper(game.teams[member.team_id].name), amount), player.name, type)
 end
 
 function set_teleports(v)
@@ -1225,6 +1258,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif command == "?tp" and g_savedata.game ~= nil then
         local player = get_player(peer_id)
         teleport(g_savedata.game, player, verb)
+    elseif command == "?ticket" and g_savedata.game ~= nil then
+        local player = get_player(peer_id)
+
+        ticket(g_savedata.game, player, verb)
     end
 end
 
