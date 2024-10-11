@@ -628,7 +628,7 @@ function ticket(game, player, amount)
 
     game.teams[member.team_id].tickets = game.teams[member.team_id].tickets + amount
 
-    server.notify(-1, string.format("%s TEAM TICKETS %+d", string.upper(game.teams[member.team_id].name), amount), player.name, type)
+    server.notify(-1, string.format("%s TEAM TICKETS WAS %+d", string.upper(game.teams[member.team_id].name), amount), player.name, type)
 end
 
 function set_teleports(v)
