@@ -1,5 +1,5 @@
 -- TSU Battle Foundation
--- version 1.0.1
+-- version 1.0.2
 
 -- properties
 g_savedata = {
@@ -486,7 +486,7 @@ function initialize_game(mode, map_id)
     set_maps(false)
     set_name_plates(true)
 
-    server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), string.upper(game.map_id)), 5)
+    server.notify(-1, "MATCHMAKING...", string.format("%s\n%s", string.upper(game.name), game.map_id), 5)
     console.log(string.format("Matchmaking %s...", game.name))
 
     for i = 1, #game.team_members do
@@ -552,7 +552,7 @@ function start_game(game)
             set_teleports(false)
             set_maps(false)
             set_name_plates(false)
-            server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), string.upper(game.map_id)), 5)
+            server.notify(-1, "GAME START", string.format("%s\n%s", string.upper(game.name), game.map_id), 5)
         end
     end
 end
@@ -566,13 +566,13 @@ function finish_game(game)
             set_teleports(true)
             set_maps(true)
             set_name_plates(true)
-            console.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), string.upper(game.map_id)), 5)
+            console.notify(-1, "GAME OVER", string.format("%s\n%s", string.upper(game.name), game.map_id), 5)
         end
     end
 end
 
 function map_game_stats(game)
-    local text = string.format("%s\n%s", string.upper(game.name), string.upper(game.map_id))
+    local text = string.format("%s\n%s", string.upper(game.name), game.map_id)
     text = text .. "\n\n" .. game_trackers[game.tracker]:status(game)
 
     for i = 1, #game.team_members do
@@ -951,8 +951,9 @@ end
 players = {}
 peers_map_open = {}
 
-function team_members(count)
+function team_members(count, ratio)
     local p = table.copy(players)
+    local ratio = ratio or 0.5
 
     if p[1].name == "Server" then
         table.remove(p, 1)
@@ -962,7 +963,13 @@ function team_members(count)
 
     for i = 1, #p do
         p[i].steam_id = tostring(p[i].steam_id)
-        p[i].team_id = (i - 1) % count + 1
+
+        if i / #p <= ratio then
+            p[i].team_id = 1
+        else
+            p[i].team_id = 2
+        end
+
         p[i].marker_id = server.getMapID()
         p[i].commander = false
         p[i].opend_map = false
@@ -1163,7 +1170,7 @@ function onTick(tick)
             players[i].steam_id = tostring(players[i].steam_id)
         end
 
-        if false then
+        if true then
             table.insert(players, {
                 id = 100,
                 name = "a",
