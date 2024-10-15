@@ -960,8 +960,6 @@ function team_members(a, b)
 
     table.shuffle(p)
 
-    console.notify(limit)
-
     for i = 1, #p do
         p[i].steam_id = tostring(p[i].steam_id)
 
@@ -1261,9 +1259,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             if g_savedata.game ~= nil then
                 clear_game(g_savedata.game)
             end
-
-            console.notify(a)
-            console.notify(b)
 
             initialize_game(game, map_id, a, b)
         elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
