@@ -1,9 +1,8 @@
 -- TSU Battle Foundation
 -- version 1.0.2
-
 -- properties
 g_savedata = {
-    mode = "debug",
+    mode = "prod",
     objects = {},
     game = nil,
     zones = {},
@@ -33,8 +32,7 @@ zone_properties = {{
     icon = 1
 }}
 
-games = {
---     {
+games = { --     {
 --     tracker = "cqt",
 --     name = "conquest",
 --     point_of_match = 60,
@@ -47,8 +45,7 @@ games = {
     point_of_match = 60,
     deploy_point_start = 200,
     teams = {}
-},
--- {
+} -- {
 --     tracker = "destruction",
 --     name = "destruction",
 --     point_of_match = 60,
@@ -227,7 +224,7 @@ game_trackers = {
 
             return text
         end
-    },
+    }
     -- destruction = {
     --     init = function(self, game)
     --         for i = 1, #game.teams do
@@ -394,7 +391,7 @@ object_trackers = {
 
 -- games
 
-function initialize_game(mode, map_id)
+function initialize_game(mode, map_id, red_count, blue_count)
     for i = #g_savedata.objects, 1, -1 do
         despawn_object(g_savedata.objects[i])
     end
@@ -473,7 +470,7 @@ function initialize_game(mode, map_id)
     }
 
     game_trackers[game.tracker]:init(game)
-    game.team_members = team_members(2)
+    game.team_members = team_members(red_count, blue_count)
     spawn_storage(map_id)
     g_savedata.game = game
 
@@ -860,7 +857,9 @@ function unmap_vehicle_friendry(game, vehicle)
 end
 
 function vehicle_spec_table(vehicle)
-    local player = table.find(players, function(x) return x.steam_id == vehicle.owner.steam_id end)
+    local player = table.find(players, function(x)
+        return x.steam_id == vehicle.owner.steam_id
+    end)
     return string.format("%s\n\n%.00f deploy points\n%.00f hit points\n%.00f voxels\n%.00f mass", player.name, vehicle.deploy_points, vehicle.hit_points, vehicle.voxels, vehicle.mass)
 end
 
@@ -951,9 +950,9 @@ end
 players = {}
 peers_map_open = {}
 
-function team_members(count, ratio)
+function team_members(a, b)
     local p = table.copy(players)
-    local ratio = ratio or 0.5
+    local limit = math.round(a / (a + b) * #p)
 
     if p[1].name == "Server" then
         table.remove(p, 1)
@@ -961,10 +960,12 @@ function team_members(count, ratio)
 
     table.shuffle(p)
 
+    console.notify(limit)
+
     for i = 1, #p do
         p[i].steam_id = tostring(p[i].steam_id)
 
-        if i / #p <= ratio then
+        if i <= limit then
             p[i].team_id = 1
         else
             p[i].team_id = 2
@@ -1236,6 +1237,17 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local params = parse_tags({...})
             local mode_id = params.mode or "manual"
             local map_id = params.map
+            local a, b = 1, 1
+
+            if params.ratio ~= nil then
+                local _a, _b = string.match(params.ratio, "^(%d+):(%d+)$")
+
+                if _a ~= nil and _b ~= nil then
+                    a = tonumber(_a)
+                    b = tonumber(_b)
+                end
+
+                end
 
             local game = table.find(games, function(x)
                 return x.tracker == mode_id
@@ -1246,20 +1258,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 return
             end
 
-            -- local map = table.find(maps, function(x)
-            --     return x.map == map_id
-            -- end)
-
-            -- if map == nil then
-            --     console.error(string.format("%s is not valid map", map_id))
-            --     return
-            -- end
-
             if g_savedata.game ~= nil then
                 clear_game(g_savedata.game)
             end
 
-            initialize_game(game, map_id)
+            console.notify(a)
+            console.notify(b)
+
+            initialize_game(game, map_id, a, b)
         elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
             clear_game(g_savedata.game)
         elseif is_admin and verb == "map" then
@@ -1323,7 +1329,7 @@ function onCreate(is_world_create)
     else
         console.notify("Battle: no available")
     end
-    
+
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Objects: %d", #g_savedata.objects))
 end
@@ -1539,7 +1545,7 @@ function parse_tags(tags)
     local t = {}
 
     for i = 1, #tags do
-        local k, v = string.match(tags[i], "^([%w_]+)=([%w_-]+)$")
+        local k, v = string.match(tags[i], "^([%w_]+)=([%w_+-*/:]+)$")
 
         if k ~= nil and v ~= nil then
             t[k] = v
