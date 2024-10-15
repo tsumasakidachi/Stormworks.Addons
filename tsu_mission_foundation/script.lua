@@ -1,5 +1,4 @@
 -- TSU Mission Foundation 1.1.0
-
 -- properties
 g_savedata = {
     mode = "prod",
@@ -225,7 +224,7 @@ mission_trackers = {
             return progresses
         end,
         status = function(self, mission)
-            local text =  "Progress:"
+            local text = "Progress:"
 
             local progresses = self:progress(mission)
 
@@ -253,11 +252,11 @@ object_trackers = {
             object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
             if object.vital.hp == 0 then
-                object.cpa_count =  1
+                object.cpa_count = 1
             else
-                object.cpa_count =  0
+                object.cpa_count = 0
             end
-            
+
             object.on_board = 0
             object.nearby_player = false
 
@@ -1306,7 +1305,9 @@ function onPlayerRespawn(peer_id)
     teleport_to_spawn_points(peer_id)
 
     if not server.getGameSettings().infinite_money then
-        local player = table.find(players, function(p) return p.id == peer_id end)
+        local player = table.find(players, function(p)
+            return p.id == peer_id
+        end)
         transact(-10000, string.format("%s bought a new life.", player.name))
     end
 end
@@ -1381,21 +1382,27 @@ function parse_tags(tags_full)
     return t
 end
 
-console = {}
+console = {
+    log = function(text, peer_id)
+        if peer_id == nil then
+            peer_id = -1
+        end
 
-function console.notify(text, peer_id)
-    peer_id = peer_id or -1
+        server.announce("[LOG]", text, peer_id)
+    end,
+    notify = function(text, peer_id)
+        peer_id = peer_id or -1
 
-    if g_savedata.mode == "debug" then
-        server.announce("[Mission Foundation]", text, peer_id)
+        if g_savedata.mode == "debug" then
+            server.announce("[NOTICE]", text, peer_id)
+        end
+    end,
+    error = function(text, peer_id)
+        peer_id = peer_id or -1
+
+        server.announce("[ERROR]", text, peer_id)
     end
-end
-
-function console.error(text, peer_id)
-    peer_id = peer_id or -1
-
-    server.announce("[Mission Foundation]", text, peer_id)
-end
+}
 
 function table.contains(t, x)
     local contains = false
