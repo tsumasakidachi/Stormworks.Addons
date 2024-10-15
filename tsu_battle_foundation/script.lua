@@ -662,6 +662,7 @@ function ticket(game, player, amount)
 
     game.teams[member.team_id].tickets = game.teams[member.team_id].tickets + amount
 
+    console.log(string.format("%s team tickets was %+d by %s", game.teams[member.team_id].name, amount, player.name))
     server.notify(-1, string.format("%s TEAM TICKETS WAS %+d", string.upper(game.teams[member.team_id].name), amount), player.name, type)
 end
 
@@ -1169,7 +1170,7 @@ function onTick(tick)
             players[i].steam_id = tostring(players[i].steam_id)
         end
 
-        if true then
+        if false then
             table.insert(players, {
                 id = 100,
                 name = "a",
