@@ -962,8 +962,6 @@ function team_members(a, b)
     table.shuffle(p)
 
     for i = 1, #p do
-        p[i].steam_id = tostring(p[i].steam_id)
-
         if i <= limit then
             p[i].team_id = 1
         else
