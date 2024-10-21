@@ -1216,7 +1216,7 @@ function onTick(tick)
             players[i].steam_id = tostring(players[i].steam_id)
         end
 
-        if true then
+        if false then
             table.insert(players, {
                 id = 100,
                 name = "a",
