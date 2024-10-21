@@ -470,7 +470,25 @@ function initialize_game(mode, map_id, red_count, blue_count)
     }
 
     game_trackers[game.tracker]:init(game)
-    game.team_members = team_members(red_count, blue_count)
+
+    game.team_members = {}
+
+    local p = shuffle_players()
+    local limit = math.round(red_count / (red_count + blue_count) * #p)
+
+    for i = 1, #p do
+        local team_id = nil
+
+        if i <= limit then
+            team_id = 1
+        else
+            team_id = 2
+        end
+        
+        local player = team_member(p[i], team_id)
+        table.insert(game.team_members, player)
+    end
+
     spawn_storage(map_id)
     g_savedata.game = game
 
@@ -493,7 +511,7 @@ function initialize_game(mode, map_id, red_count, blue_count)
         set_default_inventory(object_id)
         map_member(game, game.team_members[i])
         teleport_to_base(game, game.team_members[i])
-        console.log(string.format("%s joined %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
+        console.log(string.format("%s assigned to %s team", game.team_members[i].name, game.teams[game.team_members[i].team_id].name), game.team_members[i].id)
     end
 end
 
@@ -951,6 +969,9 @@ end
 players = {}
 peers_map_open = {}
 
+function assign(player, team_id)
+end
+
 function team_members(a, b)
     local p = table.copy(players)
     local limit = math.round(a / (a + b) * #p)
@@ -972,6 +993,27 @@ function team_members(a, b)
         p[i].commander = false
         p[i].opend_map = false
     end
+
+    return p
+end
+
+function team_member(player, team_id)
+    player.team_id = team_id
+    player.marker_id = server.getMapID()
+    player.commander = false
+    player.opend_map = false
+
+    return player
+end
+
+function shuffle_players()
+    local p = table.copy(players)
+
+    if p[1].name == "Server" then
+        table.remove(p, 1)
+    end
+
+    table.shuffle(p)
 
     return p
 end
@@ -1006,7 +1048,13 @@ function unmap_member(game, member)
 end
 
 function map_player(peer_id, game, player)
-    local object_id = server.getPlayerCharacterID(player.id)
+    local object_id, s = server.getPlayerCharacterID(player.id)
+
+    if not s then return end
+
+    local vehicle_id, s = server.getCharacterVehicle(object_id)
+
+    if vehicle_id ~= nil or not s then return end
 
     server.addMapObject(peer_id, player.marker_id, 2, 1, 0, 0, 0, 0, nil, object_id, player.name, 0, nil, game.teams[player.team_id].color.r, game.teams[player.team_id].color.g, game.teams[player.team_id].color.b, 255)
 end
@@ -1168,7 +1216,7 @@ function onTick(tick)
             players[i].steam_id = tostring(players[i].steam_id)
         end
 
-        if false then
+        if true then
             table.insert(players, {
                 id = 100,
                 name = "a",
@@ -1262,6 +1310,54 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             initialize_game(game, map_id, a, b)
         elseif is_admin and verb == "clear" and g_savedata.game ~= nil then
             clear_game(g_savedata.game)
+        elseif is_admin and verb == "assign" and g_savedata.game ~= nil then
+            local peer_id, team_name = ...
+            peer_id = tonumber(peer_id)
+
+            if g_savedata.game == nil then
+                return
+            end
+            
+            local player = table.find(players, function(x) return x.id == peer_id end)
+
+            if player == nil then
+                console.error(string.format("Player %d no exists", peer_id), peer_id)
+                return
+            end
+
+            local team_id = table.find_index(g_savedata.game.teams, function(x) return x.name == string.lower(team_name) end)
+
+            if team_id == nil then
+                console.error(string.format("Team %s no exists", team_name), peer_id)
+                return
+            end
+
+            local member_index = table.find_index(g_savedata.game.team_members, function(x) return x.steam_id == player.steam_id end)
+
+            if member_index ~= nil then
+                console.error(string.format("Player %d already assined", peer_id), peer_id)
+                -- table.remove(g_savedata.game.team_members, member_index)
+                return
+            end
+
+            local member = team_member(player, team_id)
+            table.insert(g_savedata.game.team_members, member)
+            local object_id = server.getPlayerCharacterID(member.id)
+            
+            for i = 1, #g_savedata.game.team_members do
+                if member ~= nil and g_savedata.game.team_members[i].team_id == member.team_id then
+                    map_player(member.id, g_savedata.game, g_savedata.game.team_members[i])
+                    map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
+                end
+            end
+    
+            for i = 1, #g_savedata.objects do
+                map_vehicle_friendry(g_savedata.game, g_savedata.objects[i])
+            end
+
+            clear_inventory(object_id)
+            set_default_inventory(object_id)
+            teleport_to_base(g_savedata.game, member)
         elseif is_admin and verb == "map" then
         elseif is_admin and verb == "deploy_points" then
             g_savedata.subsystems.deploy_points = not g_savedata.subsystems.deploy_points
@@ -1351,14 +1447,15 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
 
     for i = 1, #vehicle_ids do
         local data, s = server.getVehicleData(vehicle_ids[i])
+        local tags = parse_tags(data.tags)
 
-        if peer_id >= 0 then
+        if tags.tracker == "storage" then
+            initialize_object(vehicle_ids[i], "vehicle", data)
+        elseif peer_id >= 0 then
             local owner = get_player(peer_id)
             local body_index = i - 1
 
             initialize_object(vehicle_ids[i], "vehicle", data, group_id, body_index, 0, owner.steam_id)
-        else
-            initialize_object(vehicle_ids[i], "vehicle", data)
         end
     end
 end
