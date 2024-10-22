@@ -1884,6 +1884,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         end
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
+    elseif command == "?kill" then
+        local object_id = server.getPlayerCharacterID(peer_id)
+        server.killCharacter(object_id)
     end
 end
 
@@ -1907,11 +1910,13 @@ function onPlayerLeave(steam_id, name, peer_id, is_admin, is_auth)
 end
 
 function onPlayerRespawn(peer_id)
-    teleport_to_spawn_points(peer_id)
-
     local player = table.find(players, function(p)
         return p.id == peer_id
     end)
+
+    teleport_to_spawn_points(peer_id)
+    server.command(string.format("?clpv %d", peer_id))
+
     transact(-10000, string.format("%s bought a new life.", player.name))
 end
 
@@ -1971,6 +1976,7 @@ end
 function onCreate(is_world_create)
     load_zones()
     load_locations()
+    server.command("?util clearing true")
 
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))

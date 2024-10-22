@@ -186,8 +186,16 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         end
     end
 
-    if command == "?tooltip" and is_admin then
-        g_savedata.vehicle_tooltip = not g_savedata.vehicle_tooltip
+    if command == "?util" and target == "tooltip" and is_admin then
+        local value = ...
+
+        if value == "true" then
+            g_savedata.vehicle_tooltip = true
+        elseif value == "false" then
+            g_savedata.vehicle_tooltip = false
+        elseif value == nil then
+            g_savedata.vehicle_tooltip = not g_savedata.vehicle_tooltip
+        end
 
         for i = 1, #g_savedata.vehicles do
             if g_savedata.vehicle_tooltip then
@@ -197,7 +205,19 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             end
         end
 
-        server.announce("[Utility]", string.format("Vehicle detail tooltip: %s", g_savedata.vehicle_tooltip))
+        server.announce("[NOTICE]", string.format("Vehicle tooltip: %s", g_savedata.vehicle_tooltip))
+    elseif command == "?util" and target == "clearing" and is_admin then
+        local value = ...
+
+        if value == "true" then
+            g_savedata.vehicle_clearing = true
+        elseif value == "false" then
+            g_savedata.vehicle_clearing = false
+        elseif value == nil then
+            g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
+        end
+        
+        server.announce("[NOTICE]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
     end
 end
 
@@ -238,9 +258,6 @@ function onVehicleDespawn(vehicle_id, peer_id)
             table.remove(g_savedata.vehicles, i)
         end
     end
-end
-
-function onVehicleLoad()
 end
 
 function despawn_players_vehicle(player)
