@@ -1,4 +1,6 @@
--- TSU Mission Foundation SCG 1.1.4
+name = "TSU Mission Foundation SCG"
+version = "1.1.4"
+
 -- properties
 g_savedata = {
     mode = "prod",
@@ -27,7 +29,7 @@ g_savedata = {
     cpa_recurrence = property.checkbox("CPA Recurrence", true),
     rescuees_has_strobe = property.checkbox("Rescuees has strobe", true),
     splillage = false,
-    eot = true -- END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru --
+    eot = "END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru"
 }
 
 location_properties = {{
