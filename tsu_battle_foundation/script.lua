@@ -1,5 +1,5 @@
 -- TSU Battle Foundation
--- version 1.0.2
+-- version 1.0.3
 -- properties
 g_savedata = {
     mode = "prod",
@@ -10,8 +10,7 @@ g_savedata = {
         operation_area = true,
         deploy_points = false,
         hit_points = false
-    },
-    altitude_max = 300
+    }
 }
 
 zone_properties = {{
@@ -484,7 +483,7 @@ function initialize_game(mode, map_id, red_count, blue_count)
         else
             team_id = 2
         end
-        
+
         local player = team_member(p[i], team_id)
         table.insert(game.team_members, player)
     end
@@ -525,6 +524,7 @@ function clear_game(game)
 
         clear_inventory(object_id)
         set_default_inventory(object_id)
+        reset_player_hp(object_id)
         unmap_member(game, game.team_members[i])
         teleport_to_start_tile(game.team_members[i])
     end
@@ -1048,13 +1048,17 @@ function unmap_member(game, member)
 end
 
 function map_player(peer_id, game, player)
-    local object_id, s = server.getPlayerCharacterID(player.id)
+    local object_id = server.getPlayerCharacterID(player.id)
 
-    if not s then return end
+    if object_id == nil then
+        return
+    end
 
-    local vehicle_id, s = server.getCharacterVehicle(object_id)
+    local vehicle_id = server.getCharacterVehicle(object_id)
 
-    if vehicle_id ~= nil or not s then return end
+    if vehicle_id == nil then
+        return
+    end
 
     server.addMapObject(peer_id, player.marker_id, 2, 1, 0, 0, 0, 0, nil, object_id, player.name, 0, nil, game.teams[player.team_id].color.r, game.teams[player.team_id].color.g, game.teams[player.team_id].color.b, 255)
 end
@@ -1160,6 +1164,10 @@ function teleport_to_start_tile(player)
     local start_tile = server.getStartTile()
     local t = matrix.translation(start_tile.x, start_tile.y, start_tile.z)
     server.setPlayerPos(player.id, t)
+end
+
+function reset_player_hp(object_id)
+    server.setCharacterData(object_id, 100, false, false)
 end
 
 -- UIs
@@ -1292,7 +1300,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                     b = tonumber(_b)
                 end
 
-                end
+            end
 
             local game = table.find(games, function(x)
                 return x.tracker == mode_id
@@ -1317,22 +1325,28 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             if g_savedata.game == nil then
                 return
             end
-            
-            local player = table.find(players, function(x) return x.id == peer_id end)
+
+            local player = table.find(players, function(x)
+                return x.id == peer_id
+            end)
 
             if player == nil then
                 console.error(string.format("Player %d no exists", peer_id), peer_id)
                 return
             end
 
-            local team_id = table.find_index(g_savedata.game.teams, function(x) return x.name == string.lower(team_name) end)
+            local team_id = table.find_index(g_savedata.game.teams, function(x)
+                return x.name == string.lower(team_name)
+            end)
 
             if team_id == nil then
                 console.error(string.format("Team %s no exists", team_name), peer_id)
                 return
             end
 
-            local member_index = table.find_index(g_savedata.game.team_members, function(x) return x.steam_id == player.steam_id end)
+            local member_index = table.find_index(g_savedata.game.team_members, function(x)
+                return x.steam_id == player.steam_id
+            end)
 
             if member_index ~= nil then
                 console.error(string.format("Player %d already assined", peer_id), peer_id)
@@ -1343,14 +1357,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local member = team_member(player, team_id)
             table.insert(g_savedata.game.team_members, member)
             local object_id = server.getPlayerCharacterID(member.id)
-            
+
             for i = 1, #g_savedata.game.team_members do
                 if member ~= nil and g_savedata.game.team_members[i].team_id == member.team_id then
                     map_player(member.id, g_savedata.game, g_savedata.game.team_members[i])
                     map_player(g_savedata.game.team_members[i].id, g_savedata.game, member)
                 end
             end
-    
+
             for i = 1, #g_savedata.objects do
                 map_vehicle_friendry(g_savedata.game, g_savedata.objects[i])
             end
