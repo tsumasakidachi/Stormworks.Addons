@@ -1100,8 +1100,6 @@ function teleport(game, player, target)
         return
     end
 
-    console.error(tostring(target), player.id)
-
     if target ~= nil then
         local vehicle = table.find(g_savedata.objects, function(x)
             return x.tracker == "vehicle" and x.id == target and x.body_index == 0
