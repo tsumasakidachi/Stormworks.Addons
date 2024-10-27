@@ -1,5 +1,5 @@
 name = "TSU Mission Foundation SCG"
-version = "1.1.4"
+version = "1.1.5"
 
 -- properties
 g_savedata = {
@@ -180,22 +180,28 @@ location_properties = {{
     report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始している.",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
+    fire_min = 50,
+    fire_max = 100,
     note = "職員からの通報"
-    -- }, {
-    --     pattern = "^mission:tunnel_fire$",
-    --     tracker = "sar",
-    --     suitable_zones = {},
-    --     is_main_location = true,
-    --     sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
-    --     sub_location_min = 3,
-    --     sub_location_max = 5,
-    --     is_unique_sub_location = false,
-    --     search_radius = 500,
-    --     notification_type = 1,
-    --     report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
-    --     report_timer_min = 0,
-    --     report_timer_max = 0,
-    --     note = "民間人からの通報"
+}, {
+    pattern = "^mission:tunnel_fire$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
+    sub_location_min = 3,
+    sub_location_max = 5,
+    is_unique_sub_location = false,
+    search_radius = 500,
+    notification_type = 1,
+    report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    fire_min = 50,
+    fire_max = 100,
+    note = "民間人からの通報"
 }, {
     pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
@@ -443,6 +449,8 @@ mission_trackers = {
 
                 mission.search_center = matrix.translation(x, y, z)
                 mission.spawned = true
+
+                console.notify(string.format("Spawned mission #%d.", mission.id))
             end
 
             local rescuee_count = 0
@@ -584,7 +592,7 @@ mission_trackers = {
 object_trackers = {
     rescuee = {
         test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "character" and object.tags.tracker and object.tags.tracker == "rescuee"
+            return object.type == "character" and object.tags.tracker ~= nil and object.tags.tracker == "rescuee"
         end,
         init = function(self, id, type, object, component_id, mission_id)
             local hp_min = -20
@@ -728,7 +736,7 @@ object_trackers = {
     },
     wreckage = {
         test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "wreckage"
+            return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "wreckage"
         end,
         init = function(self, id, type, object, component_id, mission_id)
             object.components_checked = false
@@ -777,7 +785,7 @@ object_trackers = {
     },
     headquarter = {
         test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "vehicle" and object.tags.tracker and object.tags.tracker == "headquarter"
+            return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "headquarter"
         end,
         init = function(self, id, type, object, component_id, mission_id)
             object.components_checked = false
@@ -830,74 +838,74 @@ object_trackers = {
             end
         end,
         tick = function(self, object, tick)
-            for index = 1, math.max(#g_savedata.missions, 6) do
-                local mission = g_savedata.missions[index]
+            if object.components_checked then
+                for index = 1, math.max(#g_savedata.missions, 6) do
+                    if g_savedata.missions[index] ~= nil then
+                        local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
 
-                if mission ~= nil then
-                    local x, y, z = matrix.position(mission.locations[1].transform)
+                        if object.mission_datalink[index].id ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].id, g_savedata.missions[index].id)
+                        end
 
-                    if object.mission_datalink[index].id ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].id, mission.id)
-                    end
+                        if object.mission_datalink[index].x ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
+                        end
 
-                    if object.mission_datalink[index].x ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
-                    end
+                        if object.mission_datalink[index].y ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
+                        end
 
-                    if object.mission_datalink[index].y ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
-                    end
+                        if object.mission_datalink[index].t ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].r, g_savedata.missions[index].search_radius)
+                        end
 
-                    if object.mission_datalink[index].t ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].r, mission.search_radius)
-                    end
+                        if object.mission_datalink[index].sar ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].sar, g_savedata.missions[index].units.sar)
+                        end
 
-                    if object.mission_datalink[index].sar ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].sar, mission.units.sar)
-                    end
+                        if object.mission_datalink[index].med ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].med, g_savedata.missions[index].units.med)
+                        end
 
-                    if object.mission_datalink[index].med ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].med, mission.units.med)
-                    end
+                        if object.mission_datalink[index].fire ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].fire, g_savedata.missions[index].units.fire)
+                        end
 
-                    if object.mission_datalink[index].fire ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].fire, mission.units.fire)
-                    end
+                        if object.mission_datalink[index].spc ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].spc, g_savedata.missions[index].units.spc)
+                        end
+                    else
+                        if object.mission_datalink[index].id ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
+                        end
 
-                    if object.mission_datalink[index].spc ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].spc, mission.units.spc)
-                    end
-                else
-                    if object.mission_datalink[index].id ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
-                    end
+                        if object.mission_datalink[index].x ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
+                        end
 
-                    if object.mission_datalink[index].x ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
-                    end
+                        if object.mission_datalink[index].y ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
+                        end
 
-                    if object.mission_datalink[index].y ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
-                    end
+                        if object.mission_datalink[index].r ~= nil then
+                            set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
+                        end
 
-                    if object.mission_datalink[index].r ~= nil then
-                        set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
-                    end
+                        if object.mission_datalink[index].sar ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
+                        end
 
-                    if object.mission_datalink[index].sar ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
-                    end
+                        if object.mission_datalink[index].med ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].med, false)
+                        end
 
-                    if object.mission_datalink[index].med ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].med, false)
-                    end
+                        if object.mission_datalink[index].fire ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
+                        end
 
-                    if object.mission_datalink[index].fire ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
-                    end
-
-                    if object.mission_datalink[index].spc ~= nil then
-                        set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
+                        if object.mission_datalink[index].spc ~= nil then
+                            set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
+                        end
                     end
                 end
             end
@@ -975,9 +983,6 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     local mission = {}
     mission.cleared = false
     mission.id = g_savedata.mission_count + 1
-
-    console.notify(string.format("Initializing mission #%d...", mission.id))
-
     mission.start_position = center
     mission.tracker = tracker
     mission.locations = {location}
@@ -996,9 +1001,6 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     }
     mission.reward = 0
     mission_trackers[mission.tracker]:init(mission)
-
-    record_location_history(location)
-    table.insert(g_savedata.missions, mission)
     g_savedata.mission_count = g_savedata.mission_count + 1
 
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
@@ -1010,6 +1012,10 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
             table.insert(mission.locations, sub_location)
         end
     end
+
+    table.insert(g_savedata.missions, mission)
+    record_location_history(location)
+    console.notify(string.format("Initialized mission #%d.", mission.id))
 end
 
 function clear_mission(mission)
@@ -1090,6 +1096,10 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
 
     if object.tracker ~= nil then
         object_trackers[object.tracker]:init(id, type, object, component_id, mission_id, table.unpack(params))
+    end
+
+    if object.type == "vehicle" and object.tags.keep_active == "true" then
+        server.setVehicleTransponder(object.id, true)
     end
 
     table.insert(g_savedata.objects, object)
@@ -1382,6 +1392,8 @@ end
 
 function spawn_location(location, mission_id)
     local vehicles = {}
+    local rescuees = {}
+    local fires = {}
     local others = {}
 
     for component_index = 0, location.component_count do
@@ -1395,6 +1407,10 @@ function spawn_location(location, mission_id)
 
             if data.type == "vehicle" then
                 table.insert(vehicles, data)
+            elseif data.type == "character" and data.tags.tracker == "rescuee" then
+                table.insert(rescuees, data)
+            elseif data.type == "fire" then
+                table.insert(fires, data)
             else
                 table.insert(others, data)
             end
@@ -1407,12 +1423,26 @@ function spawn_location(location, mission_id)
         console.notify(string.format("Spawning static location %s", location.name))
     end
 
-    for k, v in pairs(vehicles) do
-        spawn_component(v, location.transform, mission_id)
+    for i = 1, #vehicles do
+        spawn_component(vehicles[i], location.transform, mission_id)
     end
 
-    for k, v in pairs(others) do
-        spawn_component(v, location.transform, mission_id)
+    local rescuees_limit = math.ceil(#rescuees * math.random(location.rescuee_min, location.rescuee_max) / 100)
+    table.shuffle(rescuees)
+
+    for i = 1, rescuees_limit do
+        spawn_component(rescuees[i], location.transform, mission_id)
+    end
+
+    local fires_limit = math.ceil(#fires * math.random(location.fire_min, location.fire_max) / 100)
+    table.shuffle(fires)
+
+    for i = 1, fires_limit do
+        spawn_component(fires[i], location.transform, mission_id)
+    end
+
+    for i = 1, #others do
+        spawn_component(others[i], location.transform, mission_id)
     end
 end
 
@@ -1476,6 +1506,10 @@ function load_locations()
                         location.report = location_properties[i].report or ""
                         location.report_timer_min = location_properties[i].report_timer_min or 0
                         location.report_timer_max = location_properties[i].report_timer_max or 0
+                        location.rescuee_min = location_properties[i].rescuee_min or 100
+                        location.rescuee_max = location_properties[i].rescuee_max or 100
+                        location.fire_min = location_properties[i].fire_min or 100
+                        location.fire_max = location_properties[i].fire_max or 100
                         location.note = location_properties[i].note or ""
 
                         table.insert(g_savedata.locations, location)
@@ -1724,15 +1758,6 @@ timing = 0
 function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
-    if g_savedata.mission_timer_tickrate > 0 then
-        if g_savedata.mission_interval <= 0 and (not g_savedata.mission_count_limited or missions_less_than_limit()) then
-            random_mission(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min)
-            g_savedata.mission_interval = math.random(g_savedata.mission_interval_min, g_savedata.mission_interval_max)
-        else
-            g_savedata.mission_interval = g_savedata.mission_interval - (tick * g_savedata.mission_timer_tickrate)
-        end
-    end
-
     if timing % 10 == 0 then
         players = server.getPlayers()
 
@@ -1776,6 +1801,15 @@ function onTick(tick)
             else
                 tick_mission(g_savedata.missions[i], tick * cycle)
             end
+        end
+    end
+
+    if g_savedata.mission_timer_tickrate > 0 then
+        if g_savedata.mission_interval <= 0 and (not g_savedata.mission_count_limited or missions_less_than_limit()) then
+            random_mission(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min)
+            g_savedata.mission_interval = math.random(g_savedata.mission_interval_min, g_savedata.mission_interval_max)
+        else
+            g_savedata.mission_interval = g_savedata.mission_interval - (tick * g_savedata.mission_timer_tickrate)
         end
     end
 
@@ -1933,10 +1967,19 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     local data = server.getVehicleData(vehicle_ids[1])
     local object = {}
     local owner = nil
-    local cost = 0
+    local cost = nil
 
-    if peer_id > 0 then
-        owner = get_player(peer_id).steam_id
+    if peer_id >= 0 then
+        local player = table.find(players, function(x)
+            return x.id == peer_id
+        end)
+
+        if player ~= nil then
+            owner = player.steam_id
+        else
+            owner = nil
+        end
+
         cost = group_cost
     end
 
@@ -1950,7 +1993,15 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     object.group_id = group_id
     object.vehicle_ids = vehicle_ids
 
-    initialize_object(object.id, object.type, object, nil, nil, owner, cost)
+    local test = false
+
+    for k, v in pairs(object_trackers) do
+        test = test or v:test_type(object.id, object.type, object, nil, nil, owner, cost)
+    end
+
+    if test then
+        initialize_object(object.id, object.type, object, nil, nil, owner, cost)
+    end
 end
 
 function onVehicleLoad(vehicle_id)
@@ -1978,7 +2029,10 @@ end
 function onCreate(is_world_create)
     load_zones()
     load_locations()
-    server.command("?util clearing true")
+
+    if is_world_create then
+        server.command("?util clearing true")
+    end
 
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
@@ -2185,6 +2239,13 @@ function table.distinct(t)
     end
 
     return u
+end
+
+function table.shuffle(x)
+    for i = #x, 2, -1 do
+        local j = math.random(i)
+        x[i], x[j] = x[j], x[i]
+    end
 end
 
 function math.round(x)
