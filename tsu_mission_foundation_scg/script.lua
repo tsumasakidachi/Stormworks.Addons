@@ -607,17 +607,13 @@ object_trackers = {
                 object.cpa_count = 0
             end
 
-            object.on_board = 0
-            object.nearby_player = false
+            object.strobe = {
+                opt = false,
+                ir = false
+            }
             object.time_admission = 0
 
             server.setCharacterData(object.id, object.vital.hp, object.vital.interactable, object.vital.ai)
-
-            if g_savedata.rescuees_has_strobe then
-                server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-                server.setCharacterItem(object.id, 4, 24, true, 0, 100)
-            end
-
             server.setCharacterTooltip(object.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
         clear = function(self, object)
@@ -626,17 +622,15 @@ object_trackers = {
         end,
         tick = function(self, object, tick)
             local transform = self:position(object)
-            local on_board = server.getCharacterVehicle(object.id)
-            local get_on = on_board ~= 0 and object.on_board == 0
-            local get_off = on_board == 0 and object.on_board ~= 0
+            local character_vehicle = server.getCharacterVehicle(object.id)
+            local on_board = character_vehicle ~= 0
             local vital_update = server.getCharacterData(object.id)
-            local is_in_hospital, s = is_in_landscape(transform, "hospital")
-            local nearby = nearby_players(transform, 100)
-            local arrived = nearby and not object.nearby_player
-            local leaved = not nearby and object.nearby_player
+            local is_in_hospital = is_in_landscape(transform, "hospital")
+            local is_doctor_nearby = is_doctor_nearby(object)
+            local is_safe = is_in_hospital or is_doctor_nearby
 
-            if g_savedata.cpa_recurrence and not is_in_hospital then
-                if object.vital.hp > 0 and vital_update.hp == 0 then
+            if g_savedata.cpa_recurrence and not is_safe then
+                if not object.vital.incapacitated and vital_update.incapacitated then
                     object.cpa_count = object.cpa_count + 1
                 end
 
@@ -644,15 +638,21 @@ object_trackers = {
             end
 
             if g_savedata.rescuees_has_strobe then
-                if (arrived and on_board == 0) or (get_off and nearby) then
-                    server.setCharacterItem(object.id, 2, 23, true, 0, 100)
-                    server.setCharacterItem(object.id, 4, 24, true, 0, 100)
+                local distance = distance_min_to_player(transform)
+                local opt = (object.strobe.opt or distance <= 100) and not on_board
+                local ir = (object.strobe.ir or distance <= 1000) and not on_board
+                local dead = not object.vital.dead and vital_update.dead
+
+                if opt ~= object.strobe.opt or dead then
+                    server.setCharacterItem(object.id, 2, 23, opt, 0, 100)
                 end
 
-                if get_on then
-                    server.setCharacterItem(object.id, 2, 23, false, 0, 100)
-                    server.setCharacterItem(object.id, 4, 24, false, 0, 100)
+                if ir ~= object.strobe.ir or dead then
+                    server.setCharacterItem(object.id, 3, 24, ir, 0, 100)
                 end
+
+                object.strobe.opt = opt
+                object.strobe.ir = ir
             end
 
             object.vital = vital_update
@@ -662,9 +662,6 @@ object_trackers = {
             end
 
             server.setCharacterData(object.id, object.vital.hp, not object.completed, object.vital.ai)
-
-            object.on_board = on_board
-            object.nearby_player = nearby
         end,
         position = function(self, object)
             return server.getObjectPos(object.id)
@@ -674,14 +671,9 @@ object_trackers = {
         end,
         completed = function(self, object)
             return object.time_admission > 120
-
         end,
         reward = function(self, object)
             local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
-
-            if object.vital.is_dead then
-                value = 0
-            end
 
             if g_savedata.cpa_recurrence and object.cpa_count >= 2 then
                 value = value - object.cpa_count * 1000
@@ -1223,6 +1215,16 @@ function loaded_vehicle(vehicle)
     object_trackers[vehicle.tracker]:load(vehicle)
 end
 
+function is_doctor_nearby(object)
+    local is = false
+
+    for i = 1, #g_savedata.objects do
+        is = is or g_savedata.objects[i].tracker == "doctor" and matrix.distance(object.transform, g_savedata.objects[i].transform) <= 10
+    end
+
+    return is
+end
+
 -- locations
 
 function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
@@ -1714,18 +1716,6 @@ function transact(amount, title)
     server.notify(-1, string.format(text, amount), title, not_type)
 end
 
-function nearby_players(transform, distance)
-    local result = false
-
-    for i = 1, #players do
-        local d = matrix.distance(players[i].transform, transform)
-
-        result = result or matrix.distance(players[i].transform, transform) <= distance
-    end
-
-    return result
-end
-
 -- spawn point
 
 function teleport_to_spawn_points(peer_id)
@@ -1749,6 +1739,28 @@ end
 -- players
 
 players = {}
+
+function is_player_nearby(transform, distance)
+    local result = false
+
+    for i = 1, #players do
+        local d = matrix.distance(players[i].transform, transform)
+
+        result = result or matrix.distance(players[i].transform, transform) <= distance
+    end
+
+    return result
+end
+
+function distance_min_to_player(transform)
+    local distance = math.huge
+
+    for i = 1, #players do
+        distance = math.min(distance, matrix.distance(players[i].transform, transform))
+    end
+
+    return distance
+end
 
 -- callbacks
 
