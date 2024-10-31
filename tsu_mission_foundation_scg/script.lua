@@ -38,8 +38,8 @@ location_properties = {{
     suitable_zones = {"forest", "island", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
-    sub_location_min = 1,
-    sub_location_max = 3,
+    sub_location_min = 3,
+    sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
@@ -112,7 +112,7 @@ location_properties = {{
     suitable_zones = {"offshore", "channel"},
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$"},
-    sub_location_min = 2,
+    sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 1000,
@@ -127,7 +127,7 @@ location_properties = {{
     suitable_zones = {"offshore", "channel"},
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$"},
-    sub_location_min = 2,
+    sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 1000,
@@ -142,7 +142,7 @@ location_properties = {{
     suitable_zones = {"diving_spot"},
     is_main_location = true,
     sub_locations = {"^mission:diver_missing_%d+$"},
-    sub_location_min = 2,
+    sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 500,
@@ -238,7 +238,7 @@ location_properties = {{
     suitable_zones = {"field", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:aircraft_down_%d+$", "^mission:passenger_fallen_land_%d+$"},
-    sub_location_min = 3,
+    sub_location_min = 5,
     sub_location_max = 7,
     is_unique_sub_location = true,
     search_radius = 1000,
@@ -421,20 +421,20 @@ zone_properties = {{
 
 mission_trackers = {
     sar = {
-        init = function(self, mission)
+        init = function(self)
         end,
-        clear = function(self, mission)
+        clear = function(self)
         end,
-        tick = function(self, mission, tick)
-            if not mission.spawned then
-                for i = 1, #mission.locations do
-                    spawn_location(mission.locations[i], mission.id)
+        tick = function(self, tick)
+            if not self.spawned then
+                for i = 1, #self.locations do
+                    spawn_location(self.locations[i], self.id)
                 end
 
                 local c, x, y, z = 0, 0, 0, 0
 
                 for i = 1, #g_savedata.objects do
-                    if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil then
+                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
                         local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
                         c = c + 1
                         x = x + ox
@@ -447,10 +447,10 @@ mission_trackers = {
                 y = y / c
                 z = z / c
 
-                mission.search_center = matrix.translation(x, y, z)
-                mission.spawned = true
+                self.search_center = matrix.translation(x, y, z)
+                self.spawned = true
 
-                console.notify(string.format("Spawned mission #%d.", mission.id))
+                console.notify(string.format("Spawned mission #%d.", self.id))
             end
 
             local rescuee_count = 0
@@ -463,72 +463,72 @@ mission_trackers = {
             local radiation_count = 0
 
             for i = 1, #g_savedata.objects do
-                if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "rescuee" then
+                if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
 
                     if g_savedata.objects[i].cpa_count > 0 then
                         cpa_count = cpa_count + 1
                     end
-                elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "fire" then
+                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "fire" then
                     fire_count = fire_count + 1
-                elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker == "wreckage" then
+                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "wreckage" then
                     wreckage_count = wreckage_count + 1
                 end
             end
 
-            for i = 1, #mission.locations do
-                if mission.locations[i].zone and mission.locations[i].zone.landscape == "underwater" then
+            for i = 1, #self.locations do
+                if self.locations[i].zone and self.locations[i].zone.landscape == "underwater" then
                     underwater_count = underwater_count + 1
                 end
             end
 
-            if not mission.units.sar and mission.locations[1].search_radius >= 500 then
-                mission.units.sar = true
+            if not self.units.sar and self.locations[1].search_radius >= 500 then
+                self.units.sar = true
             end
 
-            if not mission.units.fire and fire_count >= 5 then
-                mission.units.fire = true
+            if not self.units.fire and fire_count >= 5 then
+                self.units.fire = true
             end
 
-            if not mission.units.med and (rescuee_count >= 10 or cpa_count >= 1) then
-                mission.units.med = true
+            if not self.units.med and (rescuee_count >= 10 or cpa_count >= 1) then
+                self.units.med = true
             end
 
-            if not mission.units.spc and (hostile_count >= 1 or suspect_count >= 1 or underwater_count >= 1) then
-                mission.units.spc = true
+            if not self.units.spc and (hostile_count >= 1 or suspect_count >= 1 or underwater_count >= 1) then
+                self.units.spc = true
             end
         end,
-        completed = function(self, mission)
-            local completed = mission.spawned
+        complete = function(self)
+            local completed = self.spawned
 
             for k, object in pairs(g_savedata.objects) do
-                if object.mission == mission.id and object.tracker ~= nil then
-                    completed = completed and (object_trackers[object.tracker]:dispensable(object) or object_trackers[object.tracker]:completed(object))
+                if object.mission == self.id and object.tracker ~= nil then
+                    completed = completed and (object:dispensable() or object:complete())
                 end
             end
 
-            return completed or mission.terminated
+            return completed or self.terminated
         end,
-        reward = function(self, mission)
-            local reward = mission.reward
+        reward = function(self)
+            local reward = self.rewards
 
             for k, object in pairs(g_savedata.objects) do
-                if object.mission == mission.id and object.tracker ~= nil and object_trackers[object.tracker]:completed(object) then
-                    reward = reward + object_trackers[object.tracker]:reward(object)
+                if object.mission == self.id and object.tracker ~= nil and object:complete() then
+                    reward = reward + object:reward()
                 end
             end
 
             if reward > 0 then
-                local distance = matrix.distance(mission.start_position, mission.locations[1].transform)
+                local distance = matrix.distance(self.start_position, self.locations[1].transform)
                 reward = reward + math.floor(distance / 1000) * 2000 * 2
             end
 
             return reward
         end,
-        report = function(self, mission)
-            return string.format("#%d " .. mission.locations[1].report, mission.id)
+        report = function(self)
+            return string.format("#%d " .. self.locations[1].report, self.id)
         end,
-        progress = function(self, mission)
+        progress = function(self)
             local test = {}
 
             for k, v in pairs(object_trackers) do
@@ -539,8 +539,8 @@ mission_trackers = {
             end
 
             for k, v in pairs(g_savedata.objects) do
-                if v.mission == mission.id and v.tracker ~= nil then
-                    if object_trackers[v.tracker]:completed(v) then
+                if v.mission == self.id and v.tracker ~= nil then
+                    if v:complete() then
                         test[v.tracker].completed = test[v.tracker].completed + 1
                     end
 
@@ -558,13 +558,13 @@ mission_trackers = {
 
             return progresses
         end,
-        status = function(self, mission)
-            local text = mission.locations[1].note
+        status = function(self)
+            local text = self.locations[1].note
             text = text .. "\n\n[出動区分]\n"
 
             local first = true
 
-            for name, available in pairs(mission.units) do
+            for name, available in pairs(self.units) do
                 if available then
                     if not first then
                         text = text .. " "
@@ -578,7 +578,7 @@ mission_trackers = {
 
             text = text .. "\n\n[進捗]"
 
-            local progresses = self:progress(mission)
+            local progresses = self:progress()
 
             for k, progress in pairs(progresses) do
                 text = text .. "\n" .. progress
@@ -616,73 +616,73 @@ object_trackers = {
             server.setCharacterData(object.id, object.vital.hp, object.vital.interactable, object.vital.ai)
             server.setCharacterTooltip(object.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
         end,
-        clear = function(self, object)
+        clear = function(self)
         end,
-        load = function(self, object)
+        load = function(self)
         end,
-        tick = function(self, object, tick)
-            local transform = self:position(object)
-            local character_vehicle = server.getCharacterVehicle(object.id)
+        tick = function(self, tick)
+            local transform = self:position()
+            local character_vehicle = server.getCharacterVehicle(self.id)
             local on_board = character_vehicle ~= 0
-            local vital_update = server.getCharacterData(object.id)
+            local vital_update = server.getCharacterData(self.id)
             local is_in_hospital = is_in_landscape(transform, "hospital")
-            local is_doctor_nearby = is_doctor_nearby(object)
+            local is_doctor_nearby = is_doctor_nearby(self)
             local is_safe = is_in_hospital or is_doctor_nearby
 
             if g_savedata.cpa_recurrence and not is_safe then
-                if not object.vital.incapacitated and vital_update.incapacitated then
-                    object.cpa_count = object.cpa_count + 1
+                if not self.vital.incapacitated and vital_update.incapacitated then
+                    self.cpa_count = self.cpa_count + 1
                 end
 
-                vital_update.hp = math.ceil(math.max(vital_update.hp - object.cpa_count, 0))
+                vital_update.hp = math.ceil(math.max(vital_update.hp - self.cpa_count, 0))
             end
 
             if g_savedata.rescuees_has_strobe then
                 local distance = distance_min_to_player(transform)
-                local opt = (object.strobe.opt or distance <= 100) and not on_board
-                local ir = (object.strobe.ir or distance <= 1000) and not on_board
-                local dead = not object.vital.dead and vital_update.dead
+                local opt = (self.strobe.opt or distance <= 100) and not on_board
+                local ir = (self.strobe.ir or distance <= 1000) and not on_board
+                local dead = not self.vital.dead and vital_update.dead
 
-                if opt ~= object.strobe.opt or dead then
-                    server.setCharacterItem(object.id, 2, 23, opt, 0, 100)
+                if opt ~= self.strobe.opt or dead then
+                    server.setCharacterItem(self.id, 2, 23, opt, 0, 100)
                 end
 
-                if ir ~= object.strobe.ir or dead then
-                    server.setCharacterItem(object.id, 3, 24, ir, 0, 100)
+                if ir ~= self.strobe.ir or dead then
+                    server.setCharacterItem(self.id, 3, 24, ir, 0, 100)
                 end
 
-                object.strobe.opt = opt
-                object.strobe.ir = ir
+                self.strobe.opt = opt
+                self.strobe.ir = ir
             end
 
-            object.vital = vital_update
+            self.vital = vital_update
 
             if is_in_hospital then
-                object.time_admission = object.time_admission + tick
+                self.time_admission = self.time_admission + tick
             end
 
-            server.setCharacterData(object.id, object.vital.hp, not object.completed, object.vital.ai)
+            server.setCharacterData(self.id, self.vital.hp, not self.completed, self.vital.ai)
         end,
-        position = function(self, object)
-            return server.getObjectPos(object.id)
+        position = function(self)
+            return server.getObjectPos(self.id)
         end,
-        dispensable = function(self, object)
+        dispensable = function(self)
             return false
         end,
-        completed = function(self, object)
-            return object.time_admission > 120
+        complete = function(self)
+            return self.time_admission > 120
         end,
-        reward = function(self, object)
-            local value = math.ceil(self.reward_base * (math.floor(object.vital.hp / 25) / 4))
+        reward = function(self)
+            local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
 
-            if g_savedata.cpa_recurrence and object.cpa_count >= 2 then
-                value = value - object.cpa_count * 1000
+            if g_savedata.cpa_recurrence and self.cpa_count >= 2 then
+                value = value - self.cpa_count * 1000
             end
 
             return value
         end,
-        status = function(self, object)
-            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.progress, object.vital.hp, object.cpa_count)
+        status = function(self)
+            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.progress, self.vital.hp, self.cpa_count)
             -- return self.progress
         end,
         reward_base = 2000,
@@ -697,28 +697,26 @@ object_trackers = {
         init = function(self, id, type, object, component_id, mission_id)
             object.is_lit = server.getFireData(object.id)
         end,
-        clear = function(self, object)
+        clear = function(self)
         end,
-        load = function(self, object)
+        load = function(self)
         end,
-        tick = function(self, object, tick)
-            local is_lit, is_success = server.getFireData(object.id)
-            object.is_lit = is_success and is_lit
+        tick = function(self, tick)
+            self.is_lit = server.getFireData(self.id)
         end,
-        position = function(self, object)
-            return server.getObjectPos(object.id)
+        position = function(self)
+            return server.getObjectPos(self.id)
         end,
-        dispensable = function(self, object)
+        dispensable = function(self)
             return false
         end,
-        completed = function(self, object)
-            local is_lit, is_success = server.getFireData(object.object_id)
-            return not is_lit
+        complete = function(self)
+            return not self.is_lit
         end,
-        reward = function(self, object)
+        reward = function(self)
             return self.reward_base
         end,
-        status = function(self, object)
+        status = function(self)
             return self.progress
         end,
         reward_base = 500,
@@ -739,35 +737,35 @@ object_trackers = {
 
             server.setVehicleTooltip(object.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
         end,
-        clear = function(self, object)
+        clear = function(self)
         end,
-        load = function(self, object)
-            if not object.components_checked then
-                local d, s = server.getVehicleComponents(object.id)
-                object.mass = d.mass
-                object.components_checked = true
+        load = function(self)
+            if not self.components_checked then
+                local d, s = server.getVehicleComponents(self.id)
+                self.mass = d.mass
+                self.components_checked = true
             end
         end,
-        tick = function(self, object, tick)
-            object.transform = server.getVehiclePos(object.id)
+        tick = function(self, tick)
+            self.transform = server.getVehiclePos(self.id)
 
-            if is_in_landscape(object.transform, "freight_terminal") then
-                object.completion_timer = object.completion_timer + tick
+            if is_in_landscape(self.transform, "freight_terminal") then
+                self.completion_timer = self.completion_timer + tick
             end
         end,
-        position = function(self, object)
-            return server.getVehiclePos(object.id)
+        position = function(self)
+            return server.getVehiclePos(self.id)
         end,
-        dispensable = function(self, object)
-            return matrix.distance(object.initial_transform, object.transform) <= 100
+        dispensable = function(self)
+            return matrix.distance(self.initial_transform, self.transform) <= 10
         end,
-        completed = function(self, object)
-            return object.completion_timer >= 300
+        complete = function(self)
+            return self.completion_timer >= 300
         end,
-        reward = function(self, object)
-            return math.ceil(object.mass * self.reward_base / 100) * 100
+        reward = function(self)
+            return math.ceil(self.mass * self.reward_base / 100) * 100
         end,
-        status = function(self, object)
+        status = function(self)
             return self.progress
         end,
         reward_base = 2,
@@ -784,137 +782,137 @@ object_trackers = {
             object.alert = nil
             object.mission_datalink = {}
         end,
-        clear = function(self, object)
+        clear = function(self)
         end,
-        load = function(self, object)
-            if not object.components_checked then
-                local d, s = server.getVehicleComponents(object.id)
+        load = function(self)
+            if not self.components_checked then
+                local d, s = server.getVehicleComponents(self.id)
 
                 if not s then
                     return
                 end
 
-                object.alert = table.find(d.components.buttons, function(t)
+                self.alert = table.find(d.components.buttons, function(t)
                     return string.lower(t.name) == "alert"
                 end)
 
                 for i = 1, 6 do
-                    object.mission_datalink[i] = {}
-                    object.mission_datalink[i].id = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i] = {}
+                    self.mission_datalink[i].id = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_id", i)
                     end)
-                    object.mission_datalink[i].x = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].x = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_x", i)
                     end)
-                    object.mission_datalink[i].y = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].y = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_y", i)
                     end)
-                    object.mission_datalink[i].r = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].r = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_r", i)
                     end)
-                    object.mission_datalink[i].sar = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].sar = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_sar", i)
                     end)
-                    object.mission_datalink[i].med = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].med = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_med", i)
                     end)
-                    object.mission_datalink[i].fire = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].fire = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_fire", i)
                     end)
-                    object.mission_datalink[i].spc = table.find(d.components.buttons, function(d)
+                    self.mission_datalink[i].spc = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_spc", i)
                     end)
                 end
 
-                object.components_checked = true
+                self.components_checked = true
             end
         end,
-        tick = function(self, object, tick)
-            if object.components_checked then
+        tick = function(self, tick)
+            if self.components_checked then
                 for index = 1, math.max(#g_savedata.missions, 6) do
                     if g_savedata.missions[index] ~= nil then
                         local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
 
-                        if object.mission_datalink[index].id ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].id, g_savedata.missions[index].id)
+                        if self.mission_datalink[index].id ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].id, g_savedata.missions[index].id)
                         end
 
-                        if object.mission_datalink[index].x ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].x, x)
+                        if self.mission_datalink[index].x ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].x, x)
                         end
 
-                        if object.mission_datalink[index].y ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].y, z)
+                        if self.mission_datalink[index].y ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].y, z)
                         end
 
-                        if object.mission_datalink[index].t ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].r, g_savedata.missions[index].search_radius)
+                        if self.mission_datalink[index].t ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].r, g_savedata.missions[index].search_radius)
                         end
 
-                        if object.mission_datalink[index].sar ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].sar, g_savedata.missions[index].units.sar)
+                        if self.mission_datalink[index].sar ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].sar, g_savedata.missions[index].units.sar)
                         end
 
-                        if object.mission_datalink[index].med ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].med, g_savedata.missions[index].units.med)
+                        if self.mission_datalink[index].med ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].med, g_savedata.missions[index].units.med)
                         end
 
-                        if object.mission_datalink[index].fire ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].fire, g_savedata.missions[index].units.fire)
+                        if self.mission_datalink[index].fire ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].fire, g_savedata.missions[index].units.fire)
                         end
 
-                        if object.mission_datalink[index].spc ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].spc, g_savedata.missions[index].units.spc)
+                        if self.mission_datalink[index].spc ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].spc, g_savedata.missions[index].units.spc)
                         end
                     else
-                        if object.mission_datalink[index].id ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].id, 0)
+                        if self.mission_datalink[index].id ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].id, 0)
                         end
 
-                        if object.mission_datalink[index].x ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].x, 0)
+                        if self.mission_datalink[index].x ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].x, 0)
                         end
 
-                        if object.mission_datalink[index].y ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].y, 0)
+                        if self.mission_datalink[index].y ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].y, 0)
                         end
 
-                        if object.mission_datalink[index].r ~= nil then
-                            set_vehicle_keypad(object.id, object.mission_datalink[index].r, 0)
+                        if self.mission_datalink[index].r ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].r, 0)
                         end
 
-                        if object.mission_datalink[index].sar ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].sar, false)
+                        if self.mission_datalink[index].sar ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].sar, false)
                         end
 
-                        if object.mission_datalink[index].med ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].med, false)
+                        if self.mission_datalink[index].med ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].med, false)
                         end
 
-                        if object.mission_datalink[index].fire ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].fire, false)
+                        if self.mission_datalink[index].fire ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].fire, false)
                         end
 
-                        if object.mission_datalink[index].spc ~= nil then
-                            set_vehicle_button(object.id, object.mission_datalink[index].spc, false)
+                        if self.mission_datalink[index].spc ~= nil then
+                            set_vehicle_button(self.id, self.mission_datalink[index].spc, false)
                         end
                     end
                 end
             end
         end,
-        position = function(self, object)
-            return server.getVehiclePos(object.id)
+        position = function(self)
+            return server.getVehiclePos(self.id)
         end,
-        dispensable = function(self, object)
+        dispensable = function(self)
             return false
         end,
-        completed = function(self, object)
+        complete = function(self)
             return false
         end,
-        reward = function(self, object)
+        reward = function(self)
             return self.reward_base
         end,
-        status = function(self, object)
+        status = function(self)
             return self.progress
         end,
         reward_base = 0,
@@ -930,25 +928,25 @@ object_trackers = {
             object.owner_steam_id = owner
             object.cost = cost
         end,
-        clear = function(self, object)
+        clear = function(self)
         end,
-        load = function(self, object)
+        load = function(self)
         end,
-        tick = function(self, object, tick)
+        tick = function(self, tick)
         end,
-        position = function(self, object)
-            return server.getVehiclePos(object.id)
+        position = function(self)
+            return server.getVehiclePos(self.id)
         end,
-        dispensable = function(self, object)
+        dispensable = function(self)
             return false
         end,
-        completed = function(self, object)
+        complete = function(self)
             return false
         end,
-        reward = function(self, object)
+        reward = function(self)
             return self.reward_base
         end,
-        status = function(self, object)
+        status = function(self)
             return self.progress
         end,
         reward_base = 0,
@@ -991,9 +989,9 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
         fire = false,
         specialist = false
     }
-    mission.reward = 0
-    mission_trackers[mission.tracker]:init(mission)
-    g_savedata.mission_count = g_savedata.mission_count + 1
+    mission.rewards = 0
+    setmetatable(mission, mission_trackers[tracker])
+    mission:init()
 
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
@@ -1005,8 +1003,10 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
         end
     end
 
-    table.insert(g_savedata.missions, mission)
     record_location_history(location)
+    table.insert(g_savedata.missions, mission)
+    g_savedata.mission_count = g_savedata.mission_count + 1
+
     console.notify(string.format("Initialized mission #%d.", mission.id))
 end
 
@@ -1018,19 +1018,19 @@ function clear_mission(mission)
     end
 
     server.removeMapID(-1, mission.marker_id)
-    mission_trackers[mission.tracker]:clear(mission)
+    mission:clear()
     mission.cleared = true
 
-    server.notify(-1, string.format("Cleared mission #%d.", mission.id), mission_trackers[mission.tracker]:report(mission), 4)
+    server.notify(-1, string.format("Cleared mission #%d.", mission.id), mission:report(), 4)
     console.notify(string.format("Cleared mission #%d.", mission.id))
 end
 
 function tick_mission(mission, tick)
-    mission_trackers[mission.tracker]:tick(mission, tick)
+    mission:tick(tick)
 
     if g_savedata.mission_mapped and mission.search_center then
-        local label = mission_trackers[mission.tracker]:report(mission)
-        local label_hover = mission_trackers[mission.tracker]:status(mission)
+        local label = mission:report()
+        local label_hover = mission:status()
         local x, y, z = matrix.position(mission.search_center)
 
         for i = 1, #players do
@@ -1045,18 +1045,18 @@ function tick_mission(mission, tick)
 
     if not mission.reported and mission.report_timer == 0 then
         alert_headquarter()
-        server.notify(-1, mission_trackers[mission.tracker]:report(mission), mission.locations[1].note, mission.locations[1].notification_type)
+        server.notify(-1, mission:report(), mission.locations[1].note, mission.locations[1].notification_type)
         mission.reported = true
     end
 
-    if mission_trackers[mission.tracker]:completed(mission) then
+    if distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius and mission:complete() then
         reward_mission(mission)
         clear_mission(mission)
     end
 end
 
 function reward_mission(mission)
-    local reward = mission_trackers[mission.tracker]:reward(mission)
+    local reward = mission:reward()
 
     transact(reward, string.format("Cleared mission #%d.", mission.id))
 end
@@ -1072,6 +1072,7 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
 
     object.id = id
     object.type = type
+    object.tracker = nil
     object.marker_id = server.getMapID()
     object.component_id = component_id
     object.mission = mission_id
@@ -1087,7 +1088,8 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
     end
 
     if object.tracker ~= nil then
-        object_trackers[object.tracker]:init(id, type, object, component_id, mission_id, table.unpack(params))
+        setmetatable(object, object_trackers[object.tracker])
+        object:init(id, type, object, component_id, mission_id, table.unpack(params))
     end
 
     if object.type == "vehicle" and object.tags.keep_active == "true" then
@@ -1100,10 +1102,8 @@ end
 
 function clear_object(object)
     if object.tracker ~= nil then
-        object_trackers[object.tracker]:clear(object)
+        object:clear()
     end
-
-    -- despawn_object(object)
 
     server.removeMapID(-1, object.marker_id)
 
@@ -1128,34 +1128,34 @@ function tick_object(object, tick)
     -- server.removeMapID(-1, object.marker_id)
 
     -- if g_savedata.object_mapped then
-    --     local transform = object_trackers[object.tracker]:position(object)
+    --     local transform = object:position()
     --     local x, y, z = matrix.position(transform)
     --     local r, g, b, a = 127, 127, 127, 255
     --     local label = string.format("%s #%d", object.tracker, object.id)
     --     local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
-    --     local marker_type = object_trackers[object.tracker].marker_type
+    --     local marker_type = object.marker_type
 
     --     server.addMapObject(-1, object.marker_id, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     -- end
 
-    object_trackers[object.tracker]:tick(object, tick)
+    object:tick(tick)
 
-    if object.mission ~= nil and not object.completed and object_trackers[object.tracker]:completed(object) then
+    if object.mission ~= nil and not object.completed and object:complete() then
         for j = 1, #g_savedata.missions do
             if g_savedata.missions[j].id == object.mission then
-                local reward = object_trackers[object.tracker]:reward(object)
-                g_savedata.missions[j].reward = g_savedata.missions[j].reward + reward
+                local reward = object:reward()
+                g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
 
                 console.notify(string.format("Reward: %d", reward))
             end
         end
 
-        server.notify(-1, object_trackers[object.tracker]:status(object), "Objective achieved", 4)
+        server.notify(-1, object:status(), "Objective achieved", 4)
         object.completed = true
     end
 
     if object.mission ~= nil and object.completed then
-        if object.clear_timer >= object_trackers[object.tracker].clear_timer then
+        if object.clear_timer >= object.clear_timer then
             despawn_object(object)
         else
             object.clear_timer = object.clear_timer + tick
@@ -1212,7 +1212,7 @@ function spawn_equipment(transform, type, int, flt)
 end
 
 function loaded_vehicle(vehicle)
-    object_trackers[vehicle.tracker]:load(vehicle)
+    vehicle:load()
 end
 
 function is_doctor_nearby(object)
@@ -2046,6 +2046,14 @@ function onCreate(is_world_create)
         server.command("?util clearing true")
     end
 
+    for i = 1, #g_savedata.objects do
+        setmetatable(g_savedata.objects[i], object_trackers[g_savedata.objects[i].tracker])
+    end
+
+    for i = 1, #g_savedata.missions do
+        setmetatable(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
+    end
+
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
@@ -2272,3 +2280,8 @@ function string.split(text, sepatator)
     end
 end
 
+function setmetatable(table1, table2)
+    for k, v in pairs(table2) do
+        table1[k] = v
+    end
+end
