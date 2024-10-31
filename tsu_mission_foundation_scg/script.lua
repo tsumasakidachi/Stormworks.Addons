@@ -646,27 +646,27 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "character" and object.tags.tracker ~= nil and object.tags.tracker == "rescuee"
         end,
-        init = function(self, id, type, object, component_id, mission_id)
+        init = function(self)
             local hp_min = -20
             local hp_max = 100
 
-            object.vital = server.getCharacterData(object.id)
-            object.vital.hp = tonumber(object.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
+            self.vital = server.getCharacterData(self.id)
+            self.vital.hp = tonumber(self.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
-            if object.vital.hp == 0 then
-                object.cpa_count = 1
+            if self.vital.hp == 0 then
+                self.cpa_count = 1
             else
-                object.cpa_count = 0
+                self.cpa_count = 0
             end
 
-            object.strobe = {
+            self.strobe = {
                 opt = false,
                 ir = false
             }
-            object.time_admission = 0
+            self.time_admission = 0
 
-            server.setCharacterData(object.id, object.vital.hp, object.vital.interactable, object.vital.ai)
-            server.setCharacterTooltip(object.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, object.mission, object.id))
+            server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
+            server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -746,8 +746,8 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "fire"
         end,
-        init = function(self, id, type, object, component_id, mission_id)
-            object.is_lit = server.getFireData(object.id)
+        init = function(self)
+            self.is_lit = server.getFireData(self.id)
         end,
         clear = function(self)
         end,
@@ -780,14 +780,14 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "wreckage"
         end,
-        init = function(self, id, type, object, component_id, mission_id)
-            object.components_checked = false
-            object.completion_timer = 0
-            object.initial_transform = server.getVehiclePos(object.id)
-            object.transform = server.getVehiclePos(object.id)
-            object.mass = 0
+        init = function(self)
+            self.components_checked = false
+            self.completion_timer = 0
+            self.initial_transform = server.getVehiclePos(self.id)
+            self.transform = server.getVehiclePos(self.id)
+            self.mass = 0
 
-            server.setVehicleTooltip(object.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -829,9 +829,9 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id)
             return (object.type == "creature" or object.type == "animal") and object.tags.tracker ~= nil and object.tags.tracker == "hostile"
         end,
-        init = function(self, id, type, object, component_id, mission_id)
+        init = function(self)
             self.vital = server.getCharacterData(self.id)
-            server.setVehicleTooltip(object.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
+            server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -869,10 +869,10 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id)
             return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "headquarter"
         end,
-        init = function(self, id, type, object, component_id, mission_id)
-            object.components_checked = false
-            object.alert = nil
-            object.mission_datalink = {}
+        init = function(self)
+            self.components_checked = false
+            self.alert = nil
+            self.mission_datalink = {}
         end,
         clear = function(self)
         end,
@@ -1016,9 +1016,9 @@ object_trackers = {
         test_type = function(self, id, type, object, component_id, mission_id, owner, cost)
             return object.type == "vehicle" and owner ~= nil and cost ~= nil
         end,
-        init = function(self, id, type, object, component_id, mission_id, owner, cost)
-            object.owner_steam_id = owner
-            object.cost = cost
+        init = function(self, owner, cost)
+            self.owner_steam_id = owner
+            self.cost = cost
         end,
         clear = function(self)
         end,
@@ -1141,7 +1141,7 @@ function tick_mission(mission, tick)
         mission.reported = true
     end
 
-    if distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius and mission:complete() then
+    if mission:complete() and distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius then
         reward_mission(mission)
         clear_mission(mission)
     end
@@ -1170,7 +1170,7 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
     object.mission = mission_id
     object.completed = false
     object.cleared = false
-    object.clear_timer = 0
+    object.elapsed_clear = 0
 
     for k, v in pairs(object_trackers) do
         if v:test_type(id, type, object, component_id, mission_id, table.unpack(params)) then
@@ -1181,7 +1181,7 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
 
     if object.tracker ~= nil then
         setmetatable(object, object_trackers[object.tracker])
-        object:init(id, type, object, component_id, mission_id, table.unpack(params))
+        object:init(table.unpack(params))
     end
 
     if object.type == "vehicle" and object.tags.keep_active == "true" then
@@ -1247,10 +1247,10 @@ function tick_object(object, tick)
     end
 
     if object.mission ~= nil and object.completed then
-        if object.clear_timer >= object.clear_timer then
+        if object.elapsed_clear >= object.clear_timer then
             despawn_object(object)
         else
-            object.clear_timer = object.clear_timer + tick
+            object.elapsed_clear = object.elapsed_clear + tick
         end
     end
 end
