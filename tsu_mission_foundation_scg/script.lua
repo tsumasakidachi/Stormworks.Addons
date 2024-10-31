@@ -26,18 +26,25 @@ g_savedata = {
     location_comparer = "pattern",
     zone_mapped = false,
     zone_marker_id = nil,
-    cpa_recurrence = property.checkbox("CPA Recurrence", true),
-    rescuees_has_strobe = property.checkbox("Rescuees has strobe", true),
-    splillage = false,
+    subsystems = {
+        rescuees = true,
+        fires = true,
+        wreckages = true,
+        hostiles = true,
+        suspects = true,
+        splillage = true,
+        cpa_recurrence = property.checkbox("CPA Recurs", true),
+        rescuees_strobe = property.checkbox("Rescuees has strobe", true)
+    },
     eot = "END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru"
 }
 
 location_properties = {{
     pattern = "^mission:expedition_missing_%d+$",
     tracker = "sar",
-    suitable_zones = {"forest", "island", "mountain"},
+    suitable_zones = {"forest", "field", "island", "mountain"},
     is_main_location = true,
-    sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
+    sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$", "^mission:hostile_forest_%d+$"},
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
@@ -141,7 +148,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"diving_spot"},
     is_main_location = true,
-    sub_locations = {"^mission:diver_missing_%d+$"},
+    sub_locations = {"^mission:diver_missing_%d+$", "^mission:hostile_offshore_%d+$"},
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
@@ -237,7 +244,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"field", "mountain"},
     is_main_location = true,
-    sub_locations = {"^mission:aircraft_down_%d+$", "^mission:passenger_fallen_land_%d+$"},
+    sub_locations = {"^mission:aircraft_down_%d+$", "^mission:passenger_fallen_land_%d+$", "^mission:hostile_forest_%d+$"},
     sub_location_min = 5,
     sub_location_max = 7,
     is_unique_sub_location = true,
@@ -267,9 +274,9 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = {"mission:expedition_missing_%d+", "^mission:raft_%d+$"},
-    sub_location_min = 1,
-    sub_location_max = 3,
+    sub_locations = {"mission:expedition_missing_%d+", "^mission:raft_%d+$", "^mission:hostile_forest_%d+$", "^mission:hostile_water_%d+$"},
+    sub_location_min = 3,
+    sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 750,
     notification_type = 0,
@@ -277,6 +284,51 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
+}, {
+    pattern = "^mission:hostile_forest_%d+$",
+    tracker = "sar",
+    suitable_zones = {"forest", "field", "mountain", "hill"},
+    is_main_location = false,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    notification_type = 0,
+    report = "森林の敵対的生物",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = ""
+}, {
+    pattern = "^mission:hostile_offshore_%d+$",
+    tracker = "sar",
+    suitable_zones = {"offshore", "underwater", "diving_spot"},
+    is_main_location = false,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    notification_type = 0,
+    report = "外洋の敵対的生物",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = ""
+}, {
+    pattern = "^mission:hostile_water_%d+$",
+    tracker = "sar",
+    suitable_zones = {"lake", "channel"},
+    is_main_location = false,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    notification_type = 0,
+    report = "真水域の敵対的生物",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = ""
 }, {
     pattern = "^mission:train_crash_%d+$",
     tracker = "sar",
@@ -629,7 +681,7 @@ object_trackers = {
             local is_doctor_nearby = is_doctor_nearby(self)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if g_savedata.cpa_recurrence and not is_safe then
+            if g_savedata.subsystems.cpa_recurrence and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
                     self.cpa_count = self.cpa_count + 1
                 end
@@ -637,7 +689,7 @@ object_trackers = {
                 vital_update.hp = math.ceil(math.max(vital_update.hp - self.cpa_count, 0))
             end
 
-            if g_savedata.rescuees_has_strobe then
+            if g_savedata.subsystems.rescuees_strobe then
                 local distance = distance_min_to_player(transform)
                 local opt = (self.strobe.opt or distance <= 100) and not on_board
                 local ir = (self.strobe.ir or distance <= 1000) and not on_board
@@ -675,7 +727,7 @@ object_trackers = {
         reward = function(self)
             local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
 
-            if g_savedata.cpa_recurrence and self.cpa_count >= 2 then
+            if g_savedata.subsystems.cpa_recurrence and self.cpa_count >= 2 then
                 value = value - self.cpa_count * 1000
             end
 
@@ -769,9 +821,49 @@ object_trackers = {
             return self.progress
         end,
         reward_base = 2,
-        progress = "残骸を回収し貨物ターミナルへ輸送",
+        progress = "残骸を回収し貨物ターミナルへ輸送 (オプション)",
         marker_type = 2,
         clear_timer = 7200
+    },
+    hostile = {
+        test_type = function(self, id, type, object, component_id, mission_id)
+            return (object.type == "creature" or object.type == "animal") and object.tags.tracker ~= nil and object.tags.tracker == "hostile"
+        end,
+        init = function(self, id, type, object, component_id, mission_id)
+            self.vital = server.getCharacterData(self.id)
+            server.setVehicleTooltip(object.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, object.mission, object.id))
+        end,
+        clear = function(self)
+        end,
+        load = function(self)
+            if not self.components_checked then
+                local d, s = server.getVehicleComponents(self.id)
+                self.mass = d.mass
+                self.components_checked = true
+            end
+        end,
+        tick = function(self, tick)
+            self.vital = server.getCharacterData(self.id)
+        end,
+        position = function(self)
+            return server.getVehiclePos(self.id)
+        end,
+        dispensable = function(self)
+            return true
+        end,
+        complete = function(self)
+            return self.vital.incapacitated or self.vital.dead
+        end,
+        reward = function(self)
+            return self.reward_base
+        end,
+        status = function(self)
+            return self.progress
+        end,
+        reward_base = 1000,
+        progress = "敵性生物を排除 (オプション)",
+        marker_type = 2,
+        clear_timer = 300
     },
     headquarter = {
         test_type = function(self, id, type, object, component_id, mission_id)
@@ -1512,6 +1604,8 @@ function load_locations()
                         location.rescuee_max = location_properties[i].rescuee_max or 100
                         location.fire_min = location_properties[i].fire_min or 100
                         location.fire_max = location_properties[i].fire_max or 100
+                        location.hostile_min = location_properties[i].hostile_min or 100
+                        location.hostile_max = location_properties[i].hostile_max or 100
                         location.note = location_properties[i].note or ""
 
                         table.insert(g_savedata.locations, location)
@@ -1924,9 +2018,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 end
             end
         elseif verb == "cpa-recurrence" and is_admin then
-            g_savedata.cpa_recurrence = not g_savedata.cpa_recurrence
+            g_savedata.subsystems.cpa_recurrence = not g_savedata.subsystems.cpa_recurrence
 
-            console.notify(string.format("CPA Recurrence: %s", g_savedata.cpa_recurrence))
+            console.notify(string.format("CPA Recurrence: %s", g_savedata.subsystems.cpa_recurrence))
         elseif verb == "clear-history" and is_admin then
             g_savedata.locations_history = {}
         end
@@ -1935,6 +2029,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif command == "?kill" then
         local object_id = server.getPlayerCharacterID(peer_id)
         server.killCharacter(object_id)
+        server.command(string.format("?clpv %d", peer_id))
     end
 end
 
@@ -2042,12 +2137,10 @@ function onCreate(is_world_create)
     load_zones()
     load_locations()
 
-    if is_world_create then
-        server.command("?util clearing true")
-    end
-
     for i = 1, #g_savedata.objects do
-        setmetatable(g_savedata.objects[i], object_trackers[g_savedata.objects[i].tracker])
+        if g_savedata.objects[i].tracker ~= nil then
+            setmetatable(g_savedata.objects[i], object_trackers[g_savedata.objects[i].tracker])
+        end
     end
 
     for i = 1, #g_savedata.missions do
