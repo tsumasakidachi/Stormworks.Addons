@@ -2058,8 +2058,6 @@ function onPlayerRespawn(peer_id)
     end)
 
     teleport_to_spawn_points(peer_id)
-    server.command(string.format("?clpv %d", peer_id))
-
     transact(-10000, string.format("%s bought a new life.", player.name))
 end
 
