@@ -186,6 +186,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         end
     end
 
+    -- position
+    if command == "?pos" and is_admin then
+        local transform, is_success = server.getPlayerPos(peer_id)
+        local x, y, z = matrix.position(transform)
+
+        server.announce("[LOG]", string.format("%.00f, %.00f, %.00f", x, y, z))
+    end
+
     if command == "?util" and target == "tooltip" and is_admin then
         local value = ...
 
