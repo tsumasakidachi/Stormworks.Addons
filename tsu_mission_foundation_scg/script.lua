@@ -45,8 +45,8 @@ location_properties = {{
     suitable_zones = {"forest", "field", "island", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$", "^mission:hostile_forest_%d+$"},
-    sub_location_min = 3,
-    sub_location_max = 5,
+    sub_location_min = 5,
+    sub_location_max = 7,
     is_unique_sub_location = false,
     search_radius = 1000,
     notification_type = 0,
@@ -201,9 +201,9 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    search_radius = 500,
+    search_radius = 250,
     notification_type = 1,
-    report = "火災\nトンネルの中で何もかもが燃えている! このままではみんな焼け死んでしまう!",
+    report = "火災\nトンネルの中が何もかも燃えている! このままではみんな焼け死ぬ!",
     report_timer_min = 0,
     report_timer_max = 0,
     fire_min = 50,
@@ -370,7 +370,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 250,
     notification_type = 1,
-    report = "火災\n貨物ターミナルの倉庫から出火. この倉庫に保管されているのは爆発性の化学物質である. 十分注意せよ.",
+    report = "火災\n貨物ターミナルの倉庫から出火. この倉庫に保管されているのは爆発性の化学物質である. 十分注意して行動せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
@@ -653,7 +653,7 @@ object_trackers = {
             self.vital = server.getCharacterData(self.id)
             self.vital.hp = tonumber(self.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
-            if self.vital.hp == 0 then
+            if self.vital.incapacitated then
                 self.cpa_count = 1
             else
                 self.cpa_count = 0
@@ -686,7 +686,7 @@ object_trackers = {
                     self.cpa_count = self.cpa_count + 1
                 end
 
-                vital_update.hp = math.ceil(math.max(vital_update.hp - self.cpa_count, 0))
+                vital_update.hp = math.max(vital_update.hp - (self.cpa_count / 2), 0)
             end
 
             if g_savedata.subsystems.rescuees_strobe then
@@ -1085,6 +1085,10 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     setmetatable(mission, mission_trackers[tracker])
     mission:init()
 
+    record_location_history(location)
+    table.insert(g_savedata.missions, mission)
+    g_savedata.mission_count = g_savedata.mission_count + 1
+
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
     for i = 1, sub_location_count do
@@ -1094,10 +1098,6 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
             table.insert(mission.locations, sub_location)
         end
     end
-
-    record_location_history(location)
-    table.insert(g_savedata.missions, mission)
-    g_savedata.mission_count = g_savedata.mission_count + 1
 
     console.notify(string.format("Initialized mission #%d.", mission.id))
 end
@@ -1406,12 +1406,12 @@ function random_location(center, range_max, range_min, location_names, zone_name
             location_candidate.transform = location_candidate.zone.transform
         else
             local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
+            location_candidate.transform = transform
 
-            if not is_success or g_savedata.mission_range_limited and matrix.distance(center, transform) > range_max then
+            if not is_success or g_savedata.mission_range_limited and matrix.distance(center, location_candidate.transform) > range_max then
                 goto continue_location
             end
 
-            location_candidate.transform = transform
         end
 
         table.insert(location_candidates, location_candidate)
