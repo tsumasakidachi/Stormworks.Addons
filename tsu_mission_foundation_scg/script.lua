@@ -45,7 +45,7 @@ location_properties = {{
     suitable_zones = {"forest", "field", "island", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$", "^mission:hostile_forest_%d+$"},
-    sub_location_min = 5,
+    sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 1000,
@@ -1968,8 +1968,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "next" and is_admin then
             g_savedata.mission_interval = 0
         elseif verb == "close" and is_admin then
-            console.error("'?mission close' replaced to '?mission terminate'")
-        elseif verb == "terminate" and is_admin then
             local id = ...
             id = tonumber(id)
             local mission = table.find(g_savedata.missions, function(x)
