@@ -44,7 +44,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"forest", "field", "island", "mountain"},
     is_main_location = true,
-    sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$", "^mission:hostile_forest_%d+$"},
+    sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
@@ -148,7 +148,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"diving_spot"},
     is_main_location = true,
-    sub_locations = {"^mission:diver_missing_%d+$", "^mission:hostile_offshore_%d+$"},
+    sub_locations = {"^mission:diver_missing_%d+$"},
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
@@ -244,7 +244,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"field", "mountain"},
     is_main_location = true,
-    sub_locations = {"^mission:aircraft_down_%d+$", "^mission:passenger_fallen_land_%d+$", "^mission:hostile_forest_%d+$"},
+    sub_locations = {"^mission:aircraft_down_%d+$", "^mission:passenger_fallen_land_%d+$"},
     sub_location_min = 5,
     sub_location_max = 5,
     is_unique_sub_location = true,
@@ -274,7 +274,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = { "^mission:hostile_forest_%d+$", "^mission:hostile_water_%d+$"},
+    sub_locations = { "^mission:hostile_forest_%d+$"},
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
@@ -1281,7 +1281,6 @@ function spawn_character(transform, data)
     object.tags = data.tags
     object.display_name = data.display_name
     object.type = data.type
-    object.transform = server.getObjectPos(object.object_id)
 
     return object
 end
@@ -1298,7 +1297,6 @@ function spawn_equipment(transform, type, int, flt)
     object.tags = {}
     object.display_name = nil
     object.type = type
-    object.transform = server.getObjectPos(object.object_id)
 
     return object
 end
