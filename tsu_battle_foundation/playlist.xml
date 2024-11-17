@@ -8,12 +8,12 @@
 			<l id="2" name="storage" env_mod_spawn_num="1">
 				<components>
 					<c component_type="3" id="1" name="tracker=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_1.xml" vehicle_file_store="4" vehicle_is_static="true">
-						<spawn_transform 31="1"/>
+						<spawn_transform 31="1.264942"/>
 						<spawn_bounds>
 							<min x="-1.375" y="-0.875" z="-6.125"/>
-							<max x="1.375" y="1.125" z="6.125"/>
+							<max x="1.375" y="1.625" z="6.125"/>
 						</spawn_bounds>
-						<spawn_local_offset y="-0.125"/>
+						<spawn_local_offset y="-0.375"/>
 						<graph_links/>
 					</c>
 				</components>

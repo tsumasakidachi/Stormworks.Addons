@@ -1,5 +1,5 @@
 -- TSU Battle Foundation
--- version 1.0.3
+-- version 1.0.4
 -- properties
 g_savedata = {
     mode = "prod",
@@ -655,12 +655,12 @@ function ready(game, player, r)
 end
 
 function ticket(game, player, amount)
-    local amount = math.ceil(tonumber(amount))
-
     if amount == nil then
         console.error("Amount is not number.")
         return
     end
+
+    amount = math.ceil(amount)
 
     local member = table.find(game.team_members, function(x)
         return x.steam_id == tostring(player.steam_id)
@@ -879,7 +879,7 @@ function vehicle_spec_table(vehicle)
     local player = table.find(players, function(x)
         return x.steam_id == vehicle.owner.steam_id
     end)
-    return string.format("%s\n\n%.00f deploy points\n%.00f hit points\n%.00f voxels\n%.00f mass", player.name, vehicle.deploy_points, vehicle.hit_points, vehicle.voxels, vehicle.mass)
+    return string.format("%s\n\n%.00f voxels\n%.00f mass", player.name, vehicle.voxels, vehicle.mass)
 end
 
 function spawn_storage(map_id)
@@ -1412,8 +1412,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         teleport(g_savedata.game, player, verb)
     elseif command == "?ticket" and g_savedata.game ~= nil then
         local player = get_player(peer_id)
+        local amount = tonumber(verb)
 
-        ticket(g_savedata.game, player, verb)
+        ticket(g_savedata.game, player, amount)
     end
 end
 
