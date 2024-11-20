@@ -591,8 +591,8 @@ function map_game_stats(game)
     text = text .. "\n\n" .. game_trackers[game.tracker]:status(game)
 
     for i = 1, #game.team_members do
-        server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.8, -0.7)
-        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "TEAM", true, team_stats(game, game.team_members[i]), 0.6, -0.7)
+        server.setPopupScreen(game.team_members[i].id, game.game_stats_marker_id, "STATS", true, text, 0.9, -0.5)
+        server.setPopupScreen(game.team_members[i].id, game.team_stats_marker_id, "TEAM", true, team_stats(game, game.team_members[i]), 0.725, -0.5)
     end
 end
 
