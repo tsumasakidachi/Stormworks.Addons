@@ -47,7 +47,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="3" id="31" name="id_31" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_31.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.483455" 02="-0.875369" 20="0.875369" 22="0.483455" 30="188.263519" 31="6.513947" 32="-384.771851"/>
+						<spawn_transform 00="0.483455" 02="-0.875369" 20="0.875369" 22="0.483455" 30="191.559082" 31="6.513947" 32="-383.251648"/>
 						<spawn_bounds>
 							<min x="-7.375" y="-0.375" z="-13.625"/>
 							<max x="7.375" y="0.375" z="13.625"/>
