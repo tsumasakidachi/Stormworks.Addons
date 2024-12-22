@@ -13,15 +13,15 @@ g_savedata = {
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 20) * 3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 60, 1, 30) * 3600,
+    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
+    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 60, 1, 20) * 3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 10, 1, 1) * 1000,
     mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 8) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
     mission_mapped = true,
-    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 6),
+    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 3),
     object_mapped = false,
     location_comparer = "pattern",
     zone_mapped = false,
@@ -34,9 +34,10 @@ g_savedata = {
         suspects = true,
         splillage = true,
         cpa_recurrence = property.checkbox("CPA Recurs", true),
-        rescuees_strobe = property.checkbox("Rescuees has strobe", true)
+        rescuees_strobe = property.checkbox("Rescuees has strobe", true),
+        eot = "END OF TABLE"
     },
-    eot = "END OF TABLE: kore wo kesu to ue no gyou no ckonma ga fo-matta- ni yotte kesareru"
+    eot = "END OF TABLE"
 }
 
 location_properties = {{
@@ -265,7 +266,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 100,
     notification_type = 0,
-    report = "火災\nマリーナに係留されているボーから出火して周りの船にも燃え移っている.",
+    report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "民間人からの通報"
@@ -274,13 +275,13 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = { "^mission:hostile_forest_%d+$"},
+    sub_locations = { "^mission:hostile_forest_%d+$", "^mission:hostile_water_%d+"},
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 750,
+    search_radius = 200,
     notification_type = 0,
-    report = "火災\nキャンプ場で火事, 森林火災に発展する危険性がある.",
+    report = "火災\nキャンプ場で火事, 森林火災に発展する危険性がある. 現場へ急行し迅速に消火, 要救助者を搬送せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -809,7 +810,7 @@ object_trackers = {
             return server.getVehiclePos(self.id)
         end,
         dispensable = function(self)
-            return matrix.distance(self.initial_transform, self.transform) <= 10
+            return matrix.distance(self.initial_transform, self.transform) <= 25
         end,
         complete = function(self)
             return self.completion_timer >= 300
