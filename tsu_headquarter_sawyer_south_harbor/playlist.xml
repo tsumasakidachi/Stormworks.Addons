@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_headquarter_sawyer_south_harbor" file_store="4" name="TSU Headquarter Sawyer South Harbor">
-	<locations location_id_counter="2" component_id_counter="52">
+	<locations location_id_counter="2" component_id_counter="53">
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -87,6 +87,14 @@
 							<max x="10.125" y="0.375" z="14.125"/>
 						</spawn_bounds>
 						<spawn_local_offset y="-0.125" z="-1.5"/>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="53" cargo_zone_import_cargo_type="landscape=base" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.48016" 02="0.877181" 20="-0.877181" 22="-0.48016" 30="159.827652" 31="3.112566" 32="-401.010651"/>
+						<spawn_bounds>
+							<min x="-30.308772" y="-12.881964" z="-53.063959"/>
+							<max x="30.308772" y="12.881964" z="53.063959"/>
+						</spawn_bounds>
 						<graph_links/>
 					</c>
 				</components>
