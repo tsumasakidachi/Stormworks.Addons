@@ -16,12 +16,12 @@ g_savedata = {
     mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
     mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 60, 1, 20) * 3600,
     mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 10, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 8) * 1000,
+    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 6) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
     mission_mapped = true,
-    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 3),
+    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 4),
     object_mapped = false,
     location_comparer = "pattern",
     zone_mapped = false,
@@ -33,7 +33,8 @@ g_savedata = {
         hostiles = true,
         suspects = true,
         splillage = true,
-        cpa_recurrence = property.checkbox("CPA Recurs", true),
+        cpa_recurrence = property.checkbox("CPA is recurrent", true),
+        cpa_recurrence_rate = property.slider("Recurrence rate of CPA (%)", 0, 100, 1, 12),
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
         eot = "END OF TABLE"
     },
@@ -49,7 +50,7 @@ location_properties = {{
     sub_location_min = 2,
     sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 500,
+    search_radius = 1000,
     notification_type = 0,
     report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ.",
     report_timer_min = 0,
@@ -128,6 +129,8 @@ location_properties = {{
     report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "乗組員からの通報"
 }, {
     pattern = "^mission:vessel_sink_%d+$",
@@ -143,6 +146,8 @@ location_properties = {{
     report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "乗組員からの通報"
 }, {
     pattern = "^mission:diver_yacht_%d+$",
@@ -204,7 +209,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 250,
     notification_type = 1,
-    report = "火災\nトンネルの中が何もかも燃えている! このままではみんな焼け死ぬ!",
+    report = "火災\nトンネルが何もかも燃えている! このままではみんな焼け死んでしまう!",
     report_timer_min = 0,
     report_timer_max = 0,
     fire_min = 50,
@@ -218,7 +223,7 @@ location_properties = {{
     sub_locations = {},
     sub_location_min = 0,
     sub_location_max = 0,
-    is_unique_sub_location = false,
+    is_unique_sub_location = true,
     search_radius = 100,
     notification_type = 0,
     report = "交通事故\n自動車が正面衝突しけが人がいる.",
@@ -269,6 +274,8 @@ location_properties = {{
     report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "民間人からの通報"
 }, {
     pattern = "^mission:campsite_fire_%d+$",
@@ -277,7 +284,7 @@ location_properties = {{
     is_main_location = true,
     sub_locations = { "^mission:hostile_forest_%d+$", "^mission:hostile_water_%d+"},
     sub_location_min = 0,
-    sub_location_max = 2,
+    sub_location_max = 1,
     is_unique_sub_location = false,
     search_radius = 200,
     notification_type = 0,
@@ -344,6 +351,8 @@ location_properties = {{
     report = "鉄道事故\n2両編成の旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "運転士からの通報"
 }, {
     pattern = "^mission:power_plant_fire_%d+$",
@@ -359,6 +368,8 @@ location_properties = {{
     report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "職員からの通報"
 }, {
     pattern = "^mission:chemical_storage_fire_%d+$",
@@ -374,6 +385,8 @@ location_properties = {{
     report = "火災\n貨物ターミナルの倉庫から出火. この倉庫に保管されているのは爆発性の化学物質である. 十分注意して行動せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
     note = "職員からの通報"
     -- }, {
     --     pattern = "^mission:air_medevac_%d+$",
@@ -507,12 +520,12 @@ mission_trackers = {
             end
 
             local rescuee_count = 0
-            local cpa_count = 0
             local fire_count = 0
-            local wreckage_count = 0
-            local underwater_count = 0
-            local hostile_count = 0
             local suspect_count = 0
+            local wreckage_count = 0
+            local hostile_count = 0
+            local cpa_count = 0
+            local underwater_count = 0
             local radiation_count = 0
 
             for i = 1, #g_savedata.objects do
@@ -526,6 +539,8 @@ mission_trackers = {
                     fire_count = fire_count + 1
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "wreckage" then
                     wreckage_count = wreckage_count + 1
+                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "hostile" then
+                    hostile_count = hostile_count + 1
                 end
             end
 
@@ -535,7 +550,13 @@ mission_trackers = {
                 end
             end
 
-            if not self.units.sar and self.locations[1].search_radius >= 500 then
+            self.objectives.rescuees = rescuee_count
+            self.objectives.fires = fire_count
+            self.objectives.suspects = suspect_count
+            self.objectives.wreckages = wreckage_count
+            self.objectives.hostiles = hostile_count
+
+            if not self.units.sar and self.locations[1].search_radius >= 250 then
                 self.units.sar = true
             end
 
@@ -543,11 +564,11 @@ mission_trackers = {
                 self.units.fire = true
             end
 
-            if not self.units.med and (rescuee_count >= 10 or cpa_count >= 1) then
+            if not self.units.med and rescuee_count >= 1 then
                 self.units.med = true
             end
 
-            if not self.units.spc and (hostile_count >= 1 or suspect_count >= 1 or underwater_count >= 1) then
+            if not self.units.spc and (suspect_count >= 1 or hostile_count >= 1 or underwater_count >= 1) then
                 self.units.spc = true
             end
         end,
@@ -659,7 +680,8 @@ object_trackers = {
             else
                 self.cpa_count = 0
             end
-
+            
+            self.is_cpa_recurrent = false
             self.strobe = {
                 opt = false,
                 ir = false
@@ -685,7 +707,11 @@ object_trackers = {
 
             if g_savedata.subsystems.cpa_recurrence and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
-                    self.cpa_count = self.cpa_count + 1
+                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 100) <= g_savedata.subsystems.cpa_recurrence_rate
+                
+                    if self.is_cpa_recurrent then
+                        self.cpa_count = self.cpa_count + 1
+                    end
                 end
 
                 vital_update.hp = math.max(vital_update.hp - (self.cpa_count / 2), 0)
@@ -711,7 +737,7 @@ object_trackers = {
 
             self.vital = vital_update
 
-            if is_in_hospital or is_in_base then
+            if is_in_hospital or not self.is_cpa_recurrent and is_in_base then
                 self.time_admission = self.time_admission + tick
             end
 
@@ -904,6 +930,21 @@ object_trackers = {
                     self.mission_datalink[i].r = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_r", i)
                     end)
+                    self.mission_datalink[i].rescuees = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_rescuees", i)
+                    end)
+                    self.mission_datalink[i].fires = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_fires", i)
+                    end)
+                    self.mission_datalink[i].suspects = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_suspects", i)
+                    end)
+                    self.mission_datalink[i].wreckages = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_wreckages", i)
+                    end)
+                    self.mission_datalink[i].hostiles = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_hostiles", i)
+                    end)
                     self.mission_datalink[i].sar = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_sar", i)
                     end)
@@ -939,8 +980,28 @@ object_trackers = {
                             set_vehicle_keypad(self.id, self.mission_datalink[index].y, z)
                         end
 
-                        if self.mission_datalink[index].t ~= nil then
+                        if self.mission_datalink[index].r ~= nil then
                             set_vehicle_keypad(self.id, self.mission_datalink[index].r, g_savedata.missions[index].search_radius)
+                        end
+
+                        if self.mission_datalink[index].rescuees ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].rescuees, g_savedata.missions[index].objectives.rescuees)
+                        end
+
+                        if self.mission_datalink[index].fires ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].fires, g_savedata.missions[index].objectives.fires)
+                        end
+
+                        if self.mission_datalink[index].suspects ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].suspects, g_savedata.missions[index].objectives.suspects)
+                        end
+
+                        if self.mission_datalink[index].wreckages ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].wreckages, g_savedata.missions[index].objectives.wreckages)
+                        end
+
+                        if self.mission_datalink[index].hostiles ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].hostiles, g_savedata.missions[index].objectives.hostiles)
                         end
 
                         if self.mission_datalink[index].sar ~= nil then
@@ -973,6 +1034,26 @@ object_trackers = {
 
                         if self.mission_datalink[index].r ~= nil then
                             set_vehicle_keypad(self.id, self.mission_datalink[index].r, 0)
+                        end
+
+                        if self.mission_datalink[index].rescuees ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].rescuees, 0)
+                        end
+
+                        if self.mission_datalink[index].fires ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].fires, 0)
+                        end
+
+                        if self.mission_datalink[index].suspects ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].suspects, 0)
+                        end
+
+                        if self.mission_datalink[index].wreckages ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].wreckages, 0)
+                        end
+
+                        if self.mission_datalink[index].hostiles ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].hostiles, 0)
                         end
 
                         if self.mission_datalink[index].sar ~= nil then
@@ -1077,6 +1158,13 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.spawned = false
     mission.terminated = false
     mission.marker_id = server.getMapID()
+    mission.objectives = {
+        rescuees = 0,
+        fires = 0,
+        suspects = 0,
+        wreckages = 0,
+        hostiles = 0,
+    }
     mission.units = {
         sar = false,
         medic = false,
