@@ -1,5 +1,5 @@
 -- TSU Battle Foundation
--- version 1.0.4
+-- version 1.0.5
 -- properties
 g_savedata = {
     mode = "prod",
@@ -29,6 +29,10 @@ zone_properties = {{
     landscape = "storage",
     mapped = false,
     icon = 1
+}, {
+    landscape = "stronghold",
+    mapped = false,
+    icon = 1
 }}
 
 games = { --     {
@@ -52,33 +56,6 @@ games = { --     {
 --     teams = {}
 -- }
 }
-
-maps = {{
-    map = "holt_bridge",
-    name = "holt bridge",
-    center = matrix.translation(0, 0, 0),
-    radius = 0
-}, {
-    map = "sawyer_east",
-    name = "sawyer east",
-    center = matrix.translation(2750, 0, -4850),
-    radius = 2000
-}, {
-    map = "twin_hills",
-    name = "twin hills",
-    center = matrix.translation(-12400, 0, -31900),
-    radius = 2000
-}, {
-    map = "desert_mine",
-    name = "desert mine",
-    center = matrix.translation(-1100, 0, -29200),
-    radius = 2000
-}, {
-    map = "arctic",
-    name = "arctic",
-    center = matrix.translation(-29000, 0, -90000),
-    radius = 1500
-}}
 
 game_trackers = {
     -- cqt = {
@@ -385,6 +362,29 @@ object_trackers = {
         position = function(self, object)
             return server.getVehiclePos(object.id)
         end
+    },
+    stronghold = {
+        test_type = function(self, object, group_id, body_index, cost, owner_steam_id)
+            return object.type == "vehicle" and object.tracker == "stronghold"
+        end,
+        init = function(self, object, group_id)
+            object.group_id = group_id
+        end,
+        load = function(self, object)
+        end,
+        spawn = function(self, object)
+        end,
+        despawn = function(self, object)
+        end,
+        clear = function(self, object)
+        end,
+        tick = function(self, object, tick)
+        end,
+        damage = function(self, object, damage)
+        end,
+        position = function(self, object)
+            return server.getVehiclePos(object.id)
+        end
     }
 }
 
@@ -428,6 +428,16 @@ function initialize_game(mode, map_id, red_count, blue_count)
         return
     end
 
+    local zone_strongholds = {}
+
+    for k, v in pairs(table.find_all(g_savedata.zones, function(x)
+        return x.tags.map == map_id and x.tags.landscape == "stronghold"
+    end)) do
+        table.insert(zone_strongholds, initialize_stronghold(v))
+    end
+
+    -- if #zone_strongholds == 0 then
+
     local game = {
         tracker = mode.tracker,
         started = false,
@@ -435,6 +445,7 @@ function initialize_game(mode, map_id, red_count, blue_count)
         name = mode.name,
         map_id = map_id,
         center = zone_center,
+        strongholds = zone_strongholds,
         game_stats_marker_id = server.getMapID(),
         team_status_marker_id = server.getMapID(),
         operation_area_marker_id = server.getMapID(),
@@ -519,6 +530,8 @@ function clear_game(game)
         despawn_object(g_savedata.objects[i])
     end
 
+    clear_stronghold_markers(game)
+
     for i = 1, #game.team_members do
         local object_id = server.getPlayerCharacterID(game.team_members[i].id)
 
@@ -546,6 +559,7 @@ function clear_game(game)
 end
 
 function tick_game(game, tick)
+    strongholds(game, tick)
     game_trackers[g_savedata.game.tracker]:tick(game, tick)
     start_game(game)
     finish_game(game)
@@ -961,6 +975,63 @@ function load_zones()
                 id = id + 1
             end
         end
+    end
+end
+
+function initialize_stronghold(zone)
+    zone.stronghold_marker_id = server.getMapID()
+    zone.occupied_by = 0
+
+    return zone
+end
+
+function strongholds(game)
+    for i = 1, #game.strongholds do
+        local in_zone_players = {0, 0}
+
+        for j = 1, #game.team_members do
+            local object_transform = server.getPlayerPos(game.team_members[j].id)
+            local is_in = server.isInTransformArea(object_transform, game.strongholds[i].transform, game.strongholds[i].size.x, game.strongholds[i].size.y, game.strongholds[i].size.z)
+
+            if is_in then
+                in_zone_players[game.team_members[j].team_id] = in_zone_players[game.team_members[j].team_id] + 1
+            end
+        end
+
+        local occupied_by = -1
+
+        if in_zone_players[1] > 0 and in_zone_players[1] > in_zone_players[2] then
+            occupied_by = 1
+        elseif in_zone_players[2] > 0 and in_zone_players[2] > in_zone_players[1] then
+            occupied_by = 2
+        elseif in_zone_players[1] > 0 and in_zone_players[2] > 0 and in_zone_players[1] == in_zone_players[2] then
+            occupied_by = 0
+        end
+
+        if occupied_by >= 0 and occupied_by ~= game.strongholds[i].occupied_by then
+            game.strongholds[i].occupied_by = occupied_by
+            refresh_stronghold_marker(game, game.strongholds[i])
+        end
+    end
+end
+
+function refresh_stronghold_marker(game, zone)
+    local x, y, z = matrix.position(zone.transform)
+    local r, g, b, a = 191, 191, 191, 255
+
+    if zone.occupied_by > 0 then
+        r = game.teams[zone.occupied_by].color.r
+        g = game.teams[zone.occupied_by].color.g
+        b = game.teams[zone.occupied_by].color.b
+    end
+
+    server.removeMapID(-1, zone.stronghold_marker_id)
+    server.addMapObject(-1, zone.stronghold_marker_id, 0, 9, x, z, 0, 0, nil, nil, zone.name, 0, nil, r, g, b, a)
+end
+
+function clear_stronghold_markers(game)
+    for i = 1, #game.strongholds do
+        server.removeMapID(-1, game.strongholds[i].stronghold_marker_id)
     end
 end
 
@@ -1464,6 +1535,8 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
 
         if tags.tracker == "storage" then
             initialize_object(vehicle_ids[i], "vehicle", data)
+        elseif tags.tracker == "stronghold" then
+            initialize_object(vehicle_ids[i], "vehicle", data, group_id)
         elseif peer_id >= 0 then
             local owner = get_player(peer_id)
             local body_index = i - 1
