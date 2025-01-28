@@ -2,11 +2,12 @@ g_savedata = {
     vehicles = {},
     pins = {},
     vehicle_tooltip = property.checkbox("Display custom vehicle tooltip", false),
-    vehicle_clearing = property.checkbox("Clear players vehicle on die", false),
+    vehicle_clearing = property.checkbox("Clear players vehicle on die", false)
 }
 
 timing_default = 60
 timing = timing_default
+pilot_seats = {"pilot", "driver", "co-pilot", "copilot"}
 
 function onTick()
     for i = #g_savedata.pins, 1, -1 do
@@ -123,15 +124,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
     -- teleport to vehicle
     if command == "?ttv" and is_admin then
-        local target_vehicle_id = tonumber(target)
-        local transform, is_success = server.getVehiclePos(target_vehicle_id)
-        transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
-
-        if not is_success then
-            return
-        end
-
-        server.setPlayerPos(peer_id, transform)
+        local target_peer_id = tonumber(target)
+        teleport_to_empty_seat(target, peer_id)
     end
 
     -- telelport here player
@@ -224,7 +218,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         elseif value == nil then
             g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
         end
-        
+
         server.announce("[NOTICE]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
     end
 end
@@ -285,6 +279,39 @@ function get_player(peer_id)
     end
 
     return nil
+end
+
+function teleport_to_empty_seat(vehicle_id, peer_id)
+    local data, s = server.getVehicleComponents(vehicle_id)
+    local teleported = false
+
+    if not s then
+        server.announce("[ERROR]", string.format("Vehicle #%s not found.", vehicle_id), peer_id)
+    end
+
+    for j = 1, #pilot_seats do
+        for i = 1, #data.components.seats do
+            local name = string.lower(data.components.seats[i].name)
+            
+            if not teleported and name == pilot_seats[j] then
+                local object_id = server.getPlayerCharacterID(peer_id)
+                server.setSeated(object_id, vehicle_id, data.components.seats[i].pos.x, data.components.seats[i].pos.y, data.components.seats[i].pos.z)
+                teleported = teleported or true
+            end
+        end
+    end
+
+    for i = 1, #data.components.seats do
+        local seat = server.getVehicleSeat(vehicle_id, data.components.seats[i].pos.x, data.components.seats[i].pos.y, data.components.seats[i].pos.z)
+
+        if seat.seated_id == 4294967295 then
+            local object_id = server.getPlayerCharacterID(peer_id)
+            server.setSeated(object_id, vehicle_id, data.components.seats[i].pos.x, data.components.seats[i].pos.y, data.components.seats[i].pos.z)
+            return
+        end
+    end
+
+    console.error("No empty seat.", player.id)
 end
 
 function despawn_vehicle_group(group_id, is_instant)
