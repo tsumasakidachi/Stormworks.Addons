@@ -124,8 +124,34 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
     -- teleport to vehicle
     if command == "?ttv" and is_admin then
-        local target_peer_id = tonumber(target)
-        teleport_to_empty_seat(target, peer_id)
+        if target == nil then
+            server.announce("[ERROR]", "Vehicle identifier is invalid.")
+            return
+        end
+
+        local vehicle_id = tonumber(target)
+        local addition = {...}
+
+        if vehicle_id == nil or #addition > 0 then
+            local pattern = "^" .. target
+
+            for i = 1, #addition do
+                pattern = pattern .. " " .. addition[i]
+            end
+
+            local vehicle = table.find(g_savedata.vehicles, function(x)
+                return string.match(string.lower(x.name), pattern) ~= nil
+            end)
+
+            if vehicle == nil then
+                server.announce("[ERROR]", string.format("Vehicle %s not found.", pattern), peer_id)
+                return
+            end
+
+            vehicle_id = vehicle.id
+        end
+
+        teleport_to_empty_seat(vehicle_id, peer_id)
     end
 
     -- telelport here player
@@ -292,7 +318,7 @@ function teleport_to_empty_seat(vehicle_id, peer_id)
     for j = 1, #pilot_seats do
         for i = 1, #data.components.seats do
             local name = string.lower(data.components.seats[i].name)
-            
+
             if not teleported and name == pilot_seats[j] then
                 local object_id = server.getPlayerCharacterID(peer_id)
                 server.setSeated(object_id, vehicle_id, data.components.seats[i].pos.x, data.components.seats[i].pos.y, data.components.seats[i].pos.z)
@@ -342,6 +368,102 @@ function vehicle_spec_table(vehicle)
     return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, owner, vehicle.group_id, vehicle.id, vehicle.cost)
 end
 
+function table.contains(t, x)
+    local contains = false
+
+    for i = 1, #t do
+        contains = contains or t[i] == x
+    end
+
+    return contains
+end
+
+function table.find_index(t, test)
+    for i = 1, #t do
+        if test(t[i]) then
+            return i
+        end
+    end
+
+    return nil
+end
+
+function table.find(t, test)
+    for i = 1, #t do
+        if test == nil or test(t[i]) then
+            return t[i], i
+        end
+    end
+
+    return nil, nil
+end
+
+function table.find_all(t, test)
+    local items = {}
+
+    for i = 1, #t do
+        if test(t[i]) then
+            table.insert(items, t[i])
+        end
+    end
+
+    return items
+end
+
+function table.has(t, x)
+    for i = 1, #t do
+        if t[i] == x then
+            return true
+        end
+    end
+
+    return false
+end
+
+function table.keys(t)
+    local items = {}
+
+    for k, v in pairs(t) do
+        table.insert(items, k)
+    end
+
+    return items
+end
+
+function table.random(t)
+    if #t == 0 then
+        return nil
+    end
+
+    return t[math.random(1, #t)]
+end
+
+function table.select(t, selector)
+    local items = {}
+
+    for i = 1, #t do
+        local value = selector(t[i])
+
+        if value ~= nil then
+            table.insert(items, selector(value))
+        end
+    end
+
+    return items
+end
+
+function table.where(t, selector)
+    local items = {}
+
+    for i = 1, #t do
+        if selector(t[i]) then
+            table.insert(items, t[i])
+        end
+    end
+
+    return items
+end
+
 function table.copy(t)
     local u = {}
 
@@ -354,5 +476,26 @@ function table.copy(t)
     end
 
     return u
+end
+
+function table.distinct(t)
+    local u = {}
+    local hash = {}
+
+    for _, v in ipairs(t) do
+        if not hash[v] then
+            u[#u + 1] = v
+            hash[v] = true
+        end
+    end
+
+    return u
+end
+
+function table.shuffle(x)
+    for i = #x, 2, -1 do
+        local j = math.random(i)
+        x[i], x[j] = x[j], x[i]
+    end
 end
 
