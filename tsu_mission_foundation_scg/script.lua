@@ -51,11 +51,28 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 1000,
+    code = 1,
     notification_type = 0,
-    report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためくまなく捜索せよ.",
+    report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためこの範囲をくまなく捜索せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "警察署からの通報"
+}, {
+    pattern = "^mission:em_call_%d+$",
+    tracker = "sar",
+    suitable_zones = {"house"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 250,
+    code = 0,
+    notification_type = 0,
+    report = "緊急搬送\nタス...ケ......タ......",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "民間人からの通報"
 }, {
     pattern = "^mission:passenger_fallen_land_%d+$",
     tracker = "sar",
@@ -66,6 +83,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 1000,
+    code = 0,
     notification_type = 0,
     report = "落水者",
     report_timer_min = 0,
@@ -81,6 +99,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 1000,
+    code = 0,
     notification_type = 0,
     report = "落水者",
     report_timer_min = 0,
@@ -96,6 +115,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 1000,
+    code = 0,
     notification_type = 0,
     report = "救命ボート",
     report_timer = 0,
@@ -110,6 +130,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 1000,
+    code = 0,
     notification_type = 0,
     report = "いかだ",
     report_timer_min = 0,
@@ -125,13 +146,32 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 500,
-    notification_type = 1,
+    code = 1,
+    notification_type = 0,
     report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
     note = "乗組員からの通報"
+}, {
+    pattern = "^mission:boat_sink_%d+$",
+    tracker = "sar",
+    suitable_zones = {"lake", "channel"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 500,
+    code = 1,
+    notification_type = 0,
+    report = "水難事故\nボートが壊れて沈没しそう!",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 100,
+    note = "民間人からの通報"
 }, {
     pattern = "^mission:vessel_sink_%d+$",
     tracker = "sar",
@@ -142,7 +182,8 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 500,
-    notification_type = 1,
+    code = 1,
+    notification_type = 0,
     report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -155,11 +196,12 @@ location_properties = {{
     suitable_zones = {"diving_spot"},
     is_main_location = true,
     sub_locations = {"^mission:diver_missing_%d+$"},
-    sub_location_min = 3,
-    sub_location_max = 5,
+    sub_location_min = 1,
+    sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 500,
-    notification_type = 1,
+    code = 1,
+    notification_type = 0,
     report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -174,6 +216,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 500,
+    code = 0,
     notification_type = 0,
     report = "行方不明のダイバー",
     report_timer_min = 0,
@@ -189,8 +232,9 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 500,
+    code = 2,
     notification_type = 1,
-    report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始している.",
+    report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
@@ -208,8 +252,9 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 250,
+    code = 2,
     notification_type = 1,
-    report = "火災\nトンネルが何もかも燃えている! このままではみんな焼け死んでしまう!",
+    report = "火災\nトンネルの中が何もかも燃えている! このままではみんな焼け死んでしまう!",
     report_timer_min = 0,
     report_timer_max = 0,
     fire_min = 50,
@@ -225,6 +270,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = true,
     search_radius = 100,
+    code = 0,
     notification_type = 0,
     report = "交通事故\n自動車が正面衝突しけが人がいる.",
     report_timer_min = 0,
@@ -240,6 +286,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 100,
+    code = 0,
     notification_type = 0,
     report = "スタックした自動車",
     report_timer_min = 0,
@@ -255,7 +302,8 @@ location_properties = {{
     sub_location_max = 3,
     is_unique_sub_location = true,
     search_radius = 500,
-    notification_type = 1,
+    code = 1,
+    notification_type = 0,
     report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -270,6 +318,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 100,
+    code = 1,
     notification_type = 0,
     report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
     report_timer_min = 0,
@@ -282,13 +331,14 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
-    sub_locations = { "^mission:hostile_forest_%d+$", "^mission:hostile_water_%d+"},
+    sub_locations = {},
     sub_location_min = 0,
     sub_location_max = 1,
     is_unique_sub_location = false,
-    search_radius = 200,
+    search_radius = 250,
+    code = 1,
     notification_type = 0,
-    report = "火災\nキャンプ場で火事, 森林火災に発展する危険性がある. 現場へ急行し迅速に消火, 要救助者を搬送せよ.",
+    report = "火災\nキャンプ場で火事, 森林火災に発展する危険がある.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "キャンプ場からの通報"
@@ -296,49 +346,52 @@ location_properties = {{
     pattern = "^mission:hostile_forest_%d+$",
     tracker = "sar",
     suitable_zones = {"forest", "field", "mountain", "hill"},
-    is_main_location = false,
-    sub_locations = {},
-    sub_location_min = 0,
-    sub_location_max = 0,
+    is_main_location = true,
+    sub_locations = {"^mission:expedition_missing_%d+$"},
+    sub_location_min = 1,
+    sub_location_max = 2,
     is_unique_sub_location = false,
-    search_radius = 100,
+    search_radius = 250,
+    code = 0,
     notification_type = 0,
-    report = "森林の敵対的生物",
+    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = ""
-}, {
-    pattern = "^mission:hostile_offshore_%d+$",
-    tracker = "sar",
-    suitable_zones = {"offshore", "underwater", "diving_spot"},
-    is_main_location = false,
-    sub_locations = {},
-    sub_location_min = 0,
-    sub_location_max = 0,
-    is_unique_sub_location = false,
-    search_radius = 100,
-    notification_type = 0,
-    report = "外洋の敵対的生物",
-    report_timer_min = 0,
-    report_timer_max = 0,
-    note = ""
+    note = "パトロールからの通報"
+-- }, {
+--     pattern = "^mission:hostile_offshore_%d+$",
+--     tracker = "sar",
+--     suitable_zones = {"offshore", "underwater", "diving_spot"},
+--     is_main_location = true,
+--     sub_locations = {},
+--     sub_location_min = 1,
+--     sub_location_max = 1,
+--     is_unique_sub_location = false,
+--     search_radius = 250,
+--     code = 0,
+--     notification_type = 0,
+--     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
+--     report_timer_min = 0,
+--     report_timer_max = 0,
+--     note = "パトロールからの通報"
 }, {
     pattern = "^mission:hostile_water_%d+$",
     tracker = "sar",
     suitable_zones = {"lake", "channel"},
-    is_main_location = false,
-    sub_locations = {},
-    sub_location_min = 0,
-    sub_location_max = 0,
+    is_main_location = true,
+    sub_locations = {"^mission:boat_sink_%d+$"},
+    sub_location_min = 1,
+    sub_location_max = 1,
     is_unique_sub_location = false,
-    search_radius = 100,
+    search_radius = 250,
+    code = 0,
     notification_type = 0,
-    report = "真水域の敵対的生物",
+    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = ""
+    note = "パトロールからの通報"
 }, {
-    pattern = "^mission:train_crash_%d+$",
+    pattern = "^mission:train_crash_head_on$",
     tracker = "sar",
     suitable_zones = {},
     is_main_location = true,
@@ -347,8 +400,27 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 200,
-    notification_type = 1,
-    report = "鉄道事故\n2両編成の旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
+    code = 1,
+    notification_type = 0,
+    report = "鉄道事故\n旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
+    note = "運転士からの通報"
+}, {
+    pattern = "^mission:train_crash_log_trailer$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 200,
+    code = 1,
+    notification_type = 0,
+    report = "鉄道事故\n旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
@@ -364,6 +436,7 @@ location_properties = {{
     sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 200,
+    code = 2,
     notification_type = 1,
     report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
     report_timer_min = 0,
@@ -380,29 +453,31 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
-    notification_type = 1,
+    search_radius = 100,
+    code = 1,
+    notification_type = 0,
     report = "火災\n貨物ターミナルの倉庫から出火. この倉庫に保管されているのは爆発性の化学物質である. 十分注意して行動せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
     note = "職員からの通報"
-    -- }, {
-    --     pattern = "^mission:air_medevac_%d+$",
-    --     tracker = "sar",
-    --     suitable_zones = {"airfield", "heliport"},
-    --     is_main_location = true,
-    --     sub_locations = {"^mission:air_medevac_%d+$"},
-    --     sub_location_min = 1,
-    --     sub_location_max = 3,
-    --     is_unique_sub_location = false,
-    --     search_radius = 250,
-    --     notification_type = 1,
-    --     report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
-    --     report_timer_min = 0,
-    --     report_timer_max = 0,
-    --     note = "職員からの通報"
+}, {
+    pattern = "^mission:air_medevac_%d+$",
+    tracker = "sar",
+    suitable_zones = {"airfield", "heliport"},
+    is_main_location = true,
+    sub_locations = {"^mission:air_medevac_%d+$"},
+    sub_location_min = 1,
+    sub_location_max = 3,
+    is_unique_sub_location = false,
+    search_radius = 250,
+    code = 0,
+    notification_type = 0,
+    report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "職員からの通報"
 }}
 
 zone_properties = {{
@@ -680,7 +755,7 @@ object_trackers = {
             else
                 self.cpa_count = 0
             end
-            
+
             self.is_cpa_recurrent = false
             self.strobe = {
                 opt = false,
@@ -695,6 +770,8 @@ object_trackers = {
         end,
         load = function(self)
         end,
+        unload = function(self)
+        end,
         tick = function(self, tick)
             local transform = self:position()
             local character_vehicle = server.getCharacterVehicle(self.id)
@@ -708,7 +785,7 @@ object_trackers = {
             if g_savedata.subsystems.cpa_recurrence and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
                     self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 100) <= g_savedata.subsystems.cpa_recurrence_rate
-                
+
                     if self.is_cpa_recurrent then
                         self.cpa_count = self.cpa_count + 1
                     end
@@ -766,7 +843,7 @@ object_trackers = {
             -- return self.progress
         end,
         reward_base = 2000,
-        progress = "要救助者を捜索・治療し病院へ移送",
+        progress = "要救助者を医療機関へ搬送",
         marker_type = 1,
         clear_timer = 300
     },
@@ -780,6 +857,8 @@ object_trackers = {
         clear = function(self)
         end,
         load = function(self)
+        end,
+        unload = function(self)
         end,
         tick = function(self, tick)
             self.is_lit = server.getFireData(self.id)
@@ -800,7 +879,7 @@ object_trackers = {
             return self.progress
         end,
         reward_base = 500,
-        progress = "炎を発見し鎮火",
+        progress = "炎を鎮火",
         marker_type = 5,
         clear_timer = 0
     },
@@ -825,6 +904,8 @@ object_trackers = {
                 self.mass = d.mass
                 self.components_checked = true
             end
+        end,
+        unload = function(self)
         end,
         tick = function(self, tick)
             self.transform = server.getVehiclePos(self.id)
@@ -858,20 +939,35 @@ object_trackers = {
             return (object.type == "creature" or object.type == "animal") and object.tags.tracker ~= nil and object.tags.tracker == "hostile"
         end,
         init = function(self)
-            self.vital = server.getCharacterData(self.id)
+            local pos = self:position()
+            local mission = table.find(g_savedata.missions, function(x)
+                return x.id == self.mission
+            end)
+            self.target = table.random(table.find_all(mission.locations, function(x)
+                local d = matrix.distance(x.transform, pos)
+                return d >= 25 and d < 100
+            end))
+            self.vital = server.getObjectData(self.id)
             server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
         end,
         load = function(self)
-            if not self.components_checked then
-                local d, s = server.getVehicleComponents(self.id)
-                self.mass = d.mass
-                self.components_checked = true
-            end
+        end,
+        unload = function(self)
         end,
         tick = function(self, tick)
-            self.vital = server.getCharacterData(self.id)
+            if self.loaded and self.target ~= nil then
+                local x, y, z = matrix.position(self.target.transform)
+                console.notify(string.format("%.00f, %.00f, %.00f", x, y, z))
+                local s = server.setCreatureMoveTarget(self.id, self.target.transform)
+
+                if s then
+                    self.target = nil
+                end
+            end
+            
+            self.vital = server.getObjectData(self.id)
         end,
         position = function(self)
             return server.getVehiclePos(self.id)
@@ -961,6 +1057,8 @@ object_trackers = {
 
                 self.components_checked = true
             end
+        end,
+        unload = function(self)
         end,
         tick = function(self, tick)
             if self.components_checked then
@@ -1107,6 +1205,8 @@ object_trackers = {
         end,
         load = function(self)
         end,
+        unload = function(self)
+        end,
         tick = function(self, tick)
         end,
         position = function(self)
@@ -1163,7 +1263,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
         fires = 0,
         suspects = 0,
         wreckages = 0,
-        hostiles = 0,
+        hostiles = 0
     }
     mission.units = {
         sar = false,
@@ -1258,6 +1358,7 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
     object.marker_id = server.getMapID()
     object.component_id = component_id
     object.mission = mission_id
+    object.loaded = false
     object.completed = false
     object.cleared = false
     object.elapsed_clear = 0
@@ -1391,8 +1492,14 @@ function spawn_equipment(transform, type, int, flt)
     return object
 end
 
-function loaded_vehicle(vehicle)
-    vehicle:load()
+function loaded_object(object)
+    object.loaded = true
+    object:load()
+end
+
+function unloaded_object(object)
+    object.loaded = false
+    object:unload()
 end
 
 function is_doctor_nearby(object)
@@ -2197,10 +2304,32 @@ end
 
 function onVehicleLoad(vehicle_id)
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
-            if g_savedata.objects[i].tracker ~= nil then
-                loaded_vehicle(g_savedata.objects[i])
-            end
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id and g_savedata.objects[i].tracker ~= nil then
+            loaded_object(g_savedata.objects[i])
+        end
+    end
+end
+
+function onVehicleUnload(vehicle_id)
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id and g_savedata.objects[i].tracker ~= nil then
+            unloaded_object(g_savedata.objects[i])
+        end
+    end
+end
+
+function onObjectLoad(object_id)
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].type ~= "vehicle" and g_savedata.objects[i].id == object_id and g_savedata.objects[i].tracker ~= nil then
+            loaded_object(g_savedata.objects[i])
+        end
+    end
+end
+
+function onObjectUnload(object_id)
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].type ~= "vehicle" and g_savedata.objects[i].id == object_id and g_savedata.objects[i].tracker ~= nil then
+            unloaded_object(g_savedata.objects[i])
         end
     end
 end
