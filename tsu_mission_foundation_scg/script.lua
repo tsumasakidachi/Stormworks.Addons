@@ -601,17 +601,12 @@ mission_trackers = {
             local suspect_count = 0
             local wreckage_count = 0
             local hostile_count = 0
-            local cpa_count = 0
             local underwater_count = 0
             local radiation_count = 0
 
             for i = 1, #g_savedata.objects do
                 if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
-
-                    if g_savedata.objects[i].cpa_count > 0 then
-                        cpa_count = cpa_count + 1
-                    end
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "fire" then
                     fire_count = fire_count + 1
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "wreckage" then
@@ -711,28 +706,22 @@ mission_trackers = {
         end,
         status = function(self)
             local text = self.locations[1].note
-            text = text .. "\n\n[カテゴリ]\n"
-
-            if self.category ~= nil then
-                text = text .. self.category
-            else
-                text = text .. "不明"
-            end
-
-            text = text .. "\n\n[出動区分]\n"
-
-            local first = true
+            text = text .. "\n\n[出動区分]"
+            text = text .. "\nユニット:"
 
             for name, available in pairs(self.units) do
                 if available then
-                    if not first then
-                        text = text .. " "
-                    else
-                        first = false
-                    end
-
-                    text = text .. string.upper(name)
+                    text = text .. " " .. string.upper(name)
                 end
+            end
+
+            text = text .. "\nカテゴリ: "
+
+
+            if self.category ~= nil then
+                text = text .. string.format("%d", self.category)
+            else
+                text = text .. "不明"
             end
 
             text = text .. "\n\n[進捗]"
@@ -1036,6 +1025,9 @@ object_trackers = {
                     self.mission_datalink[i].r = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_r", i)
                     end)
+                    self.mission_datalink[i].category = table.find(d.components.buttons, function(d)
+                        return string.lower(d.name) == string.format("mission_%d_category", i)
+                    end)
                     self.mission_datalink[i].rescuees = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_rescuees", i)
                     end)
@@ -1092,6 +1084,10 @@ object_trackers = {
                             set_vehicle_keypad(self.id, self.mission_datalink[index].r, g_savedata.missions[index].search_radius)
                         end
 
+                        if self.mission_datalink[index].category ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].category, g_savedata.missions[index].category)
+                        end
+
                         if self.mission_datalink[index].rescuees ~= nil then
                             set_vehicle_keypad(self.id, self.mission_datalink[index].rescuees, g_savedata.missions[index].objectives.rescuees)
                         end
@@ -1142,6 +1138,10 @@ object_trackers = {
 
                         if self.mission_datalink[index].r ~= nil then
                             set_vehicle_keypad(self.id, self.mission_datalink[index].r, 0)
+                        end
+
+                        if self.mission_datalink[index].category ~= nil then
+                            set_vehicle_keypad(self.id, self.mission_datalink[index].category, 0)
                         end
 
                         if self.mission_datalink[index].rescuees ~= nil then
