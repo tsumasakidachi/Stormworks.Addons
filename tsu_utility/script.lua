@@ -250,6 +250,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 end
 
 function onGroupSpawn(group_id, peer_id, x, y, z, cost)
+    if peer_id < 0 then
+        return
+    end
+
     local player = get_player(peer_id)
 
     for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
@@ -273,6 +277,10 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
         if g_savedata.vehicle_tooltip then
             set_vehicle_tooltip(vehicle)
         end
+    end
+
+    if not server.getGameSettings().infinite_money then
+        server.notify(-1, string.format("Paid out $%.00f", cost), string.format("%s deployed vehicle.", player.name), 2)
     end
 end
 
