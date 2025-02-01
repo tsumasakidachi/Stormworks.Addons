@@ -1029,7 +1029,8 @@ object_trackers = {
         init = function(self)
             self.components_checked = false
             self.alert = nil
-            self.mission_datalink = {}
+            self.em_beacon = nil
+            self.missions = {}
         end,
         clear = function(self)
         end,
@@ -1046,47 +1047,47 @@ object_trackers = {
                 end)
 
                 for i = 1, 6 do
-                    self.mission_datalink[i] = {}
-                    self.mission_datalink[i].id = table.find(d.components.buttons, function(d)
+                    self.missions[i] = {}
+                    self.missions[i].id = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_id", i)
                     end)
-                    self.mission_datalink[i].x = table.find(d.components.buttons, function(d)
+                    self.missions[i].x = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_x", i)
                     end)
-                    self.mission_datalink[i].y = table.find(d.components.buttons, function(d)
+                    self.missions[i].y = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_y", i)
                     end)
-                    self.mission_datalink[i].r = table.find(d.components.buttons, function(d)
+                    self.missions[i].r = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_r", i)
                     end)
-                    self.mission_datalink[i].category = table.find(d.components.buttons, function(d)
+                    self.missions[i].category = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_category", i)
                     end)
-                    self.mission_datalink[i].rescuees = table.find(d.components.buttons, function(d)
+                    self.missions[i].rescuees = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_rescuees", i)
                     end)
-                    self.mission_datalink[i].fires = table.find(d.components.buttons, function(d)
+                    self.missions[i].fires = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_fires", i)
                     end)
-                    self.mission_datalink[i].suspects = table.find(d.components.buttons, function(d)
+                    self.missions[i].suspects = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_suspects", i)
                     end)
-                    self.mission_datalink[i].wreckages = table.find(d.components.buttons, function(d)
+                    self.missions[i].wreckages = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_wreckages", i)
                     end)
-                    self.mission_datalink[i].hostiles = table.find(d.components.buttons, function(d)
+                    self.missions[i].hostiles = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_hostiles", i)
                     end)
-                    self.mission_datalink[i].sar = table.find(d.components.buttons, function(d)
+                    self.missions[i].sar = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_sar", i)
                     end)
-                    self.mission_datalink[i].med = table.find(d.components.buttons, function(d)
+                    self.missions[i].med = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_med", i)
                     end)
-                    self.mission_datalink[i].fire = table.find(d.components.buttons, function(d)
+                    self.missions[i].fire = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_fire", i)
                     end)
-                    self.mission_datalink[i].spc = table.find(d.components.buttons, function(d)
+                    self.missions[i].spc = table.find(d.components.buttons, function(d)
                         return string.lower(d.name) == string.format("mission_%d_spc", i)
                     end)
                 end
@@ -1102,116 +1103,116 @@ object_trackers = {
                     if g_savedata.missions[index] ~= nil then
                         local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
 
-                        if self.mission_datalink[index].id ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].id, g_savedata.missions[index].id)
+                        if self.missions[index].id ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].id, g_savedata.missions[index].id)
                         end
 
-                        if self.mission_datalink[index].x ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].x, x)
+                        if self.missions[index].x ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].x, x)
                         end
 
-                        if self.mission_datalink[index].y ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].y, z)
+                        if self.missions[index].y ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].y, z)
                         end
 
-                        if self.mission_datalink[index].r ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].r, g_savedata.missions[index].search_radius)
+                        if self.missions[index].r ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].r, g_savedata.missions[index].search_radius)
                         end
 
-                        if self.mission_datalink[index].category ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].category, g_savedata.missions[index].category)
+                        if self.missions[index].category ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].category, g_savedata.missions[index].category)
                         end
 
-                        if self.mission_datalink[index].rescuees ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].rescuees, g_savedata.missions[index].objectives.rescuees)
+                        if self.missions[index].rescuees ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].rescuees, g_savedata.missions[index].objectives.rescuees)
                         end
 
-                        if self.mission_datalink[index].fires ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].fires, g_savedata.missions[index].objectives.fires)
+                        if self.missions[index].fires ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].fires, g_savedata.missions[index].objectives.fires)
                         end
 
-                        if self.mission_datalink[index].suspects ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].suspects, g_savedata.missions[index].objectives.suspects)
+                        if self.missions[index].suspects ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].suspects, g_savedata.missions[index].objectives.suspects)
                         end
 
-                        if self.mission_datalink[index].wreckages ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].wreckages, g_savedata.missions[index].objectives.wreckages)
+                        if self.missions[index].wreckages ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].wreckages, g_savedata.missions[index].objectives.wreckages)
                         end
 
-                        if self.mission_datalink[index].hostiles ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].hostiles, g_savedata.missions[index].objectives.hostiles)
+                        if self.missions[index].hostiles ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].hostiles, g_savedata.missions[index].objectives.hostiles)
                         end
 
-                        if self.mission_datalink[index].sar ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].sar, g_savedata.missions[index].units.sar)
+                        if self.missions[index].sar ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].sar, g_savedata.missions[index].units.sar)
                         end
 
-                        if self.mission_datalink[index].med ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].med, g_savedata.missions[index].units.med)
+                        if self.missions[index].med ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].med, g_savedata.missions[index].units.med)
                         end
 
-                        if self.mission_datalink[index].fire ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].fire, g_savedata.missions[index].units.fire)
+                        if self.missions[index].fire ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].fire, g_savedata.missions[index].units.fire)
                         end
 
-                        if self.mission_datalink[index].spc ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].spc, g_savedata.missions[index].units.spc)
+                        if self.missions[index].spc ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].spc, g_savedata.missions[index].units.spc)
                         end
                     else
-                        if self.mission_datalink[index].id ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].id, 0)
+                        if self.missions[index].id ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].id, 0)
                         end
 
-                        if self.mission_datalink[index].x ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].x, 0)
+                        if self.missions[index].x ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].x, 0)
                         end
 
-                        if self.mission_datalink[index].y ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].y, 0)
+                        if self.missions[index].y ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].y, 0)
                         end
 
-                        if self.mission_datalink[index].r ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].r, 0)
+                        if self.missions[index].r ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].r, 0)
                         end
 
-                        if self.mission_datalink[index].category ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].category, 0)
+                        if self.missions[index].category ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].category, 0)
                         end
 
-                        if self.mission_datalink[index].rescuees ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].rescuees, 0)
+                        if self.missions[index].rescuees ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].rescuees, 0)
                         end
 
-                        if self.mission_datalink[index].fires ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].fires, 0)
+                        if self.missions[index].fires ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].fires, 0)
                         end
 
-                        if self.mission_datalink[index].suspects ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].suspects, 0)
+                        if self.missions[index].suspects ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].suspects, 0)
                         end
 
-                        if self.mission_datalink[index].wreckages ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].wreckages, 0)
+                        if self.missions[index].wreckages ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].wreckages, 0)
                         end
 
-                        if self.mission_datalink[index].hostiles ~= nil then
-                            set_vehicle_keypad(self.id, self.mission_datalink[index].hostiles, 0)
+                        if self.missions[index].hostiles ~= nil then
+                            set_vehicle_keypad(self.id, self.missions[index].hostiles, 0)
                         end
 
-                        if self.mission_datalink[index].sar ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].sar, false)
+                        if self.missions[index].sar ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].sar, false)
                         end
 
-                        if self.mission_datalink[index].med ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].med, false)
+                        if self.missions[index].med ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].med, false)
                         end
 
-                        if self.mission_datalink[index].fire ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].fire, false)
+                        if self.missions[index].fire ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].fire, false)
                         end
 
-                        if self.mission_datalink[index].spc ~= nil then
-                            set_vehicle_button(self.id, self.mission_datalink[index].spc, false)
+                        if self.missions[index].spc ~= nil then
+                            set_vehicle_button(self.id, self.missions[index].spc, false)
                         end
                     end
                 end
