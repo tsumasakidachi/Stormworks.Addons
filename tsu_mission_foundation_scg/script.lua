@@ -333,12 +333,12 @@ location_properties = {{
     is_main_location = true,
     sub_locations = {},
     sub_location_min = 0,
-    sub_location_max = 1,
+    sub_location_max = 0,
     is_unique_sub_location = false,
     search_radius = 100,
-    category = 2,
-    notification_type = 0,
-    report = "火災\nキャンプ場で火事, 森林火災に発展する危険がある.",
+    category = 1,
+    notification_type = 1,
+    report = "火災\nキャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
@@ -356,7 +356,7 @@ location_properties = {{
     search_radius = 250,
     category = 3,
     notification_type = 0,
-    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
+    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "パトロールからの通報"
@@ -372,7 +372,7 @@ location_properties = {{
     --     search_radius = 250,
     --     category = 0,
     --     notification_type = 0,
-    --     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
+    --     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
     --     report_timer_min = 0,
     --     report_timer_max = 0,
     --     note = "パトロールからの通報"
@@ -388,7 +388,7 @@ location_properties = {{
     search_radius = 250,
     category = 3,
     notification_type = 0,
-    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を殺害せよ.",
+    report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "パトロールからの通報"
@@ -946,8 +946,8 @@ object_trackers = {
                 local d = matrix.distance(x.transform, pos)
                 return d >= 25 and d < 100
             end))
-            self.vital = server.getObjectData(self.id)
-            server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
+            self.vital = server.getCharacterData(self.id)
+            server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -958,7 +958,6 @@ object_trackers = {
         tick = function(self, tick)
             if self.loaded and self.target ~= nil then
                 local x, y, z = matrix.position(self.target.transform)
-                console.notify(string.format("%.00f, %.00f, %.00f", x, y, z))
                 local s = server.setCreatureMoveTarget(self.id, self.target.transform)
 
                 if s then
@@ -966,7 +965,7 @@ object_trackers = {
                 end
             end
 
-            self.vital = server.getObjectData(self.id)
+            self.vital = server.getCharacterData(self.id)
         end,
         position = function(self)
             return server.getVehiclePos(self.id)
@@ -984,9 +983,44 @@ object_trackers = {
             return self.progress
         end,
         reward_base = 1000,
-        progress = "敵性生物を排除 (オプション)",
+        progress = "危険生物を駆除 (オプション)",
         marker_type = 2,
         clear_timer = 300
+    },
+    sniffer = {
+        test_type = function(self, id, type, object, component_id, mission_id)
+            return (object.type == "creature") and object.tags.tracker ~= nil and object.tags.tracker == "sniffer"
+        end,
+        init = function(self)
+            server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.progress, self.id))
+        end,
+        clear = function(self)
+        end,
+        load = function(self)
+        end,
+        unload = function(self)
+        end,
+        tick = function(self, tick)
+        end,
+        position = function(self)
+            return server.getVehiclePos(self.id)
+        end,
+        dispensable = function(self)
+            return false
+        end,
+        complete = function(self)
+            return false
+        end,
+        reward = function(self)
+            return self.reward_base
+        end,
+        status = function(self)
+            return self.progress
+        end,
+        reward_base = 0,
+        progress = "捜査犬",
+        marker_type = 2,
+        clear_timer = 0
     },
     headquarter = {
         test_type = function(self, id, type, object, component_id, mission_id)
