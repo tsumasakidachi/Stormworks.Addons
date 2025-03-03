@@ -1,64 +1,95 @@
 g_savedata = {
-    mode = "debug",
+    mode = "prod",
     active = true,
     tick = 0,
-    wind = {
-        value = 0,
-        neutral = 0,
-        band = 0,
-        min = -25,
-        max = 50,
-    },
-    rain = {
-        value = 0,
-        neutral = 0,
-        band = 0,
-        min = -250,
-        max = 125
-    },
-    fog = {
-        value = 0,
-        neutral = 0,
-        band = 0,
-        min = 0,
-        max = 50
-    },
     weather = {
-        value = 0,
-        neutral = 0,
-        band = 0,
-        min = 10800,
-        max = 28800
+        wind = {
+            transition = 0,
+            duration = 0,
+            tick = 0,
+            target = 0,
+            past = 0,
+            target_min = 0,
+            target_max = 20,
+            clear = 0,
+        },
+        rain = {
+            target = 0,
+            past = 0,
+            tick = 0,
+            transition = 0,
+            duration = 0,
+            target_min = 0,
+            target_max = 80,
+            clear = 50,
+        },
+        fog = {
+            target = 0,
+            past = 0,
+            tick = 0,
+            transition = 0,
+            duration = 0,
+            target_min = 0,
+            target_max = 40,
+            clear = 0,
+        }
     }
 }
+
+local cycle = 60
+local timing = 0
 
 function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
-    if not g_savedata.active then
-        return
+    if timing % 60 == 0 then
+        for k, v in pairs(g_savedata.weather) do
+            tick_weather(v, tick * cycle, k)
+        end
+
+        weather(g_savedata.weather)
     end
 
-    if g_savedata.weather.value > 0 then
-        g_savedata.weather.value = math.max(g_savedata.weather.value - tick, 0)
+    if timing + 1 < cycle then
+        timing = timing + 1
     else
-        update(g_savedata.weather)
-        update(g_savedata.wind)
-        update(g_savedata.rain)
-        update(g_savedata.fog)
-        local fog = math.min(g_savedata.fog.value + g_savedata.rain.value * math.random() * 0.25 - g_savedata.wind.value * math.random() * 0.25, g_savedata.fog.max)
-        weather(g_savedata.wind.value, g_savedata.rain.value, fog)
+        timing = 0
     end
 end
 
-function update(meteorology)
-    meteorology.value = math.max(0, math.random(0, meteorology.max - meteorology.min) + meteorology.min)
+function tick_weather(w, tick, type)
+    if w.tick < w.duration then
+        w.tick = w.tick + tick
+    else
+        local shift = math.round(w.target_max * (w.clear * 0.01))
+        local max = w.target_max - shift
+        local min = w.target_min - shift
+        local factor = w.target_max / max
+        w.tick = 0
+        w.past = w.target
+        w.target = math.max(0, (math.random(0, max - min) + min) * factor)
+        w.duration = math.random(14400, 57600)
+        w.transition = math.ceil(w.duration * math.random(10, 25) * 0.01)
+    end
 end
 
-function weather(wind, rain, fog)
-    server.setWeather(math.max(0, fog) / 100, math.max(0, rain) / 100, math.max(0, wind) / 100)
-    console.notify(string.format("wind: %.00f\nrain: %.00f\nfog: %.00f", wind, rain, fog))
+function value_weather(w)
+    local x1 = 0
+    local y1 = w.past
+    local x2 = w.transition
+    local y2 = w.target
+
+    return ((y2 - y1) / (x2 - x1)) * math.min(w.tick, w.transition) + ((x2 * y1 - x1 * y2) / (x2 - x1))
 end
+
+function weather(w)
+    local rain = value_weather(w.rain) * 0.01
+    local wind = value_weather(w.wind) * 0.01
+    local fog = value_weather(w.fog) * 0.01 + rain * 0.5 - wind * 0.25
+
+    server.setWeather(fog, rain, wind)
+    console.notify(string.format("F %3.6f; R %3.6f; W %3.6f", fog, rain, wind))
+    end
 
 function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command, verb, ...)
     if command ~= "?weather" then
@@ -70,7 +101,9 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
     elseif verb == "stop" and is_admin then
         g_savedata.active = false
     elseif verb == "next" and is_admin then
-        g_savedata.weather.value = 0
+        g_savedata.weather.rain.tick = g_savedata.weather.rain.duration
+        g_savedata.weather.wind.tick = g_savedata.weather.wind.duration
+        g_savedata.weather.fog.tick = g_savedata.weather.fog.duration
     elseif verb == "prod" and is_admin then
         g_savedata.mode = "prod"
     elseif verb == "debug" and is_admin then
