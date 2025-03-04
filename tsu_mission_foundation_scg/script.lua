@@ -32,9 +32,9 @@ g_savedata = {
         wreckages = true,
         hostiles = true,
         suspects = true,
-        splillage = true,
+        spillage = true,
         cpa_recurrence = property.checkbox("CPA recurrence", true),
-        cpa_recurrence_rate = property.slider("Rate of CPA recurrence (%)", 0, 100, 1, 0),
+        cpa_recurrence_rate = property.slider("Rate of CPA recurrence (%)", 0, 100, 1, 20),
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
         eot = "END OF TABLE"
     },
@@ -639,9 +639,10 @@ mission_trackers = {
             local rescuee_count = 0
             local rescuee_picked_count = 0
             local fire_count = 0
-            local forestfire_count = 0
+            local forest_fire_count = 0
             local suspect_count = 0
             local wreckage_count = 0
+            local wreckage_items = {}
             local hostile_count = 0
             local underwater_count = 0
             local radiation_count = 0
@@ -655,14 +656,17 @@ mission_trackers = {
                     end
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "fire" then
                     fire_count = fire_count + 1
-                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "forestfire" then
-                    forestfire_count = forestfire_count + 1
+                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "forest_fire" then
+                    forest_fire_count = forest_fire_count + 1
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "wreckage" then
                     wreckage_count = wreckage_count + 1
+                    table.insert(wreckage_items, g_savedata.objects[i].name)
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "hostile" then
                     hostile_count = hostile_count + 1
                 end
             end
+
+            wreckage_items = table.distinct(wreckage_items)
 
             for i = 1, #self.locations do
                 if self.locations[i].zone and self.locations[i].zone.landscape == "underwater" then
@@ -673,16 +677,17 @@ mission_trackers = {
             self.objectives.rescuees = rescuee_count
             self.objectives.rescuees_picked = rescuee_picked_count
             self.objectives.fires = fire_count
-            self.objectives.forestfire = forestfire_count
+            self.objectives.forest_fires = forest_fire_count
             self.objectives.suspects = suspect_count
             self.objectives.wreckages = wreckage_count
+            self.objectives.wreckage_items = wreckage_items
             self.objectives.hostiles = hostile_count
 
             if not self.units.sar and self.locations[1].search_radius >= 250 then
                 self.units.sar = true
             end
 
-            if not self.units.fire and (fire_count >= 5 or forestfire_count >= 1) then
+            if not self.units.fire and (fire_count >= 10 or forest_fire_count >= 1) then
                 self.units.fire = true
             end
 
@@ -698,25 +703,16 @@ mission_trackers = {
             local category_basis = 0
             local category_bonus = 0
 
-            if self.objectives.rescuees >= 25 or self.objectives.fires >= 50 or self.objectives.suspects >= 10 then
+            if self.objectives.rescuees >= 10 or self.objectives.fires >= 50 or self.objectives.suspects >= 10 or self.objectives.forest_fires >= 1 or self.search_radius >= 1000 then
                 category_basis = 2
-            elseif self.objectives.rescuees >= 10 or self.objectives.fires >= 20 or self.objectives.suspects >= 5 then
+            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 10 or self.objectives.suspects >= 2 then
                 category_basis = 1
             else
                 category_basis = 0
             end
 
-            if self.objectives.forestfire >= 1 then
-                category_bonus = category_bonus + 1
-            end
-
-            if self.search_radius >= 750 then
-                category_bonus = category_bonus + 1
-            end
-
             category_bonus = math.min(category_bonus, 2)
-            -- category = math.max(self.category, category_basis + category_bonus)
-            category = category_basis + category_bonus
+            category = math.max(self.category, category_basis + category_bonus)
 
             if category >= 2 and self.category < 2 then
                 server.notify(-1, string.format("ミッション #%d の状況が悪化.", self.id), "詳細はミッション情報を確認せよ.", 1)
@@ -829,6 +825,7 @@ object_trackers = {
             local hp_min = -20
             local hp_max = 100
 
+            self.transform = server.getObjectPos(self.id)
             self.vital = server.getCharacterData(self.id)
             self.vital.hp = tonumber(self.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
@@ -844,6 +841,7 @@ object_trackers = {
                 ir = false
             }
             self.time_admission = 0
+            self.activated = false
             self.on_board = false
 
             server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
@@ -856,13 +854,13 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            local transform = self:position()
             local character_vehicle = server.getCharacterVehicle(self.id)
             local on_board = character_vehicle ~= 0
             local vital_update = server.getCharacterData(self.id)
-            local is_in_hospital = is_in_landscape(transform, "hospital")
-            local is_in_base = is_in_landscape(transform, "base")
-            local is_doctor_nearby = is_doctor_nearby(self)
+            local is_in_hospital = is_in_landscape(self.transform, "hospital")
+            local is_in_base = is_in_landscape(self.transform, "base")
+            local activated = self.activated or is_player_nearby(self.transform, 500)
+            local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
             if g_savedata.subsystems.cpa_recurrence and not is_safe then
@@ -878,7 +876,7 @@ object_trackers = {
             end
 
             if g_savedata.subsystems.rescuees_strobe then
-                local distance = distance_min_to_player(transform)
+                local distance = distance_min_to_player(self.transform)
                 local opt = (self.strobe.opt or distance <= 100) and not on_board
                 local ir = (self.strobe.ir or distance <= 1000) and not on_board
                 local dead = not self.vital.dead and vital_update.dead
@@ -895,14 +893,19 @@ object_trackers = {
                 self.strobe.ir = ir
             end
 
+            if not self.activated and activated then
+                console.notify(string.format("Objective#%d activated.", self.id))
+            end
+
             self.on_board = on_board
             self.vital = vital_update
+            self.activated = activated
 
             if is_in_hospital or not self.is_cpa_recurrent and is_in_base then
                 self.time_admission = self.time_admission + tick
             end
 
-            server.setCharacterData(self.id, self.vital.hp, not self.completed, self.vital.ai)
+            server.setCharacterData(self.id, self.vital.hp, not self.completed and activated, self.vital.ai)
         end,
         position = function(self)
             return server.getObjectPos(self.id)
@@ -967,12 +970,12 @@ object_trackers = {
         marker_type = 5,
         clear_timer = 0
     },
-    forestfire = {
+    forest_fire = {
         test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "forestfire"
+            return object.type == "forest_fire"
         end,
-        init = function(self, x, y, z)
-            self.transform = matrix.translation(x, y, z)
+        init = function(self, transform)
+            self.transform = transform
             self.is_lit = true
         end,
         clear = function(self)
@@ -984,7 +987,7 @@ object_trackers = {
         tick = function(self, tick)
         end,
         position = function(self)
-            return self.transform
+            return self.position
         end,
         dispensable = function(self)
             return false
@@ -1028,8 +1031,6 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            self.transform = server.getVehiclePos(self.id)
-
             if is_in_landscape(self.transform, "freight_terminal") then
                 self.completion_timer = self.completion_timer + tick
             end
@@ -1038,7 +1039,7 @@ object_trackers = {
             return server.getVehiclePos(self.id)
         end,
         dispensable = function(self)
-            return matrix.distance(self.initial_transform, self.transform) <= 25
+            return matrix.distance(self.initial_transform, self.transform) <= 50
         end,
         complete = function(self)
             return self.completion_timer >= 300
@@ -1059,12 +1060,13 @@ object_trackers = {
             return (object.type == "creature" or object.type == "animal") and object.tags.tracker ~= nil and object.tags.tracker == "hostile"
         end,
         init = function(self)
-            local pos = self:position()
+            self.transform = server.getObjectPos(self.id)
+
             local mission = table.find(g_savedata.missions, function(x)
                 return x.id == self.mission
             end)
             self.target = table.random(table.find_all(mission.locations, function(x)
-                local d = matrix.distance(x.transform, pos)
+                local d = matrix.distance(x.transform, self.transform)
                 return d >= 10 and d < 500
             end))
             self.vital = server.getCharacterData(self.id)
@@ -1077,6 +1079,8 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
+            self.transform = server.getObjectPos(self.id)
+
             if self.loaded and self.target ~= nil then
                 local x, y, z = matrix.position(self.target.transform)
                 local s = server.setCreatureMoveTarget(self.id, self.target.transform)
@@ -1089,7 +1093,7 @@ object_trackers = {
             self.vital = server.getCharacterData(self.id)
         end,
         position = function(self)
-            return server.getVehiclePos(self.id)
+            return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
             return true
@@ -1124,7 +1128,7 @@ object_trackers = {
         tick = function(self, tick)
         end,
         position = function(self)
-            return server.getVehiclePos(self.id)
+            return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
             return false
@@ -1428,8 +1432,10 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.objectives = {
         rescuees = 0,
         fires = 0,
+        forest_fires = 0,
         suspects = 0,
         wreckages = 0,
+        wreckage_items = {},
         hostiles = 0
     }
     mission.units = {
@@ -1589,6 +1595,9 @@ function tick_object(object, tick)
         return
     end
 
+    object.transform = object:position()
+    object:tick(tick)
+
     -- server.removeMapID(-1, object.marker_id)
 
     -- if g_savedata.object_mapped then
@@ -1601,8 +1610,6 @@ function tick_object(object, tick)
 
     --     server.addMapObject(-1, object.marker_id, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     -- end
-
-    object:tick(tick)
 
     if object.mission ~= nil and not object.completed and object:complete() then
         for j = 1, #g_savedata.missions do
@@ -1683,11 +1690,11 @@ function unloaded_object(object)
     object:unload()
 end
 
-function is_doctor_nearby(object)
+function is_doctor_nearby(transform)
     local is = false
 
     for i = 1, #g_savedata.objects do
-        is = is or g_savedata.objects[i].tracker == "doctor" and matrix.distance(object.transform, g_savedata.objects[i].transform) <= 10
+        is = is or g_savedata.objects[i].tracker == "doctor" and matrix.distance(transform, g_savedata.objects[i].transform) <= 10
     end
 
     return is
@@ -2538,13 +2545,13 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
     end
 
     if target ~= nil then
-        initialize_object(fire_objective_id, "forestfire", {}, nil, target, x, y, z)
+        initialize_object(fire_objective_id, "forest_fire", {}, nil, target, transform)
     end
 end
 
 function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].type == "forestfire" and g_savedata.objects[i].id == fire_objective_id then
+        if g_savedata.objects[i].tracker == "forest_fire" and g_savedata.objects[i].id == fire_objective_id then
             g_savedata.objects[i].is_lit = false
         end
     end
