@@ -13,10 +13,10 @@ g_savedata = {
     zones = {},
     mission_timer_tickrate = 0,
     mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval of (minutes)", 0, 30, 1, 10) * 3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval of (minutes)", 0, 60, 1, 20) * 3600,
-    mission_range_min = property.slider("New missions occurs in a minimum range of (km)", 0, 10, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range of (km)", 1, 100, 1, 6) * 1000,
+    mission_interval_min = property.slider("New missions occurs at a minimum interval (minutes)", 0, 30, 1, 10) * 3600,
+    mission_interval_max = property.slider("New missions occurs at a maximum interval (minutes)", 0, 60, 1, 20) * 3600,
+    mission_range_min = property.slider("New missions occurs in a minimum range (km)", 0, 10, 1, 1) * 1000,
+    mission_range_max = property.slider("New missions occurs in a maximum range (km)", 1, 100, 1, 6) * 1000,
     mission_range_limited = true,
     mission_count = 0,
     mission_count_limited = true,
@@ -33,7 +33,6 @@ g_savedata = {
         hostiles = true,
         suspects = true,
         spillage = true,
-        cpa_recurrence = property.checkbox("CPA recurrence", true),
         cpa_recurrence_rate = property.slider("Rate of CPA recurrence (%)", 0, 100, 1, 20),
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
         mapping = {
@@ -443,6 +442,21 @@ location_properties = {{
     report_timer_max = 0,
     note = "パトロールからの通報"
 }, {
+    pattern = "^mission:naval_mine_%d+$",
+    tracker = "sar",
+    suitable_zones = {"offshore", "channel", "diving_spot"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 500,
+    notification_type = 0,
+    report = "落下物\n付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊 (報酬なし) または貨物ターミナルへ輸送 (報酬あり) せよ.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "パトロールからの通報"
+}, {
     pattern = "^mission:train_crash_head_on$",
     tracker = "sar",
     suitable_zones = {},
@@ -728,9 +742,9 @@ mission_trackers = {
         complete = function(self)
             local completed = self.spawned
 
-            for k, object in pairs(g_savedata.objects) do
-                if object.mission == self.id and object.tracker ~= nil then
-                    completed = completed and (object:dispensable() or object:complete())
+            for i = 1, #g_savedata.objects do
+                if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
+                    completed = completed and (g_savedata.objects[i]:dispensable() or g_savedata.objects[i]:complete())
                 end
             end
 
@@ -753,7 +767,7 @@ mission_trackers = {
             return reward
         end,
         report = function(self)
-            return string.format("REPORT #%d\n" .. self.locations[1].report, self.id)
+            return string.format("REPORT #%d\n%s", self.id, self.locations[1].report)
         end,
         progress = function(self)
             local test = {}
@@ -1023,6 +1037,12 @@ object_trackers = {
             self.transform = server.getVehiclePos(self.id)
             self.mass = 0
 
+            if self.tags.indispensable ~= nil and self.tags.indispensable == "true" then
+                self.indispensable = true
+            else
+                self.indispensable = false
+            end
+
             server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
@@ -1045,7 +1065,7 @@ object_trackers = {
             return server.getVehiclePos(self.id)
         end,
         dispensable = function(self)
-            return matrix.distance(self.initial_transform, self.transform) <= 50
+            return not self.indispensable and matrix.distance(self.initial_transform, self.transform) <= 50
         end,
         complete = function(self)
             return self.completion_timer >= 300
