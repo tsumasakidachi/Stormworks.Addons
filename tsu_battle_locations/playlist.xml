@@ -2,9 +2,9 @@
 <playlist folder_path="data/missions/tsu_battle_locations" file_store="4" name="TSU Battle Locations">
 	<locations location_id_counter="20" component_id_counter="30">
 		<locations>
-			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="a_bridge_too_far" is_env_mod="true" env_mod_spawn_num="1">
+			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="holt_bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="10" id="1" cargo_zone_import_cargo_type="map=a_bridge_too_far,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="1" cargo_zone_import_cargo_type="map=holt_bridge,landscape=base,team=blue" display_name="BLUE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.711391" 02="0.702797" 20="-0.702797" 22="0.711391" 30="73.177032" 31="18.072144" 32="-67.023453"/>
 						<spawn_bounds>
 							<min x="-161.782192" y="-29.878206" z="-153.952671"/>
@@ -12,7 +12,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="8" cargo_zone_import_cargo_type="map=a_bridge_too_farf,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="8" cargo_zone_import_cargo_type="map=holt_bridgef,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.732809" 02="0.680434" 20="-0.680434" 22="0.732809" 30="95.243378" 31="12.484696" 32="-118.89991"/>
 						<spawn_bounds>
 							<min x="-5" y="-5.209184" z="-5"/>
@@ -22,9 +22,9 @@
 					</c>
 				</components>
 			</l>
-			<l id="3" tile="data/tiles/mega_island_12_6.xml" name="a_bridge_too_far" is_env_mod="true" env_mod_spawn_num="1">
+			<l id="3" tile="data/tiles/mega_island_12_6.xml" name="holt_bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="10" id="5" cargo_zone_import_cargo_type="map=a_bridge_too_far,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="5" cargo_zone_import_cargo_type="map=holt_bridge,landscape=base,team=red" display_name="RED" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.705879" 02="0.708333" 20="-0.708333" 22="-0.705879" 30="72.851524" 31="13.519076" 32="67.8256"/>
 						<spawn_bounds>
 							<min x="-124.263923" y="-40.667424" z="-143.74456"/>
@@ -32,7 +32,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="9" cargo_zone_import_cargo_type="map=a_bridge_too_far,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="9" cargo_zone_import_cargo_type="map=holt_bridge,landscape=storage" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.705566" 02="0.708645" 20="-0.708645" 22="-0.705566" 30="125.326813" 31="8.684548" 32="88.636215"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
@@ -122,9 +122,9 @@
 					</c>
 				</components>
 			</l>
-			<l id="16" tile="data/tiles/mega_island_7_7.xml" name="a_bridge_too_far" is_env_mod="true" env_mod_spawn_num="1">
+			<l id="16" tile="data/tiles/mega_island_7_7.xml" name="holt_bridge" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="10" id="26" cargo_zone_import_cargo_type="map=a_bridge_too_far,landscape=center,radius=3000" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="26" cargo_zone_import_cargo_type="map=holt_bridge,landscape=center,radius=3000" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 30="-15.549506" 31="5.000008" 32="35.647587"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
@@ -132,7 +132,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="30" cargo_zone_import_cargo_type="map=a_bridge_too_far,landscape=stronghold" display_name="Holt Bridge" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="30" cargo_zone_import_cargo_type="map=holt_bridge,landscape=stronghold" display_name="Holt Bridge" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.866978" 02="-0.498346" 20="0.498346" 22="0.866978" 30="365.291351" 31="20.517998" 32="18.898598"/>
 						<spawn_bounds>
 							<min x="-39.001838" y="-8.082363" z="-184.437007"/>
