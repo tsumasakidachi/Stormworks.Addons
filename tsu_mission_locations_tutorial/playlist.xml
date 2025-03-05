@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<playlist folder_path="data/missions/tsu_mission_foundation_tutorial" file_store="4" name="TSU Mission Location Tutorial">
-	<locations location_id_counter="4" component_id_counter="10">
+<playlist folder_path="data/missions/tsu_mission_locations_tutorial" file_store="4" name="TSU Mission Location Tutorial">
+	<locations location_id_counter="5" component_id_counter="16">
 		<locations>
 			<l id="3" tile="data/tiles/mega_island_8_7.xml" name="SAWYER 8_7" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -85,6 +85,58 @@
 						<spawn_bounds>
 							<min x="-1" y="-1" z="-1"/>
 							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="5" tile="data/tiles/mega_island_9_8.xml" name="mission:Forest_on_fire!" env_mod_spawn_num="1">
+				<components>
+					<c component_type="5" id="11" zone_radius="8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="166.974777" 31="7.343312" 32="-125.009567"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="12" zone_radius="8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="168.079453" 31="7.442324" 32="-131.891983"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="13" zone_radius="8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="158.699677" 31="7.634517" 32="-130.918335"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="14" zone_radius="8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="159.626266" 31="7.508569" 32="-125.063774"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="5" id="15" zone_radius="8" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="163.494095" 31="7.477569" 32="-128.149765"/>
+						<spawn_bounds>
+							<min x="-1" y="-1" z="-1"/>
+							<max x="1" y="1" z="1"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="2" id="16" name="tracker=rescuee" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="155.768066" 31="7.437196" 32="-127.421165"/>
+						<spawn_bounds>
+							<min x="-0.11" y="-0.8" z="-0.11"/>
+							<max x="0.11" y="0.8" z="0.11"/>
 						</spawn_bounds>
 						<graph_links/>
 					</c>
