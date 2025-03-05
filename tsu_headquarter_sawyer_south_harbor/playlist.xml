@@ -39,7 +39,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,landscape=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="149.910294" 31="1.308605" 32="-406.090973"/>
+						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="149.910294" 31="1.308605" 32="-406.270264"/>
 						<spawn_bounds>
 							<min x="-5.770339" y="-14.142403" z="-13.108555"/>
 							<max x="5.770339" y="14.142403" z="13.108555"/>
