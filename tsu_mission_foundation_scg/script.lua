@@ -36,6 +36,11 @@ g_savedata = {
         cpa_recurrence = property.checkbox("CPA recurrence", true),
         cpa_recurrence_rate = property.slider("Rate of CPA recurrence (%)", 0, 100, 1, 20),
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
+        mapping = {
+            mission = {},
+            object = {},
+            zone = {}
+        },
         eot = "END OF TABLE"
     },
     eot = "END OF TABLE"
@@ -126,7 +131,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 500,
     notification_type = 0,
-    report = "水難事故\nいかだを作って遊んでいたら転覆した!",
+    report = "水難事故\nいかだを作ってあそんでいたら転覆した!",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "民間人からの通報"
@@ -284,9 +289,9 @@ location_properties = {{
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$"},
     sub_location_min = 1,
-    sub_location_max = 4,
+    sub_location_max = 5,
     is_unique_sub_location = false,
-    search_radius = 500,
+    search_radius = 1000,
     notification_type = 0,
     report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
     report_timer_min = 0,
@@ -352,7 +357,7 @@ location_properties = {{
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = true,
-    search_radius = 750,
+    search_radius = 1000,
     notification_type = 0,
     report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
     report_timer_min = 0,
@@ -367,7 +372,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 100,
+    search_radius = 50,
     notification_type = 0,
     report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
     report_timer_min = 0,
@@ -384,7 +389,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 200,
+    search_radius = 250,
     notification_type = 0,
     report = "火災\nキャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
     report_timer_min = 0,
@@ -446,7 +451,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 50,
     notification_type = 0,
     report = "鉄道事故\n旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
     report_timer_min = 0,
@@ -463,7 +468,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 50,
     notification_type = 0,
     report = "鉄道事故\n旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
     report_timer_min = 0,
@@ -480,7 +485,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 50,
     notification_type = 0,
     report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
     report_timer_min = 0,
@@ -497,7 +502,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 50,
     notification_type = 0,
     report = "火災\n爆発性の化学物質が保管されている倉庫から煙が出ている.",
     report_timer_min = 0,
@@ -514,7 +519,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 50,
     notification_type = 0,
     report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
     report_timer_min = 0,
@@ -858,12 +863,13 @@ object_trackers = {
             local on_board = character_vehicle ~= 0
             local vital_update = server.getCharacterData(self.id)
             local is_in_hospital = is_in_landscape(self.transform, "hospital")
+            local is_in_clinic = is_in_landscape(self.transform, "clinic")
             local is_in_base = is_in_landscape(self.transform, "base")
-            local activated = self.activated or is_player_nearby(self.transform, 500)
+            local activated = self.activated or is_player_nearby(self.transform, 100)
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if g_savedata.subsystems.cpa_recurrence and not is_safe then
+            if g_savedata.subsystems.cpa_recurrence_rate > 0 and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
                     self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_recurrence_rate
 
@@ -901,7 +907,7 @@ object_trackers = {
             self.vital = vital_update
             self.activated = activated
 
-            if is_in_hospital or not self.is_cpa_recurrent and is_in_base then
+            if is_in_hospital or not self.is_cpa_recurrent and (is_in_base or is_in_clinic) then
                 self.time_admission = self.time_admission + tick
             end
 
@@ -919,7 +925,7 @@ object_trackers = {
         reward = function(self)
             local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
 
-            if g_savedata.subsystems.cpa_recurrence and self.cpa_count >= 2 then
+            if g_savedata.subsystems.cpa_recurrence_rate > 0 and self.cpa_count >= 2 then
                 value = value - self.cpa_count * 1000
             end
 
@@ -1109,7 +1115,7 @@ object_trackers = {
         end,
         reward_base = 1000,
         progress = "危険生物を駆除 (オプション)",
-        marker_type = 2,
+        marker_type = 18,
         clear_timer = 300
     },
     sniffer = {
@@ -1144,7 +1150,7 @@ object_trackers = {
         end,
         reward_base = 0,
         progress = "捜査犬",
-        marker_type = 2,
+        marker_type = 9,
         clear_timer = 0
     },
     headquarter = {
@@ -1396,7 +1402,7 @@ object_trackers = {
         end,
         reward_base = 0,
         progress = "",
-        marker_type = 11,
+        marker_type = 12,
         clear_timer = 0
     }
 }
@@ -1483,7 +1489,7 @@ end
 function tick_mission(mission, tick)
     mission:tick(tick)
 
-    if g_savedata.mission_mapped and mission.search_center then
+    if (g_savedata.mode == "debug" or g_savedata.mission_mapped) and mission.search_center then
         local label = mission:report()
         local label_hover = mission:status()
         local x, y, z = matrix.position(mission.search_center)
@@ -1598,18 +1604,16 @@ function tick_object(object, tick)
     object.transform = object:position()
     object:tick(tick)
 
-    -- server.removeMapID(-1, object.marker_id)
+    server.removeMapID(-1, object.marker_id)
 
-    -- if g_savedata.object_mapped then
-    --     local transform = object:position()
-    --     local x, y, z = matrix.position(transform)
-    --     local r, g, b, a = 127, 127, 127, 255
-    --     local label = string.format("%s #%d", object.tracker, object.id)
-    --     local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
-    --     local marker_type = object.marker_type
+    if g_savedata.mode == "debug" then
+        local x, y, z = matrix.position(object.transform)
+        local r, g, b, a = 128, 128, 128, 255
+        local label = string.format("%s #%d", object.tracker, object.id)
+        local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
 
-    --     server.addMapObject(-1, object.marker_id, 0, marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
-    -- end
+        server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
+    end
 
     if object.mission ~= nil and not object.completed and object:complete() then
         for j = 1, #g_savedata.missions do
@@ -2085,7 +2089,7 @@ end
 function map_zone(zone, peer_id)
     local peer_id = peer_id or -1
 
-    if g_savedata.zone_mapped or zone.mapped then
+    if (g_savedata.mode == "debug" or g_savedata.zone_mapped) or zone.mapped then
         local x, y, z = matrix.position(zone.transform)
         local color = zone.icon == 8 and 255 or 0
         local name = zone.name
@@ -2370,21 +2374,21 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
             g_savedata.mode = "debug"
-        elseif verb == "map" and is_admin then
-            local target = ...
+        -- elseif verb == "map" and is_admin then
+        --     local target = ...
 
-            if target == "mission" then
-                g_savedata.mission_mapped = not g_savedata.mission_mapped
-            elseif target == "zone" then
-                g_savedata.zone_mapped = not g_savedata.zone_mapped
+        --     if target == "mission" then
+        --         g_savedata.mission_mapped = not g_savedata.mission_mapped
+        --     elseif target == "zone" then
+        --         g_savedata.zone_mapped = not g_savedata.zone_mapped
 
-                for i = 1, #g_savedata.zones do
-                    server.removeMapID(-1, g_savedata.zones[i].marker_id)
-                    map_zone(g_savedata.zones[i])
-                end
-            elseif target == "object" then
-                g_savedata.object_mapped = not g_savedata.object_mapped
-            end
+        --         for i = 1, #g_savedata.zones do
+        --             server.removeMapID(-1, g_savedata.zones[i].marker_id)
+        --             map_zone(g_savedata.zones[i])
+        --         end
+        --     elseif target == "object" then
+        --         g_savedata.object_mapped = not g_savedata.object_mapped
+        --     end
         elseif verb == "limit-count" and is_admin then
             g_savedata.mission_count_limited = not g_savedata.mission_count_limited
         elseif verb == "limit-range" and is_admin then
@@ -2399,10 +2403,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                     server.setObjectPos(g_savedata.objects[i].id, transform)
                 end
             end
-        elseif verb == "cpa-recurrence" and is_admin then
-            g_savedata.subsystems.cpa_recurrence = not g_savedata.subsystems.cpa_recurrence
-
-            console.notify(string.format("CPA Recurrence: %s", g_savedata.subsystems.cpa_recurrence))
         elseif verb == "clear-history" and is_admin then
             g_savedata.locations_history = {}
         end
