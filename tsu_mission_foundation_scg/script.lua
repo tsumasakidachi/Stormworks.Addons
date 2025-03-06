@@ -1,6 +1,12 @@
 name = "TSU Mission Foundation SCG"
 version = "1.2.0"
 
+subsystem_mode = {
+    indispensable = "indispensable",
+    dispensable = "dispensable",
+    disabled = "disabled"
+}
+
 -- properties
 g_savedata = {
     mode = "prod",
@@ -46,12 +52,6 @@ g_savedata = {
         eot = "END OF TABLE"
     },
     eot = "END OF TABLE"
-}
-
-subsystem_mode = {
-    indispensable = "indispensable",
-    dispensable = "dispensable",
-    disabled = "disabled"
 }
 
 location_properties = {{
