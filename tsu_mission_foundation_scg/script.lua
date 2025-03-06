@@ -33,7 +33,10 @@ g_savedata = {
         hostiles = true,
         suspects = true,
         spillage = true,
-        cpa_recurrence_rate = property.slider("Rate of CPA recurrence (%)", 0, 100, 1, 20),
+        cpa_recurrence = {
+            rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
+            threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
+        },
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
         mapping = {
             mission = {},
@@ -883,9 +886,9 @@ object_trackers = {
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if g_savedata.subsystems.cpa_recurrence_rate > 0 and not is_safe then
+            if #players >= g_savedata.subsystems.cpa_reccurence.threshold_players and g_savedata.subsystems.cpa_reccurence.rate > 0 and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
-                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_recurrence_rate
+                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_reccurence.rate
 
                     if self.is_cpa_recurrent then
                         self.cpa_count = self.cpa_count + 1
@@ -939,8 +942,8 @@ object_trackers = {
         reward = function(self)
             local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
 
-            if g_savedata.subsystems.cpa_recurrence_rate > 0 and self.cpa_count >= 2 then
-                value = value - self.cpa_count * 1000
+            if self.cpa_count >= 2 then
+                value = value - self.cpa_count * 500
             end
 
             return value
