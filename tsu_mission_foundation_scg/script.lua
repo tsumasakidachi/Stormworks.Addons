@@ -1096,6 +1096,13 @@ object_trackers = {
                 return d >= 10 and d < 500
             end))
             self.vital = server.getCharacterData(self.id)
+
+            if self.tags.indispensable ~= nil and self.tags.indispensable == "true" then
+                self.indispensable = true
+            else
+                self.indispensable = false
+            end
+
             server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, self.mission, self.id))
         end,
         clear = function(self)
@@ -1122,7 +1129,7 @@ object_trackers = {
             return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
-            return true
+            return not self.indispensable
         end,
         complete = function(self)
             return self.vital.incapacitated or self.vital.dead
