@@ -27,12 +27,12 @@ g_savedata = {
     zone_mapped = false,
     zone_marker_id = nil,
     subsystems = {
-        rescuees = true,
-        fires = true,
-        wreckages = true,
-        hostiles = true,
-        suspects = true,
-        spillage = true,
+        rescuees = subsystem_mode.indispensable,
+        fires = subsystem_mode.indispensable,
+        suspects = subsystem_mode.indispensable,
+        spillage = subsystem_mode.indispensable,
+        wreckages = subsystem_mode.dispensable,
+        hostiles = subsystem_mode.dispensable,
         cpa_recurrence = {
             rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
             threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
@@ -46,6 +46,12 @@ g_savedata = {
         eot = "END OF TABLE"
     },
     eot = "END OF TABLE"
+}
+
+subsystem_mode = {
+    indispensable = "indispensable",
+    dispensable = "dispensable",
+    disabled = "disabled"
 }
 
 location_properties = {{
@@ -886,9 +892,9 @@ object_trackers = {
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if #players >= g_savedata.subsystems.cpa_reccurence.threshold_players and g_savedata.subsystems.cpa_reccurence.rate > 0 and not is_safe then
+            if #players >= g_savedata.subsystems.cpa_recurrence.threshold_players and g_savedata.subsystems.cpa_recurrence.rate > 0 and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
-                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_reccurence.rate
+                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_recurrence.rate
 
                     if self.is_cpa_recurrent then
                         self.cpa_count = self.cpa_count + 1
