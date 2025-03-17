@@ -41,7 +41,7 @@ g_savedata = {
         hostiles = subsystem_mode.dispensable,
         cpa_recurrence = {
             rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
-            threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
+            threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8)
         },
         rescuees_strobe = property.checkbox("Rescuees has strobe", true),
         mapping = {
@@ -527,7 +527,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 50,
     notification_type = 0,
-    report = "火災\n爆発性の化学物質が保管されている倉庫から煙が出ている.",
+    report = "火災\n化学物質が保管されている倉庫が炎上している. 不意の爆発に注意せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     rescuee_min = 25,
@@ -711,11 +711,11 @@ mission_trackers = {
             self.objectives.wreckage_items = wreckage_items
             self.objectives.hostiles = hostile_count
 
-            if not self.units.sar and self.locations[1].search_radius >= 250 then
+            if not self.units.sar and self.locations[1].search_radius >= 500 and #self.locations >= 2 then
                 self.units.sar = true
             end
 
-            if not self.units.fire and (fire_count >= 10 or forest_fire_count >= 1) then
+            if not self.units.fire and (fire_count >= 5 or forest_fire_count >= 1) then
                 self.units.fire = true
             end
 
@@ -731,9 +731,9 @@ mission_trackers = {
             local category_basis = 0
             local category_bonus = 0
 
-            if self.objectives.rescuees >= 10 or self.objectives.fires >= 50 or self.objectives.suspects >= 10 or self.objectives.forest_fires >= 1 or self.search_radius >= 1000 then
+            if self.objectives.rescuees >= 10 or self.objectives.fires >= 25 or self.objectives.suspects >= 10 or self.objectives.forest_fires >= 1 or self.search_radius >= 1000 then
                 category_basis = 2
-            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 10 or self.objectives.suspects >= 2 then
+            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 5 or self.objectives.suspects >= 2 then
                 category_basis = 1
             else
                 category_basis = 0
@@ -778,36 +778,6 @@ mission_trackers = {
         report = function(self)
             return string.format("REPORT #%d\n%s", self.id, self.locations[1].report)
         end,
-        progress = function(self)
-            local test = {}
-
-            for k, v in pairs(object_trackers) do
-                test[k] = {
-                    count = 0,
-                    completed = 0
-                }
-            end
-
-            for k, v in pairs(g_savedata.objects) do
-                if v.mission == self.id and v.tracker ~= nil then
-                    if v:complete() then
-                        test[v.tracker].completed = test[v.tracker].completed + 1
-                    end
-
-                    test[v.tracker].count = test[v.tracker].count + 1
-                end
-            end
-
-            local progresses = {}
-
-            for k, v in pairs(test) do
-                if v.count > 0 then
-                    table.insert(progresses, string.format("%d\n%s", test[k].count, object_trackers[k].progress))
-                end
-            end
-
-            return progresses
-        end,
         status = function(self)
             local text = self.locations[1].note
             text = text .. "\n"
@@ -828,12 +798,49 @@ mission_trackers = {
                 end
             end
 
-            text = text .. "\n\n[目標]"
+            text = text .. "\n\n[必須の達成目標]"
 
-            local progresses = self:progress()
+            for tracker_id, tracker in pairs(object_trackers) do
+                local count = 0
 
-            for k, progress in pairs(progresses) do
-                text = text .. "\n" .. progress
+                for i = 1, #g_savedata.objects do
+                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and not g_savedata.objects[i]:dispensable() then
+                        count = count + 1
+                    end
+                end
+
+                if count > 0 then
+                    text = text .. string.format("\n%d\n%s", count, tracker.text)
+                end
+            end
+
+            text = text .. "\n\n[オプションの達成目標]"
+
+            for tracker_id, tracker in pairs(object_trackers) do
+                local count = 0
+
+                for i = 1, #g_savedata.objects do
+                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and g_savedata.objects[i]:dispensable() then
+                        count = count + 1
+                    end
+                end
+
+                if count > 0 then
+                    text = text .. string.format("\n%d\n%s", count, tracker.text)
+                end
+            end
+
+            if #self.spillages > 0 then
+                text = text .. "\n\n[漏えい]"
+                text = text .. "\n"
+
+                for i = 1, #self.spillages do
+                    if i > 1 then
+                        text = text .. " "
+                    end
+
+                    text = text .. string.upper(self.spillages[i])
+                end
             end
 
             text = text .. "\n\n[捜索半径]"
@@ -846,14 +853,13 @@ mission_trackers = {
 
 object_trackers = {
     rescuee = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "character" and object.tags.tracker ~= nil and object.tags.tracker == "rescuee"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "character" and tags.tracker ~= nil and tags.tracker == "rescuee"
         end,
         init = function(self)
             local hp_min = -20
             local hp_max = 100
 
-            self.transform = server.getObjectPos(self.id)
             self.vital = server.getCharacterData(self.id)
             self.vital.hp = tonumber(self.tags.hp) or math.max(0, math.random(0, hp_max - hp_min) + hp_min)
 
@@ -873,7 +879,7 @@ object_trackers = {
             self.on_board = false
 
             server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
-            server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, self.mission, self.id))
+            server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -888,7 +894,7 @@ object_trackers = {
             local is_in_hospital = is_in_landscape(self.transform, "hospital")
             local is_in_clinic = is_in_landscape(self.transform, "clinic")
             local is_in_base = is_in_landscape(self.transform, "base")
-            local activated = self.activated or is_player_nearby(self.transform, 100)
+            local activated = self.activated or is_player_nearby(self.transform, 500)
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
@@ -955,20 +961,21 @@ object_trackers = {
             return value
         end,
         status = function(self)
-            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.progress, self.vital.hp, self.cpa_count)
-            -- return self.progress
+            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.text, self.vital.hp, self.cpa_count)
+            -- return self.text
         end,
         reward_base = 2000,
-        progress = "要救助者を医療機関へ搬送",
+        text = "要救助者を医療機関へ搬送",
         marker_type = 1,
         clear_timer = 300
     },
     fire = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "fire"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "fire"
         end,
         init = function(self)
             self.is_lit = server.getFireData(self.id)
+            self.is_explosive = false
         end,
         clear = function(self)
         end,
@@ -978,6 +985,18 @@ object_trackers = {
         end,
         tick = function(self, tick)
             self.is_lit = server.getFireData(self.id)
+
+            local is_explosive = false
+
+            for i = 1, #g_savedata.missions do
+                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < 0.001
+            end
+
+            if is_explosive and not self.is_explosive then
+                self.is_explosive = is_explosive
+                server.spawnExplosion(self.transform, math.random() ^ 2)
+                console.notify(string.format("Objective#%d fire in the hole.", self.id))
+            end
         end,
         position = function(self)
             return server.getObjectPos(self.id)
@@ -992,16 +1011,16 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 500,
-        progress = "炎を鎮火",
+        text = "炎を鎮火",
         marker_type = 5,
         clear_timer = 0
     },
     forest_fire = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "forest_fire"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "forest_fire"
         end,
         init = function(self, transform)
             self.transform = transform
@@ -1016,7 +1035,7 @@ object_trackers = {
         tick = function(self, tick)
         end,
         position = function(self)
-            return self.position
+            return self.transform
         end,
         dispensable = function(self)
             return false
@@ -1028,22 +1047,21 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 5000,
-        progress = "森林火災を鎮火",
+        text = "森林火災を鎮火",
         marker_type = 5,
         clear_timer = 0
     },
     wreckage = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "wreckage"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "vehicle" and tags.tracker ~= nil and tags.tracker == "wreckage"
         end,
         init = function(self)
             self.components_checked = false
             self.completion_timer = 0
             self.initial_transform = server.getVehiclePos(self.id)
-            self.transform = server.getVehiclePos(self.id)
             self.mass = 0
 
             if self.tags.indispensable ~= nil and self.tags.indispensable == "true" then
@@ -1052,7 +1070,7 @@ object_trackers = {
                 self.indispensable = false
             end
 
-            server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.progress, self.mission, self.id))
+            server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -1083,20 +1101,18 @@ object_trackers = {
             return math.ceil(self.mass * self.reward_base / 100) * 100
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 2,
-        progress = "残骸を貨物ターミナルへ輸送 (オプション)",
+        text = "残骸を貨物ターミナルへ輸送",
         marker_type = 2,
         clear_timer = 7200
     },
     hostile = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return (object.type == "creature" or object.type == "animal") and object.tags.tracker ~= nil and object.tags.tracker == "hostile"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
         end,
         init = function(self)
-            self.transform = server.getObjectPos(self.id)
-
             local mission = table.find(g_savedata.missions, function(x)
                 return x.id == self.mission
             end)
@@ -1112,7 +1128,7 @@ object_trackers = {
                 self.indispensable = false
             end
 
-            server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.progress, self.mission, self.id))
+            server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
         end,
         clear = function(self)
         end,
@@ -1121,8 +1137,6 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            self.transform = server.getObjectPos(self.id)
-
             if self.loaded and self.target ~= nil then
                 local x, y, z = matrix.position(self.target.transform)
                 local s = server.setCreatureMoveTarget(self.id, self.target.transform)
@@ -1147,19 +1161,19 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 1000,
-        progress = "危険生物を駆除 (オプション)",
-        marker_type = 18,
+        text = "危険生物を駆除",
+        marker_type = 6,
         clear_timer = 300
     },
     sniffer = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return (object.type == "creature") and object.tags.tracker ~= nil and object.tags.tracker == "sniffer"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "creature" and tags.tracker ~= nil and tags.tracker == "sniffer"
         end,
         init = function(self)
-            server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.progress, self.id))
+            server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
         end,
         clear = function(self)
         end,
@@ -1182,16 +1196,16 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 0,
-        progress = "捜査犬",
+        text = "捜査犬",
         marker_type = 9,
         clear_timer = 0
     },
     headquarter = {
-        test_type = function(self, id, type, object, component_id, mission_id)
-            return object.type == "vehicle" and object.tags.tracker ~= nil and object.tags.tracker == "headquarter"
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "vehicle" and tags.tracker ~= nil and tags.tracker == "headquarter"
         end,
         init = function(self)
             self.components_checked = false
@@ -1398,16 +1412,16 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 0,
-        progress = "",
+        text = "",
         marker_type = 11,
         clear_timer = 0
     },
     unit = {
-        test_type = function(self, id, type, object, component_id, mission_id, owner, cost)
-            return object.type == "vehicle" and owner ~= nil and cost ~= nil
+        test_type = function(self, id, type, tags, component_id, mission_id, owner, cost)
+            return type == "vehicle" and owner ~= nil and cost ~= nil
         end,
         init = function(self, owner, cost)
             self.owner_steam_id = owner
@@ -1434,10 +1448,10 @@ object_trackers = {
             return self.reward_base
         end,
         status = function(self)
-            return self.progress
+            return self.text
         end,
         reward_base = 0,
-        progress = "",
+        text = "",
         marker_type = 12,
         clear_timer = 0
     }
@@ -1486,6 +1500,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
         fire = false,
         specialist = false
     }
+    mission.spillages = {}
     mission.rewards = 0
     setmetatable(mission, mission_trackers[tracker])
     mission:init()
@@ -1523,6 +1538,15 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
+    local spillages = {}
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spill ~= nil then
+            table.insert(spillages, g_savedata.objects[i].tags.spill)
+        end
+    end
+
+    mission.spillages = table.distinct(spillages)
     mission:tick(tick)
 
     if (g_savedata.mode == "debug" or g_savedata.mission_mapped) and mission.search_center then
@@ -1555,7 +1579,7 @@ function tick_mission(mission, tick)
         if mission.category >= 2 then
             notification_type = 1
         end
-        
+
         server.notify(-1, mission:report(), mission.locations[1].note, notification_type)
         mission.reported = true
     end
@@ -1578,22 +1602,26 @@ end
 
 -- objects
 
-function initialize_object(id, type, object, component_id, mission_id, ...)
+function initialize_object(id, type, tags, mission_id, component_id, parent_id, ...)
     local params = {...}
+    local object = {}
 
     object.id = id
     object.type = type
-    object.tracker = nil
+    object.tags = tags
     object.marker_id = server.getMapID()
     object.component_id = component_id
+    object.parent_id = parent_id
     object.mission = mission_id
     object.loaded = false
     object.completed = false
     object.cleared = false
     object.elapsed_clear = 0
+    object.transform = nil
+    object.tracker = nil
 
     for k, v in pairs(object_trackers) do
-        if v:test_type(id, type, object, component_id, mission_id, table.unpack(params)) then
+        if v:test_type(id, type, tags, component_id, mission_id, table.unpack(params)) then
             object.tracker = k
             break
         end
@@ -1601,8 +1629,10 @@ function initialize_object(id, type, object, component_id, mission_id, ...)
 
     if object.tracker ~= nil then
         setmetatable(object, object_trackers[object.tracker])
+        object.transform = object:position()
         object:init(table.unpack(params))
     end
+
 
     if object.type == "vehicle" and object.tags.keep_active == "true" then
         server.setVehicleTransponder(object.id, true)
@@ -1661,7 +1691,11 @@ function tick_object(object, tick)
             end
         end
 
-        server.notify(-1, object:status(), "Objective achieved", 4)
+        for i = 1, #players do
+            if matrix.distance(object.transform, players[i].transform) <= 250 then
+                server.notify(players[i].id, object:status(), "Objective achieved", 4)
+            end
+        end
         object.completed = true
     end
 
@@ -1978,9 +2012,9 @@ function spawn_component(component, transform, mission_id)
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
     spawn_by_foundation = false
 
-    object.tags = parse_tags(object.tags_full)
+    local tags = parse_tags(object.tags_full)
 
-    initialize_object(object.id, object.type, object, component.id, mission_id)
+    initialize_object(object.id, object.type, tags, mission_id, component.id, parent_object_id)
 end
 
 function load_locations()
@@ -2171,44 +2205,12 @@ end
 
 -- headquarter
 
-function initialize_headquarter(group_id)
-    local vehicle_ids, is_success = server.getVehicleGroup(group_id)
-    local hq = {}
-
-    if not is_success or is_headquarter_dupe(group_id) then
-        return
-    end
-
-    hq.tags_full = "tracker=headquarter"
-    hq.tags = parse_tags(hq.tags_full)
-    hq.display_name = ""
-    hq.type = "vehicle"
-    hq.transform = server.getVehiclePos(vehicle_ids[1])
-    hq.id = vehicle_ids[1]
-    hq.object_id = nil
-    hq.group_id = group_id
-    hq.vehicle_ids = vehicle_ids
-    hq.component_id = nil
-
-    initialize_object(hq.id, hq.type, hq, nil, nil)
-end
-
 function alert_headquarter()
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects[i].alert ~= nil then
             press_vehicle_button(g_savedata.objects[i].id, g_savedata.objects[i].alert)
         end
     end
-end
-
-function is_headquarter_dupe(group_id)
-    local is = false
-
-    for i = 1, #g_savedata.objects do
-        is = is or g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects[i].group_id == group_id
-    end
-
-    return is
 end
 
 -- budgets
@@ -2410,21 +2412,21 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
             g_savedata.mode = "debug"
-        -- elseif verb == "map" and is_admin then
-        --     local target = ...
+            -- elseif verb == "map" and is_admin then
+            --     local target = ...
 
-        --     if target == "mission" then
-        --         g_savedata.mission_mapped = not g_savedata.mission_mapped
-        --     elseif target == "zone" then
-        --         g_savedata.zone_mapped = not g_savedata.zone_mapped
+            --     if target == "mission" then
+            --         g_savedata.mission_mapped = not g_savedata.mission_mapped
+            --     elseif target == "zone" then
+            --         g_savedata.zone_mapped = not g_savedata.zone_mapped
 
-        --         for i = 1, #g_savedata.zones do
-        --             server.removeMapID(-1, g_savedata.zones[i].marker_id)
-        --             map_zone(g_savedata.zones[i])
-        --         end
-        --     elseif target == "object" then
-        --         g_savedata.object_mapped = not g_savedata.object_mapped
-        --     end
+            --         for i = 1, #g_savedata.zones do
+            --             server.removeMapID(-1, g_savedata.zones[i].marker_id)
+            --             map_zone(g_savedata.zones[i])
+            --         end
+            --     elseif target == "object" then
+            --         g_savedata.object_mapped = not g_savedata.object_mapped
+            --     end
         elseif verb == "limit-count" and is_admin then
             g_savedata.mission_count_limited = not g_savedata.mission_count_limited
         elseif verb == "limit-range" and is_admin then
@@ -2516,14 +2518,15 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     object.group_id = group_id
     object.vehicle_ids = vehicle_ids
 
+    local tags = parse_tags(data.tags_full)
     local test = false
 
     for k, v in pairs(object_trackers) do
-        test = test or v:test_type(object.id, object.type, object, nil, nil, owner, cost)
+        test = test or v:test_type(vehicle_ids[1], "vehicle", tags, nil, nil, owner, cost)
     end
 
     if test then
-        initialize_object(object.id, object.type, object, nil, nil, owner, cost)
+        initialize_object(vehicle_ids[1], "vehicle", tags, nil, nil, nil, owner, cost)
     end
 end
 
@@ -2561,7 +2564,7 @@ end
 
 function onVehicleDespawn(vehicle_id, peer_id)
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+        if g_savedata.objects[i].type == "vehicle" and (g_savedata.objects[i].id == vehicle_id or g_savedata.objects[i].parent_id == vehicle_id) then
             clear_object(g_savedata.objects[i])
         end
     end
@@ -2569,19 +2572,19 @@ end
 
 function onForestFireSpawned(fire_objective_id, x, y, z)
     local transform = matrix.translation(x, y, z)
-    local target = nil
+    local mission_id = nil
     local distance = math.maxinteger
 
     for i = 1, #g_savedata.missions do
         local d = matrix.distance(transform, g_savedata.missions[i].search_center)
 
         if d <= distance and d <= g_savedata.missions[i].search_radius then
-            target = i
+            mission_id = g_savedata.missions[i].id
         end
     end
 
-    if target ~= nil then
-        initialize_object(fire_objective_id, "forest_fire", {}, nil, target, transform)
+    if mission_id ~= nil then
+        initialize_object(fire_objective_id, "forest_fire", {}, mission_id, nil, nil, transform)
     end
 end
 
