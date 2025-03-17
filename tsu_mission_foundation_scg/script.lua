@@ -780,7 +780,7 @@ mission_trackers = {
         end,
         status = function(self)
             local text = self.locations[1].note
-            
+
             text = text .. "\n\n[出動区分]"
             text = text .. "\nカテゴリ:"
 
@@ -798,8 +798,8 @@ mission_trackers = {
                 end
             end
 
-            text = text .. "\n\n[捜索半径]"
-            text = text .. string.format("\n%dm", self.search_radius)
+            -- text = text .. "\n\n[捜索半径]"
+            -- text = text .. string.format("\n%dm", self.search_radius)
 
             text = text .. "\n\n[必須の達成目標]"
 
