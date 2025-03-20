@@ -51,6 +51,8 @@ g_savedata = {
         },
         eot = "END OF TABLE"
     },
+    oil_spills_raw = {},
+    oil_spills_gross = 0,
     eot = "END OF TABLE"
 }
 
@@ -315,8 +317,8 @@ location_properties = {{
     suitable_zones = {},
     is_main_location = true,
     sub_locations = {"^mission:car_collision_%d+$", "^mission:car_stuck_%d+$"},
-    sub_location_min = 1,
-    sub_location_max = 3,
+    sub_location_min = 3,
+    sub_location_max = 5,
     is_unique_sub_location = false,
     search_radius = 250,
     notification_type = 0,
@@ -702,6 +704,29 @@ mission_trackers = {
                 end
             end
 
+            self.o = {
+                rescuee = {
+                    count = 0,
+                    accomodated = 0
+                },
+                fire = {
+                    count = 0
+                },
+                forest_fire = {
+                    count = 0
+                },
+                suspect = {
+                    count = 0
+                },
+                wreckage = {
+                    count = 0,
+                    items = {}
+                },
+                hostile = {
+                    count = 0
+                }
+            }
+
             self.objectives.rescuees = rescuee_count
             self.objectives.rescuees_picked = rescuee_picked_count
             self.objectives.fires = fire_count
@@ -757,7 +782,7 @@ mission_trackers = {
                 end
             end
 
-            return completed or self.terminated
+            return completed
         end,
         reward = function(self)
             local reward = self.rewards
@@ -808,12 +833,12 @@ mission_trackers = {
 
                 for i = 1, #g_savedata.objects do
                     if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and not g_savedata.objects[i]:dispensable() then
-                        count = count + 1
+                        count = count + g_savedata.objects[i]:count()
                     end
                 end
 
                 if count > 0 then
-                    text = text .. string.format("\n%d\n%s", count, tracker.text)
+                    text = text .. string.format("\n%.0f\n%s", count, tracker.text)
                 end
             end
 
@@ -824,12 +849,12 @@ mission_trackers = {
 
                 for i = 1, #g_savedata.objects do
                     if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and g_savedata.objects[i]:dispensable() then
-                        count = count + 1
+                        count = count + g_savedata.objects[i]:count()
                     end
                 end
 
                 if count > 0 then
-                    text = text .. string.format("\n%d\n%s", count, tracker.text)
+                    text = text .. string.format("\n%.0f\n%s", count, tracker.text)
                 end
             end
 
@@ -928,9 +953,9 @@ object_trackers = {
                 self.strobe.ir = ir
             end
 
-            if not self.activated and activated then
-                console.notify(string.format("Objective#%d activated.", self.id))
-            end
+            -- if not self.activated and activated then
+            --     console.notify(string.format("Objective#%d activated.", self.id))
+            -- end
 
             self.on_board = on_board
             self.vital = vital_update
@@ -964,6 +989,9 @@ object_trackers = {
             return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.text, self.vital.hp, self.cpa_count)
             -- return self.text
         end,
+        count = function(self)
+            return 1
+        end,
         reward_base = 2000,
         text = "要救助者を医療機関へ搬送",
         marker_type = 1,
@@ -989,13 +1017,12 @@ object_trackers = {
             local is_explosive = false
 
             for i = 1, #g_savedata.missions do
-                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < 0.001
+                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < 0.0002
             end
 
             if is_explosive and not self.is_explosive then
                 self.is_explosive = is_explosive
                 server.spawnExplosion(self.transform, math.random() ^ 2)
-                console.notify(string.format("Objective#%d fire in the hole.", self.id))
             end
         end,
         position = function(self)
@@ -1012,6 +1039,9 @@ object_trackers = {
         end,
         status = function(self)
             return self.text
+        end,
+        count = function(self)
+            return 1
         end,
         reward_base = 500,
         text = "炎を鎮火",
@@ -1049,9 +1079,63 @@ object_trackers = {
         status = function(self)
             return self.text
         end,
+        count = function(self)
+            return 1
+        end,
         reward_base = 5000,
         text = "森林火災を鎮火",
         marker_type = 5,
+        clear_timer = 0
+    },
+    oil_spill = {
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "oil_spill"
+        end,
+        init = function(self, transform, tile_x, tile_y, amount)
+            self.transform = transform
+            self.tile_x = tile_x
+            self.tile_y = tile_y
+            self.amount = amount
+            self.amount_delta = 0
+        end,
+        clear = function(self)
+            if g_savedata.oil_spills_raw[self.tile_x] ~= nil then
+                g_savedata.oil_spills_raw[self.tile_x][self.tile_y] = nil
+                server.setOilSpill(self.transform, 0)
+            end
+        end,
+        load = function(self)
+        end,
+        unload = function(self)
+        end,
+        tick = function(self, tick)
+            if g_savedata.oil_spills_raw[self.tile_x] ~= nil and g_savedata.oil_spills_raw[self.tile_x][self.tile_y] ~= nil then
+                self.amount = g_savedata.oil_spills_raw[self.tile_x][self.tile_y]
+            else
+                self.amount = 0
+            end
+        end,
+        position = function(self)
+            return self.transform
+        end,
+        dispensable = function(self)
+            return false
+        end,
+        complete = function(self)
+            return self.amount < oil_spill_threshold
+        end,
+        reward = function(self)
+            return self.reward_base
+        end,
+        status = function(self)
+            return string.format("%s\n\n%.0f", self.text, self.amount)
+        end,
+        count = function(self)
+            return self.amount
+        end,
+        reward_base = 0,
+        text = "漏出した油を回収",
+        marker_type = 2,
         clear_timer = 0
     },
     wreckage = {
@@ -1078,6 +1162,17 @@ object_trackers = {
             if not self.components_checked then
                 local d, s = server.getVehicleComponents(self.id)
                 self.mass = d.mass
+
+                for i = 1, #d.components.signs do
+                    local tags = parse_tags(d.components.signs[i].name)
+
+                    if tags.damage ~= nil and tags.radius ~= nil then
+                        local damage = tonumber(tags.damage)
+                        local radius = tonumber(tags.radius)
+                        server.addDamage(self.id, damage, d.components.signs[i].pos.x, d.components.signs[i].pos.y, d.components.signs[i].pos.z, radius)
+                    end
+                end
+
                 self.components_checked = true
             end
         end,
@@ -1089,7 +1184,14 @@ object_trackers = {
             end
         end,
         position = function(self)
-            return server.getVehiclePos(self.id)
+            if is_vehicle(self) then
+                return server.getVehiclePos(self.id)
+            elseif is_object(self) then
+                return server.getObjectPos(self.id)
+            else
+                console.error("Failed to get object %s#%d position.", self.type, self.object)
+                return nil
+            end
         end,
         dispensable = function(self)
             return not self.indispensable and matrix.distance(self.initial_transform, self.transform) <= 50
@@ -1102,6 +1204,9 @@ object_trackers = {
         end,
         status = function(self)
             return self.text
+        end,
+        count = function(self)
+            return 1
         end,
         reward_base = 2,
         text = "残骸を貨物ターミナルへ輸送",
@@ -1163,6 +1268,9 @@ object_trackers = {
         status = function(self)
             return self.text
         end,
+        count = function(self)
+            return 1
+        end,
         reward_base = 1000,
         text = "危険生物を駆除",
         marker_type = 6,
@@ -1197,6 +1305,9 @@ object_trackers = {
         end,
         status = function(self)
             return self.text
+        end,
+        count = function(self)
+            return 1
         end,
         reward_base = 0,
         text = "捜査犬",
@@ -1414,6 +1525,9 @@ object_trackers = {
         status = function(self)
             return self.text
         end,
+        count = function(self)
+            return 1
+        end,
         reward_base = 0,
         text = "",
         marker_type = 11,
@@ -1450,6 +1564,9 @@ object_trackers = {
         status = function(self)
             return self.text
         end,
+        count = function(self)
+            return 1
+        end,
         reward_base = 0,
         text = "",
         marker_type = 12,
@@ -1474,6 +1591,9 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     local mission = {}
     mission.cleared = false
     mission.id = g_savedata.mission_count + 1
+
+    console.notify(string.format("Initializing mission #%d.", mission.id))
+
     mission.start_position = center
     mission.tracker = tracker
     mission.locations = {location}
@@ -1518,11 +1638,11 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
             table.insert(mission.locations, sub_location)
         end
     end
-
-    console.notify(string.format("Initialized mission #%d.", mission.id))
 end
 
 function clear_mission(mission)
+    console.notify(string.format("Clearing mission #%d.", mission.id))
+
     for i = #g_savedata.objects, 1, -1 do
         if g_savedata.objects[i].mission == mission.id then
             despawn_object(g_savedata.objects[i])
@@ -1534,22 +1654,23 @@ function clear_mission(mission)
     mission.cleared = true
 
     server.notify(-1, string.format("Cleared mission #%d.", mission.id), mission:report(), 4)
-    console.notify(string.format("Cleared mission #%d.", mission.id))
 end
 
 function tick_mission(mission, tick)
     local spillages = {}
 
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spill ~= nil then
-            table.insert(spillages, g_savedata.objects[i].tags.spill)
+        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spillage ~= nil then
+            table.insert(spillages, g_savedata.objects[i].tags.spillage)
+        elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].type == "oil_spill" then
+            table.insert(spillages, "oil")
         end
     end
 
     mission.spillages = table.distinct(spillages)
     mission:tick(tick)
 
-    if (g_savedata.mode == "debug" or g_savedata.mission_mapped) and mission.search_center then
+    if (g_savedata.mode == "debug" or g_savedata.mission_mapped) and mission.search_center ~= nil then
         local label = mission:report()
         local label_hover = mission:status()
         local x, y, z = matrix.position(mission.search_center)
@@ -1584,7 +1705,7 @@ function tick_mission(mission, tick)
         mission.reported = true
     end
 
-    if mission:complete() and distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius then
+    if mission:complete() and distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius or mission.terminated then
         reward_mission(mission)
         clear_mission(mission)
     end
@@ -1608,6 +1729,9 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
 
     object.id = id
     object.type = type
+    
+    console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
+
     object.tags = tags
     object.marker_id = server.getMapID()
     object.component_id = component_id
@@ -1633,16 +1757,24 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
         object:init(table.unpack(params))
     end
 
+    if false and object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
+        local spillage_amount = tonumber(object.tags.spillage_amount)
+
+        if spillage_amount ~= nil then
+            server.setOilSpill(object.transform, spillage_amount)
+        end
+    end
 
     if object.type == "vehicle" and object.tags.keep_active == "true" then
         server.setVehicleTransponder(object.id, true)
     end
 
     table.insert(g_savedata.objects, object)
-    console.notify(string.format("Initialized object %s#%d.", object.type, object.id))
 end
 
 function clear_object(object)
+    console.notify(string.format("Clearing object %s#%d.", object.type, object.id))
+
     if object.tracker ~= nil then
         object:clear()
     end
@@ -1650,14 +1782,16 @@ function clear_object(object)
     server.removeMapID(-1, object.marker_id)
 
     object.cleared = true
-    console.notify(string.format("Cleared object %s#%d.", object.type, object.id))
 end
 
 function despawn_object(object)
-    if object.type == "vehicle" then
+    if is_vehicle(object) then
         server.despawnVehicle(object.id, true)
     else
-        server.despawnObject(object.id, true)
+        if is_object(object) then
+            server.despawnObject(object.id, true)
+        end
+
         clear_object(object)
     end
 end
@@ -1676,7 +1810,7 @@ function tick_object(object, tick)
         local x, y, z = matrix.position(object.transform)
         local r, g, b, a = 128, 128, 128, 255
         local label = string.format("%s #%d", object.tracker, object.id)
-        local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+        local popup = object:status() .. " \n\n" .. string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
 
         server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     end
@@ -1691,11 +1825,14 @@ function tick_object(object, tick)
             end
         end
 
+        local label = object:status()
+
         for i = 1, #players do
             if matrix.distance(object.transform, players[i].transform) <= 250 then
-                server.notify(players[i].id, object:status(), "Objective achieved", 4)
+                server.notify(players[i].id, label, "Objective achieved", 4)
             end
         end
+
         object.completed = true
     end
 
@@ -1772,6 +1909,14 @@ function is_doctor_nearby(transform)
     end
 
     return is
+end
+
+function is_vehicle(object)
+    return object.type ~= nil and object.type == "vehicle"
+end
+
+function is_object(object)
+    return object.type ~= nil and (object.type == "zone" or object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or object.type == "ice")
 end
 
 -- locations
@@ -2213,6 +2358,15 @@ function alert_headquarter()
     end
 end
 
+-- oil spill
+
+oil_spill_threshold = 10
+
+function create_oil_spill_id()
+    g_savedata.oil_spills_gross = g_savedata.oil_spills_gross + 1
+    return g_savedata.oil_spills_gross
+end
+
 -- budgets
 
 function transact(amount, title)
@@ -2364,6 +2518,12 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mission_timer_tickrate = 0
         elseif verb == "init" and is_admin then
             local location, report_timer = ...
+
+            if location == nil then
+                console.error("location name is empty")
+                return
+            end
+
             local report_timer = tonumber(report_timer)
             local center = start_tile_transform()
             location = "^" .. location .. "$"
@@ -2578,7 +2738,7 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
     for i = 1, #g_savedata.missions do
         local d = matrix.distance(transform, g_savedata.missions[i].search_center)
 
-        if d <= distance and d <= g_savedata.missions[i].search_radius then
+        if d <= distance then
             mission_id = g_savedata.missions[i].id
         end
     end
@@ -2594,6 +2754,42 @@ function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
             g_savedata.objects[i].is_lit = false
         end
     end
+end
+
+function onOilSpill(x, z, delta, total, vehicle_id)
+    if g_savedata.oil_spills_raw[x] == nil then
+        g_savedata.oil_spills_raw[x] = {}
+    end
+
+    if g_savedata.oil_spills_raw[x][z] == nil and total >= oil_spill_threshold then
+        g_savedata.oil_spills_raw[x][z] = 0
+
+        local id = create_oil_spill_id()
+        local transform = matrix.translation(x * 1000 + 500, 0, z * 1000 - 500)
+        local mission_id = nil
+        local distance = math.maxinteger
+
+        for i = 1, #g_savedata.missions do
+            local d = matrix.distance(transform, g_savedata.missions[i].search_center)
+
+            if d <= distance then
+                mission_id = g_savedata.missions[i].id
+            end
+        end
+
+        if mission_id ~= nil then
+            initialize_object(id, "oil_spill", {}, mission_id, nil, nil, transform, x, z, total)
+        end
+    end
+
+    if g_savedata.oil_spills_raw[x][z] ~= nil then
+        g_savedata.oil_spills_raw[x][z] = total
+    end
+end
+
+function onClearOilSpill()
+    
+    g_savedata.oil_spills_raw = {}
 end
 
 function onToggleMap(peer_id, is_open)
