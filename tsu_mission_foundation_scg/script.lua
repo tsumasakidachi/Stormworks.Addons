@@ -18,23 +18,24 @@ g_savedata = {
         mission = {
             timer_tickrate = 0,
             interval = 0,
-            interval_min = property.slider("New missions occurs at a minimum interval (minutes)", 0, 30, 1, 10) * 3600,
-            interval_max = property.slider("New missions occurs at a maximum interval (minutes)", 0, 60, 1, 20) * 3600,
-            range_min = property.slider("New missions occurs in a minimum range (km)", 0, 10, 1, 1) * 1000,
-            range_max = property.slider("New missions occurs in a maximum range (km)", 1, 100, 1, 6) * 1000,
+            interval_min = property.slider("Minimum interval at which new missions occur (minutes)", 0, 30, 1, 10) * 3600,
+            interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 20) * 3600,
+            range_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
+            range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
             range_limited = true,
             count = 0,
             count_limited = true,
-            palyer_factor = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 4)
+            palyer_factor = property.slider("The number of ongoing missions is limited to the number of players divided by", 1, 32, 1, 4)
         },
         rescuee = {
             dispensable = false,
-            cpa_recurrence_rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
-            cpa_recurrence_threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
+            cpa_recurrence_rate = property.slider("CPA recurrence rate (%)", 0, 100, 1, 20),
+            cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 8),
             has_strobe = property.checkbox("Rescuees has strobe", true)
         },
         fire = {
-            dispensable = false
+            dispensable = false,
+            rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
         },
         forest_fire = {
             dispensable = false
@@ -998,7 +999,7 @@ object_trackers = {
         count = function(self)
             return 1
         end,
-        reward_base = 2000,
+        reward_base = 1000,
         text = "要救助者を医療機関へ搬送",
         marker_type = 1,
         clear_timer = 300
@@ -1023,7 +1024,7 @@ object_trackers = {
             local is_explosive = false
 
             for i = 1, #g_savedata.missions do
-                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < 0.0002
+                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
             end
 
             if is_explosive and not self.is_explosive then
@@ -1049,7 +1050,7 @@ object_trackers = {
         count = function(self)
             return 1
         end,
-        reward_base = 500,
+        reward_base = 100,
         text = "炎を鎮火",
         marker_type = 5,
         clear_timer = 0
@@ -1125,7 +1126,7 @@ object_trackers = {
             return self.transform
         end,
         dispensable = function(self)
-            return g_savedata.subsystems.oil_spill.dispensable
+            return g_savedata.subsystems.spillage.dispensable
         end,
         complete = function(self)
             return self.amount <= oil_spill_threshold
@@ -1277,7 +1278,7 @@ object_trackers = {
         count = function(self)
             return 1
         end,
-        reward_base = 1000,
+        reward_base = 500,
         text = "危険生物を駆除",
         marker_type = 6,
         clear_timer = 300
@@ -2370,7 +2371,7 @@ end
 
 -- oil spill
 
-oil_spill_threshold = 100
+oil_spill_threshold = 500
 
 function create_oil_spill_id()
     g_savedata.oil_spill_gross = g_savedata.oil_spill_gross + 1
@@ -2818,7 +2819,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         end
     end
 
-    if g_savedata.oil_spills[x][z] ~= nil then
+    if g_savedata.oil_spills[x] ~= nil and g_savedata.oil_spills[x][z] ~= nil then
         g_savedata.oil_spills[x][z] = total
     end
 end
