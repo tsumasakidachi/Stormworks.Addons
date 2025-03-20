@@ -1,12 +1,6 @@
 name = "TSU Mission Foundation SCG"
 version = "1.2.0"
 
-subsystem_mode = {
-    indispensable = "indispensable",
-    dispensable = "dispensable",
-    disabled = "disabled"
-}
-
 -- properties
 g_savedata = {
     mode = "prod",
@@ -17,33 +11,51 @@ g_savedata = {
     locations = {},
     locations_history = {},
     zones = {},
-    mission_timer_tickrate = 0,
-    mission_interval = 0,
-    mission_interval_min = property.slider("New missions occurs at a minimum interval (minutes)", 0, 30, 1, 10) * 3600,
-    mission_interval_max = property.slider("New missions occurs at a maximum interval (minutes)", 0, 60, 1, 20) * 3600,
-    mission_range_min = property.slider("New missions occurs in a minimum range (km)", 0, 10, 1, 1) * 1000,
-    mission_range_max = property.slider("New missions occurs in a maximum range (km)", 1, 100, 1, 6) * 1000,
-    mission_range_limited = true,
-    mission_count = 0,
-    mission_count_limited = true,
-    mission_mapped = true,
-    mission_spawn_when_players_x = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 4),
-    object_mapped = false,
     location_comparer = "pattern",
-    zone_mapped = false,
-    zone_marker_id = nil,
     subsystems = {
-        rescuees = subsystem_mode.indispensable,
-        fires = subsystem_mode.indispensable,
-        suspects = subsystem_mode.indispensable,
-        spillage = subsystem_mode.indispensable,
-        wreckages = subsystem_mode.dispensable,
-        hostiles = subsystem_mode.dispensable,
-        cpa_recurrence = {
-            rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
-            threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8)
+        mission = {
+            timer_tickrate = 0,
+            interval = 0,
+            interval_min = property.slider("New missions occurs at a minimum interval (minutes)", 0, 30, 1, 10) * 3600,
+            interval_max = property.slider("New missions occurs at a maximum interval (minutes)", 0, 60, 1, 20) * 3600,
+            range_min = property.slider("New missions occurs in a minimum range (km)", 0, 10, 1, 1) * 1000,
+            range_max = property.slider("New missions occurs in a maximum range (km)", 1, 100, 1, 6) * 1000,
+            range_limited = true,
+            count = 0,
+            count_limited = true,
+            palyer_factor = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 4)
         },
-        rescuees_strobe = property.checkbox("Rescuees has strobe", true),
+        rescuee = {
+            enabled = true,
+            dispensable = false,
+            cpa_recurrence_rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
+            cpa_recurrence_threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
+            has_strobe = property.checkbox("Rescuees has strobe", true)
+        },
+        fire = {
+            enabled = true,
+            dispensable = false
+        },
+        forest_fire = {
+            enabled = true,
+            dispensable = false
+        },
+        suspect = {
+            enabled = true,
+            dispensable = false
+        },
+        spillage = {
+            enabled = false,
+            dispensable = false
+        },
+        wreckage = {
+            enabled = true,
+            dispensable = true
+        },
+        hostile = {
+            enabled = true,
+            dispensable = true
+        },
         mapping = {
             mission = {},
             object = {},
@@ -51,8 +63,8 @@ g_savedata = {
         },
         eot = "END OF TABLE"
     },
-    oil_spills_raw = {},
-    oil_spills_gross = 0,
+    oil_spills = {},
+    oil_spill_gross = 0,
     eot = "END OF TABLE"
 }
 
@@ -923,9 +935,9 @@ object_trackers = {
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if #players >= g_savedata.subsystems.cpa_recurrence.threshold_players and g_savedata.subsystems.cpa_recurrence.rate > 0 and not is_safe then
+            if #players >= g_savedata.subsystems.rescuee.cpa_recurrence_threshold_players and g_savedata.subsystems.rescuee.cpa_recurrence_rate > 0 and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
-                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.cpa_recurrence.rate
+                    self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.rescuee.cpa_recurrence_rate
 
                     if self.is_cpa_recurrent then
                         self.cpa_count = self.cpa_count + 1
@@ -935,7 +947,7 @@ object_trackers = {
                 vital_update.hp = math.max(vital_update.hp - (self.cpa_count / 2), 0)
             end
 
-            if g_savedata.subsystems.rescuees_strobe then
+            if g_savedata.subsystems.rescuee.has_strobe then
                 local distance = distance_min_to_player(self.transform)
                 local opt = (self.strobe.opt or distance <= 100) and not on_board
                 local ir = (self.strobe.ir or distance <= 1000) and not on_board
@@ -971,7 +983,7 @@ object_trackers = {
             return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
-            return false
+            return g_savedata.subsystems.rescuee.dispensable
         end,
         complete = function(self)
             return self.time_admission > 120
@@ -1029,7 +1041,7 @@ object_trackers = {
             return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
-            return false
+            return g_savedata.subsystems.fire.dispensable
         end,
         complete = function(self)
             return not self.is_lit
@@ -1068,7 +1080,7 @@ object_trackers = {
             return self.transform
         end,
         dispensable = function(self)
-            return false
+            return g_savedata.subsystems.forest_fire.dispensable
         end,
         complete = function(self)
             return not self.is_lit
@@ -1099,8 +1111,8 @@ object_trackers = {
             self.amount_delta = 0
         end,
         clear = function(self)
-            if g_savedata.oil_spills_raw[self.tile_x] ~= nil then
-                g_savedata.oil_spills_raw[self.tile_x][self.tile_y] = nil
+            if g_savedata.oil_spills[self.tile_x] ~= nil then
+                g_savedata.oil_spills[self.tile_x][self.tile_y] = nil
                 server.setOilSpill(self.transform, 0)
             end
         end,
@@ -1109,8 +1121,8 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            if g_savedata.oil_spills_raw[self.tile_x] ~= nil and g_savedata.oil_spills_raw[self.tile_x][self.tile_y] ~= nil then
-                self.amount = g_savedata.oil_spills_raw[self.tile_x][self.tile_y]
+            if g_savedata.oil_spills[self.tile_x] ~= nil and g_savedata.oil_spills[self.tile_x][self.tile_y] ~= nil then
+                self.amount = g_savedata.oil_spills[self.tile_x][self.tile_y]
             else
                 self.amount = 0
             end
@@ -1119,10 +1131,10 @@ object_trackers = {
             return self.transform
         end,
         dispensable = function(self)
-            return false
+            return g_savedata.subsystems.oil_spill.dispensable
         end,
         complete = function(self)
-            return self.amount < oil_spill_threshold
+            return self.amount <= oil_spill_threshold
         end,
         reward = function(self)
             return self.reward_base
@@ -1194,7 +1206,7 @@ object_trackers = {
             end
         end,
         dispensable = function(self)
-            return not self.indispensable and matrix.distance(self.initial_transform, self.transform) <= 50
+            return g_savedata.subsystems.wreckage.dispensable and not self.indispensable and matrix.distance(self.initial_transform, self.transform) <= 50
         end,
         complete = function(self)
             return self.completion_timer >= 300
@@ -1257,7 +1269,7 @@ object_trackers = {
             return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
-            return not self.indispensable
+            return g_savedata.subsystems.hostile.dispensable and not self.indispensable
         end,
         complete = function(self)
             return self.vital.incapacitated or self.vital.dead
@@ -1590,7 +1602,7 @@ end
 function initialize_mission(center, range_min, tracker, location, report_timer)
     local mission = {}
     mission.cleared = false
-    mission.id = g_savedata.mission_count + 1
+    mission.id = g_savedata.subsystems.mission.count + 1
 
     console.notify(string.format("Initializing mission #%d.", mission.id))
 
@@ -1627,7 +1639,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
 
     record_location_history(location)
     table.insert(g_savedata.missions, mission)
-    g_savedata.mission_count = g_savedata.mission_count + 1
+    g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
     local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
@@ -1670,7 +1682,7 @@ function tick_mission(mission, tick)
     mission.spillages = table.distinct(spillages)
     mission:tick(tick)
 
-    if (g_savedata.mode == "debug" or g_savedata.mission_mapped) and mission.search_center ~= nil then
+    if g_savedata.mode == "debug" or mission.search_center ~= nil then
         local label = mission:report()
         local label_hover = mission:status()
         local x, y, z = matrix.position(mission.search_center)
@@ -1729,7 +1741,7 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
 
     object.id = id
     object.type = type
-    
+
     console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
 
     object.tags = tags
@@ -1757,7 +1769,7 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
         object:init(table.unpack(params))
     end
 
-    if false and object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
+    if g_savedata.subsystems.spillage.enabled and object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
         local spillage_amount = tonumber(object.tags.spillage_amount)
 
         if spillage_amount ~= nil then
@@ -1957,7 +1969,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
                     goto continue_zone
                 end
 
-                if (not is_main_location or g_savedata.mission_range_limited) and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
+                if (not is_main_location or g_savedata.subsystems.mission.range_limited) and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
                     goto continue_zone
                 end
 
@@ -2010,7 +2022,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
             location_candidate.transform = transform
 
-            if not is_success or g_savedata.mission_range_limited and matrix.distance(center, location_candidate.transform) > range_max then
+            if not is_success or g_savedata.subsystems.mission.range_limited and matrix.distance(center, location_candidate.transform) > range_max then
                 goto continue_location
             end
 
@@ -2304,7 +2316,7 @@ end
 function map_zone(zone, peer_id)
     local peer_id = peer_id or -1
 
-    if (g_savedata.mode == "debug" or g_savedata.zone_mapped) or zone.mapped then
+    if (g_savedata.mode == "debug") or zone.mapped then
         local x, y, z = matrix.position(zone.transform)
         local color = zone.icon == 8 and 255 or 0
         local name = zone.name
@@ -2360,11 +2372,11 @@ end
 
 -- oil spill
 
-oil_spill_threshold = 10
+oil_spill_threshold = 100
 
 function create_oil_spill_id()
-    g_savedata.oil_spills_gross = g_savedata.oil_spills_gross + 1
-    return g_savedata.oil_spills_gross
+    g_savedata.oil_spill_gross = g_savedata.oil_spill_gross + 1
+    return g_savedata.oil_spill_gross
 end
 
 -- budgets
@@ -2490,12 +2502,12 @@ function onTick(tick)
         end
     end
 
-    if g_savedata.mission_timer_tickrate > 0 then
-        if g_savedata.mission_interval <= 0 and (not g_savedata.mission_count_limited or missions_less_than_limit()) then
-            random_mission(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min)
-            g_savedata.mission_interval = math.random(g_savedata.mission_interval_min, g_savedata.mission_interval_max)
+    if g_savedata.subsystems.mission.timer_tickrate > 0 then
+        if g_savedata.subsystems.mission.interval <= 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
+            random_mission(start_tile_transform(), g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min)
+            g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min, g_savedata.subsystems.mission.interval_max)
         else
-            g_savedata.mission_interval = g_savedata.mission_interval - (tick * g_savedata.mission_timer_tickrate)
+            g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - (tick * g_savedata.subsystems.mission.timer_tickrate)
         end
     end
 
@@ -2507,15 +2519,15 @@ function onTick(tick)
 end
 
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb, ...)
-    if command == "?mission" then
+    if command == "?mission" or command == "?m" then
         if verb == "list" and is_admin then
             list_locations(peer_id)
         elseif verb == "history" then
             list_location_history(peer_id)
         elseif verb == "start" and is_admin then
-            g_savedata.mission_timer_tickrate = 1
+            g_savedata.subsystems.mission.timer_tickrate = 1
         elseif verb == "stop" and is_admin then
-            g_savedata.mission_timer_tickrate = 0
+            g_savedata.subsystems.mission.timer_tickrate = 0
         elseif verb == "init" and is_admin then
             local location, report_timer = ...
 
@@ -2527,13 +2539,13 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             local report_timer = tonumber(report_timer)
             local center = start_tile_transform()
             location = "^" .. location .. "$"
-            local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, false)
+            local location = random_location(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, {location}, {}, true, false)
 
             if location == nil then
                 return
             end
 
-            initialize_mission(center, g_savedata.mission_range_min, location.tracker, location, report_timer)
+            initialize_mission(center, g_savedata.subsystems.mission.range_min, location.tracker, location, report_timer)
         elseif verb == "clear-all" and is_admin then
             for i = #g_savedata.missions, 1, -1 do
                 clear_mission(g_savedata.missions[i])
@@ -2552,7 +2564,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
             clear_mission(mission)
         elseif verb == "next" and is_admin then
-            g_savedata.mission_interval = 0
+            g_savedata.subsystems.mission.interval = 0
         elseif verb == "close" and is_admin then
             local id = ...
             id = tonumber(id)
@@ -2567,7 +2579,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
             terminate_mission(mission)
         elseif verb == "register-hq" and is_admin then
-            console.error("'?mission register-hq' removed. Please read to manual for new methods.")
+            console.error("'?mission register-hq' removed. Please read a manual for new methods.")
         elseif verb == "prod" and is_admin then
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
@@ -2588,9 +2600,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             --         g_savedata.object_mapped = not g_savedata.object_mapped
             --     end
         elseif verb == "limit-count" and is_admin then
-            g_savedata.mission_count_limited = not g_savedata.mission_count_limited
+            local set = ...
+            g_savedata.subsystems.mission.count_limited = set_or_not(g_savedata.subsystems.mission.count_limited, set)
         elseif verb == "limit-range" and is_admin then
-            g_savedata.mission_range_limited = not g_savedata.mission_range_limited
+            local set = ...
+            g_savedata.subsystems.mission.range_limited = set_or_not(g_savedata.subsystems.mission.range_limited, set)
         elseif verb == "gather" and is_admin then
             local mission_id = ...
             mission_id = tonumber(mission_id)
@@ -2603,6 +2617,12 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             end
         elseif verb == "clear-history" and is_admin then
             g_savedata.locations_history = {}
+        elseif verb == "dispensable" and is_admin then
+            local objective, set = ...
+
+            if g_savedata.subsystems[objective] ~= nil then
+                g_savedata.subsystems[objective].dispensable = set_or_not(g_savedata.subsystems[objective].dispensable, set)
+            end
         end
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
@@ -2731,6 +2751,10 @@ function onVehicleDespawn(vehicle_id, peer_id)
 end
 
 function onForestFireSpawned(fire_objective_id, x, y, z)
+    if not g_savedata.subsystems.fire.enabled then
+        return
+    end
+
     local transform = matrix.translation(x, y, z)
     local mission_id = nil
     local distance = math.maxinteger
@@ -2749,6 +2773,10 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
 end
 
 function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
+    if not g_savedata.subsystems.fire.enabled then
+        return
+    end
+
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker == "forest_fire" and g_savedata.objects[i].id == fire_objective_id then
             g_savedata.objects[i].is_lit = false
@@ -2757,12 +2785,16 @@ function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
 end
 
 function onOilSpill(x, z, delta, total, vehicle_id)
-    if g_savedata.oil_spills_raw[x] == nil then
-        g_savedata.oil_spills_raw[x] = {}
+    if not g_savedata.subsystems.spillage.enabled then
+        return
     end
 
-    if g_savedata.oil_spills_raw[x][z] == nil and total >= oil_spill_threshold then
-        g_savedata.oil_spills_raw[x][z] = 0
+    if total > oil_spill_threshold and g_savedata.oil_spills[x] == nil then
+        g_savedata.oil_spills[x] = {}
+    end
+
+    if total > oil_spill_threshold and g_savedata.oil_spills[x][z] == nil then
+        g_savedata.oil_spills[x][z] = 0
 
         local id = create_oil_spill_id()
         local transform = matrix.translation(x * 1000 + 500, 0, z * 1000 - 500)
@@ -2782,14 +2814,14 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         end
     end
 
-    if g_savedata.oil_spills_raw[x][z] ~= nil then
-        g_savedata.oil_spills_raw[x][z] = total
+    if g_savedata.oil_spills[x][z] ~= nil then
+        g_savedata.oil_spills[x][z] = total
     end
 end
 
 function onClearOilSpill()
-    
-    g_savedata.oil_spills_raw = {}
+
+    g_savedata.oil_spills = {}
 end
 
 function onToggleMap(peer_id, is_open)
@@ -2810,6 +2842,8 @@ function onCreate(is_world_create)
         setmetatable(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
     end
 
+    console.notify(name)
+    console.notify(version)
     console.notify(string.format("Locations: %d", #g_savedata.locations))
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
@@ -2829,6 +2863,16 @@ end
 
 -- utils
 
+function set_or_not(value, set)
+    if set == "true" then
+        return true
+    elseif set == "false" then
+        return false
+    elseif set == nil then
+        return not value
+    end
+end
+
 function set_vehicle_button(vehicle_id, button, value)
     local data, s = server.getVehicleButton(vehicle_id, button.pos.x, button.pos.y, button.pos.z)
 
@@ -2847,7 +2891,7 @@ function set_vehicle_keypad(vehicle_id, keypad, value)
 end
 
 function missions_less_than_limit()
-    return #g_savedata.missions < math.min(#players / g_savedata.mission_spawn_when_players_x, 48)
+    return #g_savedata.missions < math.min(#players / g_savedata.subsystems.mission.palyer_factor, 48)
 end
 
 function despawn_vehicle_group(group_id, is_instant)
