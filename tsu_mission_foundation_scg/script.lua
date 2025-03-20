@@ -6,6 +6,8 @@ g_savedata = {
     mode = "prod",
     missions = {},
     objects = {},
+    oil_spills = {},
+    oil_spill_gross = 0,
     players = {},
     players_map = {},
     locations = {},
@@ -26,34 +28,27 @@ g_savedata = {
             palyer_factor = property.slider("New mission occurs when the number of missions is less than players divided by", 1, 32, 1, 4)
         },
         rescuee = {
-            enabled = true,
             dispensable = false,
             cpa_recurrence_rate = property.slider("Rate for CPA recurrence (%)", 0, 100, 1, 20),
             cpa_recurrence_threshold_players = property.slider("Threshold number of players for CPA recurrence", 0, 32, 1, 8),
             has_strobe = property.checkbox("Rescuees has strobe", true)
         },
         fire = {
-            enabled = true,
             dispensable = false
         },
         forest_fire = {
-            enabled = true,
             dispensable = false
         },
         suspect = {
-            enabled = true,
             dispensable = false
         },
         spillage = {
-            enabled = false,
             dispensable = false
         },
         wreckage = {
-            enabled = true,
             dispensable = true
         },
         hostile = {
-            enabled = true,
             dispensable = true
         },
         mapping = {
@@ -63,8 +58,7 @@ g_savedata = {
         },
         eot = "END OF TABLE"
     },
-    oil_spills = {},
-    oil_spill_gross = 0,
+    disabled_components = {},
     eot = "END OF TABLE"
 }
 
@@ -343,7 +337,7 @@ location_properties = {{
 }, {
     pattern = "^mission:car_collision_%d+$",
     tracker = "sar",
-    suitable_zones = {"road"},
+    suitable_zones = {"road", "tunnel"},
     is_main_location = true,
     sub_locations = {},
     sub_location_min = 0,
@@ -1769,7 +1763,7 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
         object:init(table.unpack(params))
     end
 
-    if g_savedata.subsystems.spillage.enabled and object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
+    if object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
         local spillage_amount = tonumber(object.tags.spillage_amount)
 
         if spillage_amount ~= nil then
@@ -2155,6 +2149,10 @@ function spawn_location(location, mission_id)
 end
 
 function spawn_component(component, transform, mission_id)
+    if table.has(g_savedata.disabled_components, component.type) then
+        return
+    end
+
     local obj_types = table.keys(object_trackers)
     local transform = matrix.multiply(transform, component.transform)
     local parent_object_id = nil
@@ -2623,6 +2621,24 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             if g_savedata.subsystems[objective] ~= nil then
                 g_savedata.subsystems[objective].dispensable = set_or_not(g_savedata.subsystems[objective].dispensable, set)
             end
+        elseif verb == "disable" and is_admin then
+            local value = ...
+
+            if value == nil then
+                return
+            end
+            
+            table.insert(g_savedata.disabled_components, value)
+        elseif verb == "enable" and is_admin then
+            local value = ...
+
+            if value == nil then
+                return
+            end
+            
+            table.remove(g_savedata.disabled_components, table.find_index(g_savedata.disabled_components, function(x) return x == value end))
+        elseif verb == "clear-disabled-components" and is_admin then
+            g_savedata.disabled_components = {}
         end
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
@@ -2751,10 +2767,6 @@ function onVehicleDespawn(vehicle_id, peer_id)
 end
 
 function onForestFireSpawned(fire_objective_id, x, y, z)
-    if not g_savedata.subsystems.fire.enabled then
-        return
-    end
-
     local transform = matrix.translation(x, y, z)
     local mission_id = nil
     local distance = math.maxinteger
@@ -2773,10 +2785,6 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
 end
 
 function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
-    if not g_savedata.subsystems.fire.enabled then
-        return
-    end
-
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker == "forest_fire" and g_savedata.objects[i].id == fire_objective_id then
             g_savedata.objects[i].is_lit = false
@@ -2785,10 +2793,6 @@ function onForestFireExtinguished(fire_objective_id, fire_x, fire_y, fire_z)
 end
 
 function onOilSpill(x, z, delta, total, vehicle_id)
-    if not g_savedata.subsystems.spillage.enabled then
-        return
-    end
-
     if total > oil_spill_threshold and g_savedata.oil_spills[x] == nil then
         g_savedata.oil_spills[x] = {}
     end
