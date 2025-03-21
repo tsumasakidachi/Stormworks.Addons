@@ -1030,6 +1030,7 @@ object_trackers = {
             if is_explosive and not self.is_explosive then
                 self.is_explosive = is_explosive
                 server.spawnExplosion(self.transform, math.random() ^ 2)
+                console.notify(string.format("Fire#%d exploded.", self.id))
             end
         end,
         position = function(self)
@@ -1102,8 +1103,8 @@ object_trackers = {
             self.transform = transform
             self.tile_x = tile_x
             self.tile_y = tile_y
+            self.complete_threshold = math.max(amount * 0.2, 0)
             self.amount = amount
-            self.amount_delta = 0
         end,
         clear = function(self)
             if g_savedata.oil_spills[self.tile_x] ~= nil then
@@ -1129,7 +1130,7 @@ object_trackers = {
             return g_savedata.subsystems.spillage.dispensable
         end,
         complete = function(self)
-            return self.amount <= oil_spill_threshold
+            return self.amount <= self.complete_threshold
         end,
         reward = function(self)
             return self.reward_base
@@ -1664,17 +1665,17 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
-    local spillages = {}
+    mission.spillages = {}
 
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spillage ~= nil then
-            table.insert(spillages, g_savedata.objects[i].tags.spillage)
+            table.insert(mission.spillages, string.lower(g_savedata.objects[i].tags.spillage))
         elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].type == "oil_spill" then
-            table.insert(spillages, "oil")
+            table.insert(mission.spillages, "oil")
         end
     end
 
-    mission.spillages = table.distinct(spillages)
+    mission.spillages = table.distinct(mission.spillages)
     mission:tick(tick)
 
     if g_savedata.mode == "debug" or mission.search_center ~= nil then
@@ -2371,7 +2372,7 @@ end
 
 -- oil spill
 
-oil_spill_threshold = 500
+oil_spill_threshold = 100
 
 function create_oil_spill_id()
     g_savedata.oil_spill_gross = g_savedata.oil_spill_gross + 1
@@ -2510,9 +2511,9 @@ function onTick(tick)
         end
     end
 
-    if timing + 1 < cycle then
-        timing = timing + 1
-    else
+    timing = timing + 1
+
+    if timing >= cycle then
         timing = 0
     end
 end
@@ -2770,13 +2771,14 @@ end
 function onForestFireSpawned(fire_objective_id, x, y, z)
     local transform = matrix.translation(x, y, z)
     local mission_id = nil
-    local distance = math.maxinteger
+    local distance = 2000
 
     for i = 1, #g_savedata.missions do
         local d = matrix.distance(transform, g_savedata.missions[i].search_center)
 
         if d <= distance then
             mission_id = g_savedata.missions[i].id
+            distance = d
         end
     end
 
@@ -2802,15 +2804,32 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         g_savedata.oil_spills[x][z] = 0
 
         local id = create_oil_spill_id()
-        local transform = matrix.translation(x * 1000 + 500, 0, z * 1000 - 500)
+        local mx = x * 1000
+
+        if mx > 0 then
+            mx = mx + 500
+        elseif mx < 0 then
+            mx = mx - 500
+        end
+        
+        local mz = z * 1000
+
+        if mz > 0 then
+            mz = mz + 500
+        elseif mz < 0 then
+            mz = mz - 500
+        end
+        
+        local transform = matrix.translation(mx, 0, mz)
         local mission_id = nil
-        local distance = math.maxinteger
+        local distance = 2000
 
         for i = 1, #g_savedata.missions do
             local d = matrix.distance(transform, g_savedata.missions[i].search_center)
 
             if d <= distance then
                 mission_id = g_savedata.missions[i].id
+                distance = d
             end
         end
 
