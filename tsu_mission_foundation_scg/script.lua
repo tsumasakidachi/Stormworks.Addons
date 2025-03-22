@@ -25,7 +25,7 @@ g_savedata = {
             range_limited = true,
             count = 0,
             count_limited = true,
-            palyer_factor = property.slider("The number of ongoing missions is limited to the number of players divided by", 1, 32, 1, 4)
+            palyer_factor = property.slider("Approximate number of players required to complete per mission", 1, 32, 1, 4)
         },
         rescuee = {
             dispensable = false,
