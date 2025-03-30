@@ -2959,14 +2959,14 @@ function console.notify(text, peer_id)
     peer_id = peer_id or -1
 
     if g_savedata.mode == "debug" then
-        server.announce("[Mission Foundation]", text, peer_id)
+        server.announce("[NOTICE]", text, peer_id)
     end
 end
 
 function console.error(text, peer_id)
     peer_id = peer_id or -1
 
-    server.announce("[Mission Foundation]", text, peer_id)
+    server.announce("[ERROR]", text, peer_id)
 end
 
 function table.contains(t, x)
