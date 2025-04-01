@@ -2155,7 +2155,6 @@ function spawn_component(component, transform, mission_id)
         return
     end
 
-    local obj_types = table.keys(object_trackers)
     local transform = matrix.multiply(transform, component.transform)
     local parent_object_id = nil
     local id = nil
