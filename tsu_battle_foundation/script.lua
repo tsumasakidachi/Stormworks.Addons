@@ -1,5 +1,6 @@
--- TSU Battle Foundation
--- version 1.0.5
+name = "TSU Battle Foundation"
+version = "1.1.1"
+
 -- properties
 g_savedata = {
     mode = "prod",
@@ -1455,6 +1456,74 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
             g_savedata.mode = "debug"
+        elseif is_admin and verb == "get-friendly" then
+            local peer_id, response = ...
+            local peer_id = tonumber(peer_id)
+            local team = ""
+            local members = ""
+
+            if peer_id == nil then
+                console.error("Peer ID is null.")
+                return
+            end
+
+            if g_savedata.game == nil then
+                console.error("Game does not initialized.")
+                return
+            end
+
+            local p = table.find(g_savedata.game.team_members, function(x) return x.id == peer_id end)
+
+            if p == nil then
+                console.error("Player is not exists.")
+                return
+            end
+
+            team = g_savedata.game.teams[p.team_id].name
+
+            local m = table.find_all(g_savedata.game.team_members, function(x) return x.team_id == p.team_id end)
+
+            for i = 1, #m do
+                if i > 1 then
+                    members = members .. ","
+                end
+
+                members = members .. string.format("%d", m[i].id)
+            end
+
+            server.command(string.format("?%s %s %s", response, team, members))
+        elseif is_admin and verb == "get-members" then
+            local team_name, response = ...
+            local members = ""
+
+            if team_name == nil then
+                console.error("Team name is null.")
+                return
+            end
+
+            if g_savedata.game == nil then
+                console.error("Game does not initialized.")
+                return
+            end
+
+            local team_index = table.find_index(g_savedata.game.teams, function(x) return x.name == team_name end)
+
+            if team_index == nil then
+                console.error("Team is not exist.")
+                return
+            end
+
+            local m = table.find_all(g_savedata.game.team_members, function(x) return x.team_id == team_index end)
+
+            for i = 1, #m do
+                if i > 1 then
+                    members = members .. ","
+                end
+
+                members = members .. string.format("%d", m[i].id)
+            end
+
+            server.command(string.format("?%s %s", response, members))
         end
     elseif command == "?ready" and g_savedata.game ~= nil then
         if g_savedata.game == nil then
@@ -1504,6 +1573,8 @@ function onCreate(is_world_create)
         console.notify("Battle: no available")
     end
 
+    console.notify(name)
+    console.notify(version)
     console.notify(string.format("Zones: %d", #g_savedata.zones))
     console.notify(string.format("Objects: %d", #g_savedata.objects))
 end
