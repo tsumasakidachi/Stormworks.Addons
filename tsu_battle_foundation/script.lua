@@ -1492,7 +1492,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             end
 
             server.command(string.format("?%s %s %s", response, team, members))
-        elseif is_admin and verb == "get-members" then
+        elseif is_admin and verb == "get-member" then
             local team_name, response = ...
             local members = ""
 
