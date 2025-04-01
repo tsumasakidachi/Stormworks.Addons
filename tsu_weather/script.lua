@@ -9,9 +9,9 @@ g_savedata = {
             tick = 0,
             target = 0,
             past = 0,
-            target_min = 0,
-            target_max = 20,
-            clear = 0,
+            target_min = property.slider("Minimum level of wind (%)", 0, 100, 1, 0),
+            target_max = property.slider("Maximum level of wind (%)", 0, 100, 1, 20),
+            clear = property.slider("Clear rate of wind (%)", 0, 100, 1, 0),
         },
         rain = {
             target = 0,
@@ -19,9 +19,9 @@ g_savedata = {
             tick = 0,
             transition = 0,
             duration = 0,
-            target_min = 0,
-            target_max = 80,
-            clear = 50,
+            target_min = property.slider("Minimum level of rain (%)", 0, 100, 1, 0),
+            target_max = property.slider("Maximum level of rain (%)", 0, 100, 1, 80),
+            clear = property.slider("Clear rate of rain (%)", 0, 100, 1, 50),
         },
         fog = {
             target = 0,
@@ -29,9 +29,9 @@ g_savedata = {
             tick = 0,
             transition = 0,
             duration = 0,
-            target_min = 0,
-            target_max = 40,
-            clear = 0,
+            target_min = property.slider("Minimum level of fog (%)", 0, 100, 1, 0),
+            target_max = property.slider("Maximum level of fog (%)", 0, 100, 1, 40),
+            clear = property.slider("Clear rate of fog (%)", 0, 100, 1, 0),
         }
     }
 }
