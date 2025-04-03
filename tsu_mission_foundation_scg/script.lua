@@ -557,6 +557,21 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
+}, {
+    pattern = "^mission:pirate_boat_%d+$",
+    tracker = "sar",
+    suitable_zones = {"offshore", "shallow", "channel"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 50,
+    notification_type = 0,
+    report = "海賊",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "職員からの通報"
 }}
 
 zone_properties = {{
@@ -1099,9 +1114,7 @@ object_trackers = {
         test_type = function(self, id, type, tags, component_id, mission_id)
             return type == "character" and tags.tracker ~= nil and tags.tracker == "suspect"
         end,
-        init = function(self, transform)
-            self.transform = transform
-            self.is_lit = true
+        init = function(self)
             self.vital = server.getCharacterData(self.id)
             self.admitted_time = 0
         end,
@@ -1124,10 +1137,10 @@ object_trackers = {
             self.vital = vital_update
         end,
         position = function(self)
-            return self.transform
+            return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
-            return true
+            return false
         end,
         complete = function(self)
             return self.admitted_time > 120
@@ -1223,7 +1236,7 @@ object_trackers = {
                 self.mass = d.mass
 
                 for i = 1, #d.components.signs do
-                    local tags = parse_tags(d.components.signs[i].name)
+                    local tags = string.parse_tags(d.components.signs[i].name)
 
                     if tags.damage ~= nil and tags.radius ~= nil then
                         local damage = tonumber(tags.damage)
@@ -1806,6 +1819,15 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
     object.mounted = false
     object.mounts = {}
 
+    if type == "vehicle" then
+        object.command = nil
+        object.actions = {}
+
+        if object.tags.actions ~= nil then
+            object.actions = string.split(object.tags.actions, ";")
+        end
+    end
+
     for k, v in pairs(object_trackers) do
         if v:test_type(id, type, tags, component_id, mission_id, table.unpack(params)) then
             object.tracker = k
@@ -1870,51 +1892,76 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
-    if object.tracker == nil then
-        return
-    end
+    if object.tracker ~= nil then
+        object.transform = object:position()
+        object:tick(tick)
 
-    object.transform = object:position()
-    object:tick(tick)
+        server.removeMapID(-1, object.marker_id)
 
-    server.removeMapID(-1, object.marker_id)
+        if g_savedata.mode == "debug" then
+            local x, y, z = matrix.position(object.transform)
+            local r, g, b, a = 128, 128, 128, 255
+            local label = string.format("%s #%d", object.tracker, object.id)
+            local popup = object:status() .. " \n\n" .. string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
 
-    if g_savedata.mode == "debug" then
-        local x, y, z = matrix.position(object.transform)
-        local r, g, b, a = 128, 128, 128, 255
-        local label = string.format("%s #%d", object.tracker, object.id)
-        local popup = object:status() .. " \n\n" .. string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
-
-        server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
-    end
-
-    if object.mission ~= nil and not object.completed and object:complete() then
-        for j = 1, #g_savedata.missions do
-            if g_savedata.missions[j].id == object.mission then
-                local reward = object:reward()
-                g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
-
-                console.notify(string.format("Reward: %d", reward))
-            end
+            server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
         end
 
-        local label = object:status()
+        if object.mission ~= nil and not object.completed and object:complete() then
+            for j = 1, #g_savedata.missions do
+                if g_savedata.missions[j].id == object.mission then
+                    local reward = object:reward()
+                    g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
+
+                    console.notify(string.format("Reward: %d", reward))
+                end
+            end
+
+            local label = object:status()
+
+            for i = 1, #players do
+                if matrix.distance(object.transform, players[i].transform) <= 250 then
+                    server.notify(players[i].id, label, "Objective achieved", 4)
+                end
+            end
+
+            object.completed = true
+        end
+
+        if object.mission ~= nil and object.completed then
+            if object.elapsed_clear >= object.clear_timer then
+                despawn_object(object)
+            else
+                object.elapsed_clear = object.elapsed_clear + tick
+            end
+        end
+    end
+
+    if object.type == "vehicle" and #object.actions > 0 and object.command == nil then
+        local nearby = false
+
+        local transform = object.transform
+
+        if object.tracker == nil then
+            transform = server.getVehiclePos(object.id)
+        end
+
+        for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].tracker == "unit" then
+                nearby = nearby or matrix.distance(g_savedata.objects[i].transform, transform) < 500
+            end
+        end
 
         for i = 1, #players do
-            if matrix.distance(object.transform, players[i].transform) <= 250 then
-                server.notify(players[i].id, label, "Objective achieved", 4)
-            end
+            nearby = nearby or matrix.distance(players[i].transform, transform) < 500
         end
 
-        object.completed = true
-    end
+        if nearby then
+            object.command = table.random(object.actions)
 
-    if object.mission ~= nil and object.completed then
-        if object.elapsed_clear >= object.clear_timer then
-            despawn_object(object)
-        else
-            object.elapsed_clear = object.elapsed_clear + tick
+            console.log(string.format("%s#%d entered %s command.", object.type, object.id, object.command))
         end
+    elseif object.type == "vehicle" and #object.actions > 0 and (object.command == "attack" or object.command == "escape") then
     end
 end
 
@@ -2184,7 +2231,7 @@ function spawn_location(location, mission_id)
             data.addon_index = location.addon_index
             data.location_index = location.location_index
             data.component_index = component_index
-            data.tags = parse_tags(data.tags_full)
+            data.tags = string.parse_tags(data.tags_full)
 
             if data.type == "vehicle" then
                 table.insert(vehicles, data)
@@ -2245,7 +2292,7 @@ function spawn_component(component, transform, mission_id)
     local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
     spawn_by_foundation = false
 
-    local tags = parse_tags(object.tags_full)
+    local tags = string.parse_tags(object.tags_full)
 
     initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.id, parent_object_id)
 end
@@ -2416,7 +2463,7 @@ function load_zones()
     local id = 1
 
     for _, zone in pairs(server.getZones()) do
-        local tags = parse_tags(zone.tags_full)
+        local tags = string.parse_tags(zone.tags_full)
 
         for i = 1, #zone_properties do
             if tags.landscape and zone_properties[i].landscape == tags.landscape then
@@ -2502,6 +2549,35 @@ end
 
 players = {}
 
+function tick_players()
+    players = server.getPlayers()
+
+    if #players > 0 and players[1].name == "Server" then
+        table.remove(players, 1)
+    end
+
+    for i = 1, #players do
+        players[i].steam_id = tostring(players[i].steam_id)
+
+        local transform, is_success = server.getPlayerPos(players[i].id)
+
+        if is_success then
+            players[i].transform = transform
+        else
+            players[i].transform = matrix.identity()
+        end
+
+        players[i].object_id = (server.getPlayerCharacterID(players[i].id))
+        players[i].vehicle_id = (server.getCharacterVehicle(players[i].object_id))
+
+        if g_savedata.players_map[players[i].id] ~= nil then
+            players[i].map_open = g_savedata.players_map[players[i].id]
+        else
+            players[i].map_open = false
+        end
+    end
+end
+
 function is_player_nearby(transform, distance)
     local result = false
 
@@ -2533,29 +2609,7 @@ function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
     if timing % 10 == 0 then
-        players = server.getPlayers()
-
-        if #players > 0 and players[1].name == "Server" then
-            table.remove(players, 1)
-        end
-
-        for i = 1, #players do
-            players[i].steam_id = tostring(players[i].steam_id)
-
-            local transform, is_success = server.getPlayerPos(players[i].id)
-
-            if is_success then
-                players[i].transform = transform
-            else
-                players[i].transform = matrix.identity()
-            end
-
-            if g_savedata.players_map[players[i].id] ~= nil then
-                players[i].map_open = g_savedata.players_map[players[i].id]
-            else
-                players[i].map_open = false
-            end
-        end
+        tick_players()
     end
 
     for i = #g_savedata.objects, 1, -1 do
@@ -2783,7 +2837,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
         cost = group_cost
     end
 
-    local tags = parse_tags(data.tags_full)
+    local tags = string.parse_tags(data.tags_full)
     local test = false
 
     for k, v in pairs(object_trackers) do
@@ -2941,6 +2995,8 @@ function onCreate(is_world_create)
         setmetatable(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
     end
 
+    tick_players()
+
     console.notify(name)
     console.notify(version)
     console.notify(string.format("Locations: %d", #g_savedata.locations))
@@ -3010,16 +3066,6 @@ function start_tile_transform()
     return matrix.translation(start_tile.x, start_tile.y, start_tile.z)
 end
 
-function parse_tags(tags_full)
-    local t = {}
-
-    for k, v in string.gmatch(tags_full, "([%w_]+)=([%w_-]+)") do
-        t[k] = v
-    end
-
-    return t
-end
-
 console = {}
 
 function console.log(text, peer_id)
@@ -3042,6 +3088,26 @@ function console.error(text, peer_id)
     peer_id = peer_id or -1
 
     server.announce("[ERROR]", text, peer_id)
+end
+
+function string.parse_tags(tags_full)
+    local t = {}
+
+    for k, v in string.gmatch(tags_full, "([%w_]+)=([^%s%c,]+)") do
+        t[k] = v
+    end
+
+    return t
+end
+
+function string.split(s, separator)
+    local t = {}
+
+    for part in string.gmatch(s, "([^" .. separator .. "]+)") do
+        table.insert(t, part)
+    end
+
+    return t
 end
 
 function table.contains(t, x)
@@ -3177,14 +3243,6 @@ end
 
 function math.round(x)
     return math.floor(x + 0.5)
-end
-
-function string.split(text, sepatator)
-    local result = {}
-
-    for sub in string.gmatch(text, "([^" .. sepatator .. "])") do
-        table.insert(result, sub)
-    end
 end
 
 function setmetatable(table1, table2)
