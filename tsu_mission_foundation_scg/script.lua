@@ -35,7 +35,7 @@ g_savedata = {
         },
         fire = {
             dispensable = false,
-            rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
+            rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5)
         },
         forest_fire = {
             dispensable = false
@@ -906,7 +906,7 @@ object_trackers = {
                 opt = false,
                 ir = false
             }
-            self.time_admission = 0
+            self.admitted_time = 0
             self.activated = false
             self.on_board = false
 
@@ -921,7 +921,7 @@ object_trackers = {
         end,
         tick = function(self, tick)
             local character_vehicle = server.getCharacterVehicle(self.id)
-            local on_board = character_vehicle ~= 0
+            local on_board = character_vehicle > 0
             local vital_update = server.getCharacterData(self.id)
             local is_in_hospital = is_in_landscape(self.transform, "hospital")
             local is_in_clinic = is_in_landscape(self.transform, "clinic")
@@ -969,7 +969,7 @@ object_trackers = {
             self.activated = activated
 
             if is_in_hospital or not self.is_cpa_recurrent and (is_in_base or is_in_clinic) then
-                self.time_admission = self.time_admission + tick
+                self.admitted_time = self.admitted_time + tick
             end
 
             server.setCharacterData(self.id, self.vital.hp, not self.completed and activated, self.vital.ai)
@@ -981,7 +981,7 @@ object_trackers = {
             return g_savedata.subsystems.rescuee.dispensable
         end,
         complete = function(self)
-            return self.time_admission > 120
+            return self.admitted_time > 120
         end,
         reward = function(self)
             local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
@@ -1090,10 +1090,61 @@ object_trackers = {
         count = function(self)
             return 1
         end,
-        reward_base = 5000,
+        reward_base = 2000,
         text = "森林火災を鎮火",
         marker_type = 5,
         clear_timer = 0
+    },
+    suspect = {
+        test_type = function(self, id, type, tags, component_id, mission_id)
+            return type == "character" and tags.tracker ~= nil and tags.tracker == "suspect"
+        end,
+        init = function(self, transform)
+            self.transform = transform
+            self.is_lit = true
+            self.vital = server.getCharacterData(self.id)
+            self.admitted_time = 0
+        end,
+        clear = function(self)
+        end,
+        load = function(self)
+        end,
+        unload = function(self)
+        end,
+        tick = function(self, tick)
+            local vital_update = server.getCharacterData(self.id)
+            local vehicle_id = server.getCharacterVehicle(self.id)
+            local is_in_police_sta = is_in_landscape(self.transform, "police_station")
+            local is_in_base = is_in_landscape(self.transform, "base")
+
+            if is_in_base or is_in_police_sta then
+                self.admitted_time = self.admitted_time + tick
+            end
+
+            self.vital = vital_update
+        end,
+        position = function(self)
+            return self.transform
+        end,
+        dispensable = function(self)
+            return true
+        end,
+        complete = function(self)
+            return self.admitted_time > 120
+        end,
+        reward = function(self)
+            return self.reward_base
+        end,
+        status = function(self)
+            return self.text
+        end,
+        count = function(self)
+            return 1
+        end,
+        reward_base = 100,
+        text = "被疑者を制圧して基地へ連行",
+        marker_type = 1,
+        clear_timer = 300
     },
     oil_spill = {
         test_type = function(self, id, type, tags, component_id, mission_id)
@@ -1155,8 +1206,8 @@ object_trackers = {
             self.completion_timer = 0
             self.initial_transform = server.getVehiclePos(self.id)
             self.mass = 0
-
-            if self.tags.indispensable ~= nil and self.tags.indispensable == "true" then
+            
+            if self.tags.indispensable == "true" then
                 self.indispensable = true
             else
                 self.indispensable = false
@@ -1731,12 +1782,13 @@ end
 
 -- objects
 
-function initialize_object(id, type, tags, mission_id, component_id, parent_id, ...)
+function initialize_object(id, type, name, tags, mission_id, component_id, parent_id, ...)
     local params = {...}
     local object = {}
 
     object.id = id
     object.type = type
+    object.name = name
 
     console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
 
@@ -1751,6 +1803,8 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
     object.elapsed_clear = 0
     object.transform = nil
     object.tracker = nil
+    object.mounted = false
+    object.mounts = {}
 
     for k, v in pairs(object_trackers) do
         if v:test_type(id, type, tags, component_id, mission_id, table.unpack(params)) then
@@ -1770,6 +1824,17 @@ function initialize_object(id, type, tags, mission_id, component_id, parent_id, 
 
         if spillage_amount ~= nil then
             server.setOilSpill(object.transform, spillage_amount)
+        end
+    end
+
+    if object.tags.mount_vehicle ~= nil and object.tags.mount_seat ~= nil then
+        for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].mission == mission_id and string.lower(g_savedata.objects[i].name) == string.lower(object.tags.mount_vehicle) then
+                table.insert(g_savedata.objects[i].mounts, {
+                    id = id,
+                    seat = object.tags.mount_seat
+                })
+            end
         end
     end
 
@@ -1925,6 +1990,18 @@ end
 
 function is_object(object)
     return object.type ~= nil and (object.type == "zone" or object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or object.type == "ice")
+end
+
+function mount_vehicle(vehicle)
+    local components = server.getVehicleComponents(vehicle.id)
+
+    for i = 1, #vehicle.mounts do
+        local seats = table.find_all(components.components.seats, function(x)
+            return string.lower(x.name) == string.lower(vehicle.mounts[i].seat)
+        end)
+        local seat = table.random(seats)
+        server.setSeated(vehicle.mounts[i].id, vehicle.id, seat.pos.x, seat.pos.y, seat.pos.z)
+    end
 end
 
 -- locations
@@ -2170,7 +2247,7 @@ function spawn_component(component, transform, mission_id)
 
     local tags = parse_tags(object.tags_full)
 
-    initialize_object(object.id, object.type, tags, mission_id, component.id, parent_object_id)
+    initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.id, parent_object_id)
 end
 
 function load_locations()
@@ -2628,7 +2705,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             if value == nil then
                 return
             end
-            
+
             table.insert(g_savedata.disabled_components, value)
         elseif verb == "enable" and is_admin then
             local value = ...
@@ -2636,8 +2713,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             if value == nil then
                 return
             end
-            
-            table.remove(g_savedata.disabled_components, table.find_index(g_savedata.disabled_components, function(x) return x == value end))
+
+            table.remove(g_savedata.disabled_components, table.find_index(g_savedata.disabled_components, function(x)
+                return x == value
+            end))
         elseif verb == "clear-disabled-components" and is_admin then
             g_savedata.disabled_components = {}
         end
@@ -2687,7 +2766,6 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
 
     local vehicle_ids = server.getVehicleGroup(group_id)
     local data = server.getVehicleData(vehicle_ids[1])
-    local object = {}
     local owner = nil
     local cost = nil
 
@@ -2705,16 +2783,6 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
         cost = group_cost
     end
 
-    object.tags_full = data.tags_full
-    object.tags = parse_tags(object.tags_full)
-    object.display_name = ""
-    object.type = "vehicle"
-    object.transform = server.getVehiclePos(vehicle_ids[1])
-    object.id = vehicle_ids[1]
-    object.object_id = nil
-    object.group_id = group_id
-    object.vehicle_ids = vehicle_ids
-
     local tags = parse_tags(data.tags_full)
     local test = false
 
@@ -2723,22 +2791,30 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     end
 
     if test then
-        initialize_object(vehicle_ids[1], "vehicle", tags, nil, nil, nil, owner, cost)
+        initialize_object(vehicle_ids[1], "vehicle", data.name, tags, nil, nil, nil, owner, cost)
     end
 end
 
 function onVehicleLoad(vehicle_id)
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id and g_savedata.objects[i].tracker ~= nil then
-            loaded_object(g_savedata.objects[i])
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+            if g_savedata.objects[i].tracker ~= nil then
+                loaded_object(g_savedata.objects[i])
+            end
+
+            if not g_savedata.objects[i].mounted and #g_savedata.objects[i].mounts > 0 then
+                mount_vehicle(g_savedata.objects[i])
+            end
         end
     end
 end
 
 function onVehicleUnload(vehicle_id)
     for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id and g_savedata.objects[i].tracker ~= nil then
-            unloaded_object(g_savedata.objects[i])
+        if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+            if g_savedata.objects[i].tracker ~= nil then
+                unloaded_object(g_savedata.objects[i])
+            end
         end
     end
 end
@@ -2782,7 +2858,7 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
     end
 
     if mission_id ~= nil then
-        initialize_object(fire_objective_id, "forest_fire", {}, mission_id, nil, nil, transform)
+        initialize_object(fire_objective_id, "forest_fire", nil, {}, mission_id, nil, nil, transform)
     end
 end
 
@@ -2810,7 +2886,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         elseif mx < 0 then
             mx = mx - 500
         end
-        
+
         local mz = z * 1000
 
         if mz > 0 then
@@ -2818,7 +2894,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         elseif mz < 0 then
             mz = mz - 500
         end
-        
+
         local transform = matrix.translation(mx, 0, mz)
         local mission_id = nil
         local distance = 2000
@@ -2833,7 +2909,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
         end
 
         if mission_id ~= nil then
-            initialize_object(id, "oil_spill", {}, mission_id, nil, nil, transform, x, z, total)
+            initialize_object(id, "oil_spill", nil, {}, mission_id, nil, nil, transform, x, z, total)
         end
     end
 
