@@ -1206,7 +1206,7 @@ object_trackers = {
             self.completion_timer = 0
             self.initial_transform = server.getVehiclePos(self.id)
             self.mass = 0
-            
+
             if self.tags.indispensable == "true" then
                 self.indispensable = true
             else
