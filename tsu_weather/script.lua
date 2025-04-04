@@ -94,7 +94,7 @@ end
 function weather(w)
     local rain = math.max(value_weather(w.rain) * 0.01, 0)
     local wind = math.max(value_weather(w.wind) * 0.01, 0)
-    local fog = math.max(value_weather(w.fog) * 0.01 + rain * 0.5 - wind * 0.25, 0)
+    local fog = math.max(value_weather(w.fog) * 0.01 - wind * 0.5, rain * 0.5, 0)
 
     server.setWeather(fog, rain, wind)
     console.notify(string.format("W %3.6f; R %3.6f; F %3.6f;", wind, rain, fog))
