@@ -30,7 +30,7 @@ g_savedata = {
         rescuee = {
             dispensable = false,
             cpa_recurrence_rate = property.slider("CPA recurrence rate (%)", 0, 100, 1, 20),
-            cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 8),
+            cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 6),
             has_strobe = property.checkbox("Rescuees has strobe", true)
         },
         fire = {
