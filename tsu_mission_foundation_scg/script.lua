@@ -1116,7 +1116,10 @@ object_trackers = {
         end,
         init = function(self)
             self.vital = server.getCharacterData(self.id)
+            self.path = {}
             self.admitted_time = 0
+
+            server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.ai ~= nil)
         end,
         clear = function(self)
         end,
@@ -1132,6 +1135,51 @@ object_trackers = {
 
             if is_in_base or is_in_police_sta then
                 self.admitted_time = self.admitted_time + tick
+            end
+
+            if self.ai ~= nil then
+                local command = nil
+
+                for i = 1, #g_savedata.objects do
+                    if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+                        command = g_savedata.objects[i].command
+                    end
+                end
+
+                if command == "escape" then
+                    if self.ai == "pilot" then
+                        if #self.path > 0 then
+                            if matrix.distance(self.transform, self.path[1]) <= 100 then
+                                table.remove(self.path, 1)
+                                self.targeted = false
+                            end
+
+                            if not self.targeted then
+                                server.setAITarget(self.id, self.path[1])
+                                server.setAIState(self.id, 1)
+                                self.targeted = true
+
+                                local x, y, z = matrix.position(self.path[1])
+
+                                console.notify(string.format("%s#%d destination to %.0f, %.0f, %.0f", self.tracker, self.id, x, y, z))
+                            end
+                        else
+                            local distance = math.random(5000, 10000)
+                            local heading = math.random() * 2
+                            local x = distance * math.cos(heading * math.pi)
+                            local z = distance * math.sin(heading * math.pi)
+                            local destination = matrix.multiply(self.transform, matrix.translation(x, 0, z))
+                            local path = server.pathfind(self.transform, destination, "ocean_path", "")
+                            self.path = {}
+
+                            for i = 1, #path do
+                                table.insert(self.path, matrix.translation(path[i].x, 0, path[i].z))
+                            end
+                        end
+                    end
+                elseif command == nil then
+                    server.setAIState(self.id, 0)
+                end
             end
 
             self.vital = vital_update
@@ -1694,7 +1742,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     }
     mission.spillages = {}
     mission.rewards = 0
-    setmetatable(mission, mission_trackers[tracker])
+    based(mission, mission_trackers[tracker])
     mission:init()
 
     record_location_history(location)
@@ -1816,6 +1864,7 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
     object.elapsed_clear = 0
     object.transform = nil
     object.tracker = nil
+    object.ai = nil
     object.mounted = false
     object.mounts = {}
 
@@ -1835,20 +1884,6 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
         end
     end
 
-    if object.tracker ~= nil then
-        setmetatable(object, object_trackers[object.tracker])
-        object.transform = object:position()
-        object:init(table.unpack(params))
-    end
-
-    if object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
-        local spillage_amount = tonumber(object.tags.spillage_amount)
-
-        if spillage_amount ~= nil then
-            server.setOilSpill(object.transform, spillage_amount)
-        end
-    end
-
     if object.tags.mount_vehicle ~= nil and object.tags.mount_seat ~= nil then
         for i = 1, #g_savedata.objects do
             if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].mission == mission_id and string.lower(g_savedata.objects[i].name) == string.lower(object.tags.mount_vehicle) then
@@ -1860,8 +1895,26 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
         end
     end
 
+    if object.type == "character" and object.tags.ai ~= nil then
+        object.ai = object.tags.ai
+    end
+
     if object.type == "vehicle" and object.tags.keep_active == "true" then
         server.setVehicleTransponder(object.id, true)
+    end
+
+    if object.tracker ~= nil then
+        based(object, object_trackers[object.tracker])
+        object.transform = object:position()
+        object:init(table.unpack(params))
+    end
+
+    if object.tags.spillage ~= nil and object.tags.spillage == "oil" and object.tags.spillage_amount ~= nil then
+        local spillage_amount = tonumber(object.tags.spillage_amount)
+
+        if spillage_amount ~= nil then
+            server.setOilSpill(object.transform, spillage_amount)
+        end
     end
 
     table.insert(g_savedata.objects, object)
@@ -1939,7 +1992,6 @@ function tick_object(object, tick)
 
     if object.type == "vehicle" and #object.actions > 0 and object.command == nil then
         local nearby = false
-
         local transform = object.transform
 
         if object.tracker == nil then
@@ -2987,12 +3039,12 @@ function onCreate(is_world_create)
 
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker ~= nil then
-            setmetatable(g_savedata.objects[i], object_trackers[g_savedata.objects[i].tracker])
+            based(g_savedata.objects[i], object_trackers[g_savedata.objects[i].tracker])
         end
     end
 
     for i = 1, #g_savedata.missions do
-        setmetatable(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
+        based(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
     end
 
     tick_players()
@@ -3245,7 +3297,7 @@ function math.round(x)
     return math.floor(x + 0.5)
 end
 
-function setmetatable(table1, table2)
+function based(table1, table2)
     for k, v in pairs(table2) do
         table1[k] = v
     end
