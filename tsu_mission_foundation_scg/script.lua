@@ -770,7 +770,7 @@ mission_trackers = {
                 self.units.med = true
             end
 
-            if not self.units.spc and (suspect_count >= 1 or hostile_count >= 1 or underwater_count >= 1) then
+            if not self.units.spc and (suspect_count >= 1 or wreckage_count >= 1 or hostile_count >= 1 or underwater_count >= 1) then
                 self.units.spc = true
             end
 
@@ -780,7 +780,7 @@ mission_trackers = {
 
             if self.objectives.rescuees >= 10 or self.objectives.fires >= 25 or self.objectives.suspects >= 10 or self.objectives.forest_fires >= 1 or self.search_radius >= 1000 then
                 category_basis = 2
-            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 5 or self.objectives.suspects >= 2 then
+            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 5 or self.objectives.suspects >= 2 or self.search_radius >= 500 then
                 category_basis = 1
             else
                 category_basis = 0
