@@ -42,7 +42,7 @@ local timing = 0
 function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
-    if timing % 60 == 0 then
+    if g_savedata.active and timing % 60 == 0 then
         local update = false
         
         for k, v in pairs(g_savedata.weather) do
@@ -55,9 +55,9 @@ function onTick(tick)
         end
     end
 
-    if timing + 1 < cycle then
-        timing = timing + 1
-    else
+    timing = timing + 1
+
+    if timing >= cycle then
         timing = 0
     end
 end
