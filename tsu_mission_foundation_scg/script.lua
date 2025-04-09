@@ -1,4 +1,4 @@
-name = "TSU Mission Foundation SCG"
+name = "TSU Mission Foundation for SCG"
 version = "1.2.0"
 
 -- properties
@@ -561,7 +561,7 @@ location_properties = {{
     pattern = "^mission:pirate_boat_%d+$",
     tracker = "sar",
     suitable_zones = {"offshore", "shallow", "channel"},
-    is_main_location = true,
+    is_main_location = false,
     sub_locations = {},
     sub_location_min = 0,
     sub_location_max = 0,
@@ -571,7 +571,7 @@ location_properties = {{
     report = "海賊",
     report_timer_min = 0,
     report_timer_max = 0,
-    note = "職員からの通報"
+    note = "哨戒機からの通報"
 }}
 
 zone_properties = {{
@@ -790,7 +790,7 @@ mission_trackers = {
             category = math.max(self.category, category_basis + category_bonus)
 
             if category >= 2 and self.category < 2 then
-                server.notify(-1, string.format("ミッション #%d の状況が悪化.", self.id), "詳細はミッション情報を確認せよ.", 1)
+                server.notify(-1, string.format("ミッション#%dの状況が深刻.", self.id), "詳細はミッション情報を確認せよ.", 1)
             end
 
             self.category = category
@@ -3034,7 +3034,11 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
-    load_zones()
+    -- if is_world_create then
+    if true then
+        load_zones()
+    end
+
     load_locations()
 
     for i = 1, #g_savedata.objects do
