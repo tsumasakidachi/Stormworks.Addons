@@ -2236,10 +2236,6 @@ function match_location_name(location, patterns)
     return matched
 end
 
-function is_location_free(location, mission)
-    return location.id ~= mission.locations[1].id
-end
-
 function is_location_duplicated(location)
     local dupe = false
     local l = {}
