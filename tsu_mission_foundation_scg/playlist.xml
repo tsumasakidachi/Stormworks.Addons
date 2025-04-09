@@ -1,30 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_mission_foundation_scg" file_store="4" name="TSU Mission Foundation SCG">
-	<locations location_id_counter="1" component_id_counter="2">
-		<locations>
-			<l id="1" tile="data/tiles/mega_island_15_2.xml" name="test" env_mod_spawn_num="1">
-				<components>
-					<c component_type="3" id="1" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_1.xml" vehicle_file_store="4">
-						<spawn_transform 30="179.019226" 31="1.25" 32="-421.773102"/>
-						<spawn_bounds>
-							<min x="-1.375" y="-0.625" z="-2.875"/>
-							<max x="1.375" y="1.875" z="3.125"/>
-						</spawn_bounds>
-						<spawn_local_offset y="-0.625" z="-0.125"/>
-						<graph_links/>
-					</c>
-					<c component_type="10" id="2" vehicle_parent_id="1" cargo_zone_import_cargo_type="londscape=hospital" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 30="179.021652" 31="1.249561" 32="-421.786438"/>
-						<spawn_bounds>
-							<min x="-5" y="-5" z="-5"/>
-							<max x="5" y="5" z="5"/>
-						</spawn_bounds>
-						<vehicle_parent_transform 30="0.002426" 31="-0.000439" 32="-0.013336"/>
-						<graph_links/>
-					</c>
-				</components>
-			</l>
-		</locations>
+	<locations>
+		<locations/>
 	</locations>
 </playlist>
 
