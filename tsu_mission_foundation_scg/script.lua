@@ -959,7 +959,7 @@ object_trackers = {
 
             if g_savedata.subsystems.rescuee.has_strobe then
                 local distance = distance_min_to_player(self.transform)
-                local opt = (self.strobe.opt or distance <= 100) and not on_board
+                local opt = (self.strobe.opt or distance <= 250) and not on_board
                 local ir = (self.strobe.ir or distance <= 1000) and not on_board
                 local dead = not self.vital.dead and vital_update.dead
 
