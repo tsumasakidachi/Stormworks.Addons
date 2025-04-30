@@ -470,7 +470,7 @@ location_properties = {{
     is_unique_sub_location = false,
     search_radius = 500,
     notification_type = 0,
-    report = "落下物\n付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊 (報酬なし) または貨物ターミナルへ輸送 (報酬あり) せよ.",
+    report = "落下物\n付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊 (報酬なし) またはスクラップヤードへ輸送 (報酬あり) せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "パトロールからの通報"
@@ -591,7 +591,7 @@ zone_properties = {{
     mapped = true,
     icon = 11
 }, {
-    landscape = "freight_terminal",
+    landscape = "scrap_yard",
     mapped = true,
     icon = 3
 }, {
@@ -654,6 +654,13 @@ zone_properties = {{
     landscape = "respawn"
 }}
 
+strings = {
+    statuses = {
+        essentials = "必須の目標",
+        dispensables = "オプションの目標"
+    }
+}
+
 mission_trackers = {
     sar = {
         init = function(self)
@@ -703,7 +710,7 @@ mission_trackers = {
                 if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "rescuee" then
                     rescuee_count = rescuee_count + 1
 
-                    if g_savedata.objects[i].on_board then
+                    if g_savedata.objects[i].picked then
                         rescuee_picked_count = rescuee_picked_count + 1
                     end
                 elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "fire" then
@@ -725,29 +732,6 @@ mission_trackers = {
                     underwater_count = underwater_count + 1
                 end
             end
-
-            self.o = {
-                rescuee = {
-                    count = 0,
-                    accomodated = 0
-                },
-                fire = {
-                    count = 0
-                },
-                forest_fire = {
-                    count = 0
-                },
-                suspect = {
-                    count = 0
-                },
-                wreckage = {
-                    count = 0,
-                    items = {}
-                },
-                hostile = {
-                    count = 0
-                }
-            }
 
             self.objectives.rescuees = rescuee_count
             self.objectives.rescuees_picked = rescuee_picked_count
@@ -848,37 +832,51 @@ mission_trackers = {
             -- text = text .. "\n\n[捜索半径]"
             -- text = text .. string.format("\n%dm", self.search_radius)
 
-            text = text .. "\n\n[必須の達成目標]"
+            for type, agr in pairs(self.aggregation) do
+                if agr.count > 0 then
+                    text = text .. "\n\n[" .. agr.name .. "]"
 
-            for tracker_id, tracker in pairs(object_trackers) do
-                local count = 0
+                    for tracker, data in pairs(agr.contents) do
+                        if data.count > 0 then
+                            text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
 
-                for i = 1, #g_savedata.objects do
-                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and not g_savedata.objects[i]:dispensable() then
-                        count = count + g_savedata.objects[i]:count()
+                            if data.count_picked > 0 then
+                                text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
+                            end
+
+                            if #data.contents > 0 then
+                                text = text .. "\n("
+
+                                for i = 1, #data.contents do
+                                    if i > 1 then
+                                        text = text .. ", "
+                                    end
+
+                                    text = text .. data.contents[i]
+                                end
+
+                                text = text .. ")"
+                            end
+                        end
                     end
-                end
-
-                if count > 0 then
-                    text = text .. string.format("\n%.0f\n%s", count, tracker.text)
                 end
             end
 
-            text = text .. "\n\n[オプションの達成目標]"
+            -- text = text .. "\n\n[オプションの達成目標]"
 
-            for tracker_id, tracker in pairs(object_trackers) do
-                local count = 0
+            -- for tracker_id, tracker in pairs(object_trackers) do
+            --     local count = 0
 
-                for i = 1, #g_savedata.objects do
-                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and g_savedata.objects[i]:dispensable() then
-                        count = count + g_savedata.objects[i]:count()
-                    end
-                end
+            --     for i = 1, #g_savedata.objects do
+            --         if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and g_savedata.objects[i]:dispensable() then
+            --             count = count + g_savedata.objects[i]:count()
+            --         end
+            --     end
 
-                if count > 0 then
-                    text = text .. string.format("\n%.0f\n%s", count, tracker.text)
-                end
-            end
+            --     if count > 0 then
+            --         text = text .. string.format("\n%.0f\n%s", count, tracker.text)
+            --     end
+            -- end
 
             if #self.spillages > 0 then
                 text = text .. "\n\n[漏えい]"
@@ -923,7 +921,7 @@ object_trackers = {
             }
             self.admitted_time = 0
             self.activated = false
-            self.on_board = false
+            self.picked = false
 
             server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
             server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
@@ -936,7 +934,9 @@ object_trackers = {
         end,
         tick = function(self, tick)
             local character_vehicle = server.getCharacterVehicle(self.id)
-            local on_board = character_vehicle > 0
+            local picked = table.any(g_savedata.objects, function(x)
+                return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
+            end)
             local vital_update = server.getCharacterData(self.id)
             local is_in_hospital = is_in_landscape(self.transform, "hospital")
             local is_in_clinic = is_in_landscape(self.transform, "clinic")
@@ -959,8 +959,8 @@ object_trackers = {
 
             if g_savedata.subsystems.rescuee.has_strobe then
                 local distance = distance_min_to_player(self.transform)
-                local opt = (self.strobe.opt or distance <= 250) and not on_board
-                local ir = (self.strobe.ir or distance <= 1000) and not on_board
+                local opt = (self.strobe.opt or distance <= 250) and not picked
+                local ir = (self.strobe.ir or distance <= 1000) and not picked
                 local dead = not self.vital.dead and vital_update.dead
 
                 if opt ~= self.strobe.opt or dead then
@@ -979,7 +979,7 @@ object_trackers = {
             --     console.notify(string.format("Objective#%d activated.", self.id))
             -- end
 
-            self.on_board = on_board
+            self.picked = picked
             self.vital = vital_update
             self.activated = activated
 
@@ -1007,15 +1007,16 @@ object_trackers = {
 
             return value
         end,
-        status = function(self)
-            return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.text, self.vital.hp, self.cpa_count)
-            -- return self.text
+        label = function(self)
+            -- return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.text, self.vital.hp, self.cpa_count)
+            return self.text
         end,
         count = function(self)
             return 1
         end,
         reward_base = 1000,
         text = "要救助者を医療機関へ搬送",
+        substatus = "収容済み",
         marker_type = 1,
         clear_timer = 300
     },
@@ -1060,7 +1061,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1099,7 +1100,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1196,7 +1197,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1247,7 +1248,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return string.format("%s\n\n%.0f", self.text, self.amount)
         end,
         count = function(self)
@@ -1299,7 +1300,7 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            if is_in_landscape(self.transform, "freight_terminal") then
+            if is_in_landscape(self.transform, "scrap_yard") then
                 self.completion_timer = self.completion_timer + tick
             end
         end,
@@ -1322,16 +1323,16 @@ object_trackers = {
         reward = function(self)
             return math.ceil(self.mass * self.reward_base / 100) * 100
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
             return 1
         end,
         reward_base = 2,
-        text = "残骸を貨物ターミナルへ輸送",
+        text = "残骸をスクラップヤードへ輸送",
         marker_type = 2,
-        clear_timer = 7200
+        clear_timer = 360
     },
     hostile = {
         test_type = function(self, id, type, tags, component_id, mission_id)
@@ -1385,7 +1386,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1423,7 +1424,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1642,7 +1643,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1681,7 +1682,7 @@ object_trackers = {
         reward = function(self)
             return self.reward_base
         end,
-        status = function(self)
+        label = function(self)
             return self.text
         end,
         count = function(self)
@@ -1742,6 +1743,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     }
     mission.spillages = {}
     mission.rewards = 0
+    mission.aggregation = aggretage_objectives(mission)
     based(mission, mission_trackers[tracker])
     mission:init()
 
@@ -1788,6 +1790,7 @@ function tick_mission(mission, tick)
     end
 
     mission.spillages = table.distinct(mission.spillages)
+    mission.aggregation = aggretage_objectives(mission)
     mission:tick(tick)
 
     if g_savedata.mode == "debug" or mission.search_center ~= nil then
@@ -1839,6 +1842,56 @@ end
 
 function terminate_mission(mission)
     mission.terminated = true
+end
+
+function aggretage_objectives(mission)
+    local aggregation = {
+        essentials = {name = strings.statuses.essentials, count = 0, contents = {}},
+        dispensables = {name = strings.statuses.dispensables, count = 0, contents = {}}
+    }
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil then
+            local data
+
+            if g_savedata.objects[i]:dispensable() then
+                if aggregation.dispensables.contents[g_savedata.objects[i].tracker] == nil then
+                    aggregation.dispensables.count = aggregation.dispensables.count + 1
+                    aggregation.dispensables.contents[g_savedata.objects[i].tracker] = {
+                        count = 0,
+                        count_picked = 0,
+                        contents = {}
+                    }
+                end
+
+                data = aggregation.dispensables.contents[g_savedata.objects[i].tracker]
+            else
+                if aggregation.essentials.contents[g_savedata.objects[i].tracker] == nil then
+                    aggregation.essentials.count = aggregation.essentials.count + 1
+                    aggregation.essentials.contents[g_savedata.objects[i].tracker] = {
+                        count = 0,
+                        count_picked = 0,
+                        contents = {}
+                    }
+                end
+
+                data = aggregation.essentials.contents[g_savedata.objects[i].tracker]
+            end
+
+            data.count = data.count + g_savedata.objects[i]:count()
+
+            if g_savedata.objects[i].picked then
+                data.count_picked = data.count_picked + g_savedata.objects[i]:count()
+            end
+
+            if not string.nil_or_empty(g_savedata.objects[i].name) then
+                table.insert(data.contents, g_savedata.objects[i].name)
+                data.contents = table.distinct(data.contents)
+            end
+        end
+    end
+            
+    return aggregation
 end
 
 -- objects
@@ -1955,7 +2008,7 @@ function tick_object(object, tick)
             local x, y, z = matrix.position(object.transform)
             local r, g, b, a = 128, 128, 128, 255
             local label = string.format("%s #%d", object.tracker, object.id)
-            local popup = object:status() .. " \n\n" .. string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+            local popup = string.format("%s\n\nX: %.0f\nY: %.0f\nZ: %.0f", object.text, x, y, z)
 
             server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
         end
@@ -1970,7 +2023,7 @@ function tick_object(object, tick)
                 end
             end
 
-            local label = object:status()
+            local label = object.text
 
             for i = 1, #players do
                 if matrix.distance(object.transform, players[i].transform) <= 250 then
@@ -3160,6 +3213,20 @@ function string.split(s, separator)
     end
 
     return t
+end
+
+function string.nil_or_empty(s)
+    return s == nil or s == ""
+end
+
+function table.any(t, test)
+    local any = false
+
+    for i = 1, #t do
+        any = any or test(t[i])
+    end
+
+    return any
 end
 
 function table.contains(t, x)
