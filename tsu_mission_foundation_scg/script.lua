@@ -654,6 +654,14 @@ zone_properties = {{
     landscape = "respawn"
 }}
 
+local objs = {{
+    var = "objectives",
+    title = "[必須目標]"
+}, {
+    var = "objectives_dispensable",
+    title = "[自由目標]"
+}}
+
 strings = {
     statuses = {
         essentials = "必須の目標",
@@ -668,116 +676,6 @@ mission_trackers = {
         clear = function(self)
         end,
         tick = function(self, tick)
-            if not self.spawned then
-                for i = 1, #self.locations do
-                    spawn_location(self.locations[i], self.id)
-                end
-
-                local c, x, y, z = 0, 0, 0, 0
-
-                for i = 1, #g_savedata.objects do
-                    if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
-                        local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-                        c = c + 1
-                        x = x + ox
-                        y = y + oy
-                        z = z + oz
-                    end
-                end
-
-                x = x / c
-                y = y / c
-                z = z / c
-
-                self.search_center = matrix.translation(x, y, z)
-                self.spawned = true
-
-                console.notify(string.format("Spawned mission #%d.", self.id))
-            end
-
-            local rescuee_count = 0
-            local rescuee_picked_count = 0
-            local fire_count = 0
-            local forest_fire_count = 0
-            local suspect_count = 0
-            local wreckage_count = 0
-            local wreckage_items = {}
-            local hostile_count = 0
-            local underwater_count = 0
-            local radiation_count = 0
-
-            for i = 1, #g_savedata.objects do
-                if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "rescuee" then
-                    rescuee_count = rescuee_count + 1
-
-                    if g_savedata.objects[i].picked then
-                        rescuee_picked_count = rescuee_picked_count + 1
-                    end
-                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "fire" then
-                    fire_count = fire_count + 1
-                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "forest_fire" then
-                    forest_fire_count = forest_fire_count + 1
-                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "wreckage" then
-                    wreckage_count = wreckage_count + 1
-                    table.insert(wreckage_items, g_savedata.objects[i].name)
-                elseif g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == "hostile" then
-                    hostile_count = hostile_count + 1
-                end
-            end
-
-            wreckage_items = table.distinct(wreckage_items)
-
-            for i = 1, #self.locations do
-                if self.locations[i].zone and self.locations[i].zone.landscape == "underwater" then
-                    underwater_count = underwater_count + 1
-                end
-            end
-
-            self.objectives.rescuees = rescuee_count
-            self.objectives.rescuees_picked = rescuee_picked_count
-            self.objectives.fires = fire_count
-            self.objectives.forest_fires = forest_fire_count
-            self.objectives.suspects = suspect_count
-            self.objectives.wreckages = wreckage_count
-            self.objectives.wreckage_items = wreckage_items
-            self.objectives.hostiles = hostile_count
-
-            if not self.units.sar and self.locations[1].search_radius >= 500 and #self.locations >= 2 then
-                self.units.sar = true
-            end
-
-            if not self.units.fire and (fire_count >= 5 or forest_fire_count >= 1) then
-                self.units.fire = true
-            end
-
-            if not self.units.med and rescuee_count >= 1 then
-                self.units.med = true
-            end
-
-            if not self.units.spc and (suspect_count >= 1 or wreckage_count >= 1 or hostile_count >= 1 or underwater_count >= 1) then
-                self.units.spc = true
-            end
-
-            local category = 0
-            local category_basis = 0
-            local category_bonus = 0
-
-            if self.objectives.rescuees >= 10 or self.objectives.fires >= 25 or self.objectives.suspects >= 10 or self.objectives.forest_fires >= 1 or self.search_radius >= 1000 then
-                category_basis = 2
-            elseif self.objectives.rescuees >= 5 or self.objectives.fires >= 5 or self.objectives.suspects >= 2 or self.search_radius >= 500 then
-                category_basis = 1
-            else
-                category_basis = 0
-            end
-
-            category_bonus = math.min(category_bonus, 2)
-            category = math.max(self.category, category_basis + category_bonus)
-
-            if category >= 2 and self.category < 2 then
-                server.notify(-1, string.format("ミッション#%dの状況が深刻.", self.id), "詳細はミッション情報を確認せよ.", 1)
-            end
-
-            self.category = category
         end,
         complete = function(self)
             local completed = self.spawned
@@ -807,10 +705,52 @@ mission_trackers = {
             return reward
         end,
         report = function(self)
-            return string.format("REPORT #%d\n%s", self.id, self.locations[1].report)
+            return string.format("#%d %s", self.id, self.locations[1].report)
         end,
         status = function(self)
             local text = self.locations[1].note
+
+            text = text .. "\n\n[目標]"
+
+            for tracker, data in pairs(self.objectives) do
+                if data.count > 0 then
+                    text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
+
+                    if data.count_picked > 0 then
+                        text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
+                    end
+
+                    if #data.contents > 0 then
+                        text = text .. "\n("
+
+                        for i = 1, #data.contents do
+                            if i > 1 then
+                                text = text .. ", "
+                            end
+
+                            text = text .. data.contents[i]
+                        end
+
+                        text = text .. ")"
+                    end
+                end
+            end
+
+            text = text .. "\n\n[捜索半径]"
+            text = text .. string.format("\n%dm", self.search_radius)
+
+            if #self.spillages > 0 then
+                text = text .. "\n\n[漏えい]"
+                text = text .. "\n"
+
+                for i = 1, #self.spillages do
+                    if i > 1 then
+                        text = text .. " "
+                    end
+
+                    text = text .. string.upper(self.spillages[i])
+                end
+            end
 
             text = text .. "\n\n[出動区分]"
             text = text .. "\nカテゴリ:"
@@ -826,68 +766,6 @@ mission_trackers = {
             for name, available in pairs(self.units) do
                 if available then
                     text = text .. " " .. string.upper(name)
-                end
-            end
-
-            -- text = text .. "\n\n[捜索半径]"
-            -- text = text .. string.format("\n%dm", self.search_radius)
-
-            for type, agr in pairs(self.aggregation) do
-                if agr.count > 0 then
-                    text = text .. "\n\n[" .. agr.name .. "]"
-
-                    for tracker, data in pairs(agr.contents) do
-                        if data.count > 0 then
-                            text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
-
-                            if data.count_picked > 0 then
-                                text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
-                            end
-
-                            if #data.contents > 0 then
-                                text = text .. "\n("
-
-                                for i = 1, #data.contents do
-                                    if i > 1 then
-                                        text = text .. ", "
-                                    end
-
-                                    text = text .. data.contents[i]
-                                end
-
-                                text = text .. ")"
-                            end
-                        end
-                    end
-                end
-            end
-
-            -- text = text .. "\n\n[オプションの達成目標]"
-
-            -- for tracker_id, tracker in pairs(object_trackers) do
-            --     local count = 0
-
-            --     for i = 1, #g_savedata.objects do
-            --         if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker == tracker_id and g_savedata.objects[i]:dispensable() then
-            --             count = count + g_savedata.objects[i]:count()
-            --         end
-            --     end
-
-            --     if count > 0 then
-            --         text = text .. string.format("\n%.0f\n%s", count, tracker.text)
-            --     end
-            -- end
-
-            if #self.spillages > 0 then
-                text = text .. "\n\n[漏えい]"
-                text = text .. "\n"
-
-                for i = 1, #self.spillages do
-                    if i > 1 then
-                        text = text .. " "
-                    end
-
-                    text = text .. string.upper(self.spillages[i])
                 end
             end
 
@@ -1014,9 +892,14 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
+        end,
         reward_base = 1000,
         text = "要救助者を医療機関へ搬送",
-        substatus = "収容済み",
         marker_type = 1,
         clear_timer = 300
     },
@@ -1067,6 +950,12 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
+        end,
         reward_base = 100,
         text = "炎を鎮火",
         marker_type = 5,
@@ -1105,6 +994,12 @@ object_trackers = {
         end,
         count = function(self)
             return 1
+        end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
         end,
         reward_base = 2000,
         text = "森林火災を鎮火",
@@ -1203,6 +1098,12 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
+        end,
         reward_base = 100,
         text = "被疑者を制圧して基地へ連行",
         marker_type = 1,
@@ -1253,6 +1154,12 @@ object_trackers = {
         end,
         count = function(self)
             return self.amount
+        end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
         end,
         reward_base = 0,
         text = "漏出した油を回収",
@@ -1329,6 +1236,12 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
+        end,
         reward_base = 2,
         text = "残骸をスクラップヤードへ輸送",
         marker_type = 2,
@@ -1392,6 +1305,12 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return false
+        end,
         reward_base = 500,
         text = "危険生物を駆除",
         marker_type = 6,
@@ -1429,6 +1348,12 @@ object_trackers = {
         end,
         count = function(self)
             return 1
+        end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return true
         end,
         reward_base = 0,
         text = "捜査犬",
@@ -1511,125 +1436,125 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            if self.components_checked then
-                for index = 1, math.max(#g_savedata.missions, 6) do
-                    if g_savedata.missions[index] ~= nil then
-                        local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
+            -- if self.components_checked then
+            --     for index = 1, math.max(#g_savedata.missions, 6) do
+            --         if g_savedata.missions[index] ~= nil then
+            --             local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
 
-                        if self.missions[index].id ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].id, g_savedata.missions[index].id)
-                        end
+            --             if self.missions[index].id ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].id, g_savedata.missions[index].id)
+            --             end
 
-                        if self.missions[index].x ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].x, x)
-                        end
+            --             if self.missions[index].x ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].x, x)
+            --             end
 
-                        if self.missions[index].y ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].y, z)
-                        end
+            --             if self.missions[index].y ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].y, z)
+            --             end
 
-                        if self.missions[index].r ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].r, g_savedata.missions[index].search_radius)
-                        end
+            --             if self.missions[index].r ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].r, g_savedata.missions[index].search_radius)
+            --             end
 
-                        if self.missions[index].category ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].category, g_savedata.missions[index].category)
-                        end
+            --             if self.missions[index].category ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].category, g_savedata.missions[index].category)
+            --             end
 
-                        if self.missions[index].rescuees ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].rescuees, g_savedata.missions[index].objectives.rescuees)
-                        end
+            --             if self.missions[index].rescuees ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].rescuees, g_savedata.missions[index].objectives.rescuees)
+            --             end
 
-                        if self.missions[index].fires ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].fires, g_savedata.missions[index].objectives.fires)
-                        end
+            --             if self.missions[index].fires ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].fires, g_savedata.missions[index].objectives.fires)
+            --             end
 
-                        if self.missions[index].suspects ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].suspects, g_savedata.missions[index].objectives.suspects)
-                        end
+            --             if self.missions[index].suspects ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].suspects, g_savedata.missions[index].objectives.suspects)
+            --             end
 
-                        if self.missions[index].wreckages ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].wreckages, g_savedata.missions[index].objectives.wreckages)
-                        end
+            --             if self.missions[index].wreckages ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].wreckages, g_savedata.missions[index].objectives.wreckages)
+            --             end
 
-                        if self.missions[index].hostiles ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].hostiles, g_savedata.missions[index].objectives.hostiles)
-                        end
+            --             if self.missions[index].hostiles ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].hostiles, g_savedata.missions[index].objectives.hostiles)
+            --             end
 
-                        if self.missions[index].sar ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].sar, g_savedata.missions[index].units.sar)
-                        end
+            --             if self.missions[index].sar ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].sar, g_savedata.missions[index].units.sar)
+            --             end
 
-                        if self.missions[index].med ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].med, g_savedata.missions[index].units.med)
-                        end
+            --             if self.missions[index].med ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].med, g_savedata.missions[index].units.med)
+            --             end
 
-                        if self.missions[index].fire ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].fire, g_savedata.missions[index].units.fire)
-                        end
+            --             if self.missions[index].fire ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].fire, g_savedata.missions[index].units.fire)
+            --             end
 
-                        if self.missions[index].spc ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].spc, g_savedata.missions[index].units.spc)
-                        end
-                    else
-                        if self.missions[index].id ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].id, 0)
-                        end
+            --             if self.missions[index].spc ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].spc, g_savedata.missions[index].units.spc)
+            --             end
+            --         else
+            --             if self.missions[index].id ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].id, 0)
+            --             end
 
-                        if self.missions[index].x ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].x, 0)
-                        end
+            --             if self.missions[index].x ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].x, 0)
+            --             end
 
-                        if self.missions[index].y ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].y, 0)
-                        end
+            --             if self.missions[index].y ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].y, 0)
+            --             end
 
-                        if self.missions[index].r ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].r, 0)
-                        end
+            --             if self.missions[index].r ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].r, 0)
+            --             end
 
-                        if self.missions[index].category ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].category, 0)
-                        end
+            --             if self.missions[index].category ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].category, 0)
+            --             end
 
-                        if self.missions[index].rescuees ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].rescuees, 0)
-                        end
+            --             if self.missions[index].rescuees ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].rescuees, 0)
+            --             end
 
-                        if self.missions[index].fires ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].fires, 0)
-                        end
+            --             if self.missions[index].fires ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].fires, 0)
+            --             end
 
-                        if self.missions[index].suspects ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].suspects, 0)
-                        end
+            --             if self.missions[index].suspects ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].suspects, 0)
+            --             end
 
-                        if self.missions[index].wreckages ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].wreckages, 0)
-                        end
+            --             if self.missions[index].wreckages ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].wreckages, 0)
+            --             end
 
-                        if self.missions[index].hostiles ~= nil then
-                            set_vehicle_keypad(self.id, self.missions[index].hostiles, 0)
-                        end
+            --             if self.missions[index].hostiles ~= nil then
+            --                 set_vehicle_keypad(self.id, self.missions[index].hostiles, 0)
+            --             end
 
-                        if self.missions[index].sar ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].sar, false)
-                        end
+            --             if self.missions[index].sar ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].sar, false)
+            --             end
 
-                        if self.missions[index].med ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].med, false)
-                        end
+            --             if self.missions[index].med ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].med, false)
+            --             end
 
-                        if self.missions[index].fire ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].fire, false)
-                        end
+            --             if self.missions[index].fire ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].fire, false)
+            --             end
 
-                        if self.missions[index].spc ~= nil then
-                            set_vehicle_button(self.id, self.missions[index].spc, false)
-                        end
-                    end
-                end
-            end
+            --             if self.missions[index].spc ~= nil then
+            --                 set_vehicle_button(self.id, self.missions[index].spc, false)
+            --             end
+            --         end
+            --     end
+            -- end
         end,
         position = function(self)
             return server.getVehiclePos(self.id)
@@ -1648,6 +1573,12 @@ object_trackers = {
         end,
         count = function(self)
             return 1
+        end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return true
         end,
         reward_base = 0,
         text = "",
@@ -1688,6 +1619,12 @@ object_trackers = {
         count = function(self)
             return 1
         end,
+        reported = function(self)
+            return true
+        end,
+        mapped = function(self)
+            return true
+        end,
         reward_base = 0,
         text = "",
         marker_type = 12,
@@ -1726,25 +1663,14 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.spawned = false
     mission.terminated = false
     mission.marker_id = server.getMapID()
-    mission.objectives = {
-        rescuees = 0,
-        fires = 0,
-        forest_fires = 0,
-        suspects = 0,
-        wreckages = 0,
-        wreckage_items = {},
-        hostiles = 0
-    }
-    mission.units = {
-        sar = false,
-        medic = false,
-        fire = false,
-        specialist = false
-    }
     mission.spillages = {}
     mission.rewards = 0
-    mission.aggregation = aggretage_objectives(mission)
     based(mission, mission_trackers[tracker])
+    mission.objectives = aggregate_mission_objectives(mission)
+    mission.landscapes = aggregate_mission_landscapes(mission)
+    mission.events = aggregate_mission_events(mission)
+    mission.category = aggregate_mission_category(mission)
+    mission.units = aggregate_mission_units(mission)
     mission:init()
 
     record_location_history(location)
@@ -1779,6 +1705,33 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
+    if not mission.spawned then
+        for i = 1, #mission.locations do
+            spawn_location(mission.locations[i], mission.id)
+        end
+
+        local c, x, y, z = 0, 0, 0, 0
+
+        for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil then
+                local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
+                c = c + 1
+                x = x + ox
+                y = y + oy
+                z = z + oz
+            end
+        end
+
+        x = x / c
+        y = y / c
+        z = z / c
+
+        mission.search_center = matrix.translation(x, y, z)
+        mission.spawned = true
+
+        console.notify(string.format("Spawned mission #%d.", mission.id))
+    end
+
     mission.spillages = {}
 
     for i = 1, #g_savedata.objects do
@@ -1790,7 +1743,11 @@ function tick_mission(mission, tick)
     end
 
     mission.spillages = table.distinct(mission.spillages)
-    mission.aggregation = aggretage_objectives(mission)
+    mission.objectives = aggregate_mission_objectives(mission)
+    mission.landscapes = aggregate_mission_landscapes(mission)
+    mission.events = aggregate_mission_events(mission)
+    mission.category = aggregate_mission_category(mission)
+    mission.units = aggregate_mission_units(mission)
     mission:tick(tick)
 
     if g_savedata.mode == "debug" or mission.search_center ~= nil then
@@ -1844,39 +1801,28 @@ function terminate_mission(mission)
     mission.terminated = true
 end
 
-function aggretage_objectives(mission)
-    local aggregation = {
-        essentials = {name = strings.statuses.essentials, count = 0, contents = {}},
-        dispensables = {name = strings.statuses.dispensables, count = 0, contents = {}}
-    }
+function aggregate_mission_landscapes(mission)
+    return {}
+end
+
+function aggregate_mission_events(mission)
+    return {}
+end
+
+function aggregate_mission_objectives(mission)
+    local objs = {}
+
+    for k, v in pairs(object_trackers) do
+        objs[k] = {
+            count = 0,
+            count_picked = 0,
+            contents = {}
+        }
+    end
 
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil then
-            local data
-
-            if g_savedata.objects[i]:dispensable() then
-                if aggregation.dispensables.contents[g_savedata.objects[i].tracker] == nil then
-                    aggregation.dispensables.count = aggregation.dispensables.count + 1
-                    aggregation.dispensables.contents[g_savedata.objects[i].tracker] = {
-                        count = 0,
-                        count_picked = 0,
-                        contents = {}
-                    }
-                end
-
-                data = aggregation.dispensables.contents[g_savedata.objects[i].tracker]
-            else
-                if aggregation.essentials.contents[g_savedata.objects[i].tracker] == nil then
-                    aggregation.essentials.count = aggregation.essentials.count + 1
-                    aggregation.essentials.contents[g_savedata.objects[i].tracker] = {
-                        count = 0,
-                        count_picked = 0,
-                        contents = {}
-                    }
-                end
-
-                data = aggregation.essentials.contents[g_savedata.objects[i].tracker]
-            end
+            local data = objs[g_savedata.objects[i].tracker]
 
             data.count = data.count + g_savedata.objects[i]:count()
 
@@ -1890,8 +1836,40 @@ function aggretage_objectives(mission)
             end
         end
     end
-            
-    return aggregation
+
+    return objs
+end
+
+function aggregate_mission_category(mission)
+    local category = 0
+    local category_basis = 0
+    local category_bonus = 0
+
+    if mission.objectives.rescuee.count >= 10 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius >= 1000 then
+        category_basis = 2
+    elseif mission.objectives.rescuee.count >= 5 or mission.objectives.fire.count >= 5 or mission.objectives.suspect.count >= 2 or mission.search_radius >= 500 then
+        category_basis = 1
+    else
+        category_basis = 0
+    end
+
+    category_bonus = math.min(category_bonus, 2)
+    category = math.max(mission.category, category_basis + category_bonus)
+
+    -- if category >= 2 and mission.category < 2 then
+    --     server.notify(-1, string.format("ミッション#%dの状況が深刻.", mission.id), "詳細はミッション情報を確認せよ.", 1)
+    -- end
+
+    return category
+end
+
+function aggregate_mission_units(mission)
+    return {
+        sar = mission.units ~= nil and mission.units.sar or mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
+        fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or mission.objectives.fire.count >= 1,
+        med = mission.units ~= nil and mission.units.med or mission.objectives.rescuee.count >= 1,
+        spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
+    }
 end
 
 -- objects
