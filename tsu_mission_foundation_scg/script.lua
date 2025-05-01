@@ -66,7 +66,7 @@ g_savedata = {
 location_properties = {{
     pattern = "^mission:expedition_missing_%d+$",
     tracker = "sar",
-    suitable_zones = {"forest", "field", "island", "mountain"},
+    suitable_zones = {"forest", "island", "mountain"},
     is_main_location = true,
     sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
     sub_location_min = 1,
@@ -654,18 +654,22 @@ zone_properties = {{
     landscape = "respawn"
 }}
 
-local objs = {{
-    var = "objectives",
-    title = "[必須目標]"
-}, {
-    var = "objectives_dispensable",
-    title = "[自由目標]"
-}}
-
 strings = {
     statuses = {
         essentials = "必須の目標",
         dispensables = "オプションの目標"
+    },
+    events = {
+        chemical = "chemical spill",
+        oil = "oil spill",
+        gas = "gas spill",
+        dust = "dust spill",
+        radioactive = "radioactive spill",
+        whirlpool = "whirlpool",
+        tornado = "tornado",
+        tsunami = "tsunami",
+        eruption = "eruption",
+        meteor = "meteor"
     }
 }
 
@@ -736,21 +740,21 @@ mission_trackers = {
                 end
             end
 
-            text = text .. "\n\n[捜索半径]"
-            text = text .. string.format("\n%dm", self.search_radius)
-
-            if #self.spillages > 0 then
-                text = text .. "\n\n[漏えい]"
+            if #self.events > 0 then
+                text = text .. "\n\n[事象]"
                 text = text .. "\n"
 
-                for i = 1, #self.spillages do
+                for i = 1, #self.events do
                     if i > 1 then
-                        text = text .. " "
+                        text = text .. ", "
                     end
 
-                    text = text .. string.upper(self.spillages[i])
+                    text = text .. self.events[i]
                 end
             end
+
+            text = text .. "\n\n[捜索半径]"
+            text = text .. string.format("\n%dm", self.search_radius)
 
             text = text .. "\n\n[出動区分]"
             text = text .. "\nカテゴリ:"
@@ -761,7 +765,7 @@ mission_trackers = {
                 text = text .. " 不明"
             end
 
-            text = text .. "\nユニット:"
+            text = text .. "\nユニット: "
 
             for name, available in pairs(self.units) do
                 if available then
@@ -867,9 +871,6 @@ object_trackers = {
 
             server.setCharacterData(self.id, self.vital.hp, not self.completed and activated, self.vital.ai)
         end,
-        position = function(self)
-            return server.getObjectPos(self.id)
-        end,
         dispensable = function(self)
             return g_savedata.subsystems.rescuee.dispensable
         end,
@@ -923,17 +924,15 @@ object_trackers = {
             local is_explosive = false
 
             for i = 1, #g_savedata.missions do
-                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and #g_savedata.missions[i].spillages > 0 and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+                is_explosive = is_explosive or g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
             end
 
             if is_explosive and not self.is_explosive then
                 self.is_explosive = is_explosive
+                server.setFireData(self.id, true, false)
                 server.spawnExplosion(self.transform, math.random() ^ 2)
                 console.notify(string.format("Fire#%d exploded.", self.id))
             end
-        end,
-        position = function(self)
-            return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
             return g_savedata.subsystems.fire.dispensable
@@ -959,7 +958,7 @@ object_trackers = {
         reward_base = 100,
         text = "炎を鎮火",
         marker_type = 5,
-        clear_timer = 0
+        clear_timer = 360
     },
     forest_fire = {
         test_type = function(self, id, type, tags, component_id, mission_id)
@@ -976,9 +975,6 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-        end,
-        position = function(self)
-            return self.transform
         end,
         dispensable = function(self)
             return g_savedata.subsystems.forest_fire.dispensable
@@ -1080,9 +1076,6 @@ object_trackers = {
 
             self.vital = vital_update
         end,
-        position = function(self)
-            return server.getObjectPos(self.id)
-        end,
         dispensable = function(self)
             return false
         end,
@@ -1136,9 +1129,6 @@ object_trackers = {
             else
                 self.amount = 0
             end
-        end,
-        position = function(self)
-            return self.transform
         end,
         dispensable = function(self)
             return g_savedata.subsystems.spillage.dispensable
@@ -1211,18 +1201,8 @@ object_trackers = {
                 self.completion_timer = self.completion_timer + tick
             end
         end,
-        position = function(self)
-            if is_vehicle(self) then
-                return server.getVehiclePos(self.id)
-            elseif is_object(self) then
-                return server.getObjectPos(self.id)
-            else
-                console.error("Failed to get object %s#%d position.", self.type, self.object)
-                return nil
-            end
-        end,
         dispensable = function(self)
-            return g_savedata.subsystems.wreckage.dispensable and not self.indispensable and matrix.distance(self.initial_transform, self.transform) <= 50
+            return not self.indispensable and not is_player_nearby(self.transform, 2000)
         end,
         complete = function(self)
             return self.completion_timer >= 300
@@ -1287,9 +1267,6 @@ object_trackers = {
 
             self.vital = server.getCharacterData(self.id)
         end,
-        position = function(self)
-            return server.getObjectPos(self.id)
-        end,
         dispensable = function(self)
             return g_savedata.subsystems.hostile.dispensable and not self.indispensable
         end,
@@ -1330,9 +1307,6 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-        end,
-        position = function(self)
-            return server.getObjectPos(self.id)
         end,
         dispensable = function(self)
             return false
@@ -1556,9 +1530,6 @@ object_trackers = {
             --     end
             -- end
         end,
-        position = function(self)
-            return server.getVehiclePos(self.id)
-        end,
         dispensable = function(self)
             return false
         end,
@@ -1600,9 +1571,6 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-        end,
-        position = function(self)
-            return server.getVehiclePos(self.id)
         end,
         dispensable = function(self)
             return false
@@ -1663,7 +1631,6 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.spawned = false
     mission.terminated = false
     mission.marker_id = server.getMapID()
-    mission.spillages = {}
     mission.rewards = 0
     based(mission, mission_trackers[tracker])
     mission.objectives = aggregate_mission_objectives(mission)
@@ -1732,17 +1699,6 @@ function tick_mission(mission, tick)
         console.notify(string.format("Spawned mission #%d.", mission.id))
     end
 
-    mission.spillages = {}
-
-    for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spillage ~= nil then
-            table.insert(mission.spillages, string.lower(g_savedata.objects[i].tags.spillage))
-        elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].type == "oil_spill" then
-            table.insert(mission.spillages, "oil")
-        end
-    end
-
-    mission.spillages = table.distinct(mission.spillages)
     mission.objectives = aggregate_mission_objectives(mission)
     mission.landscapes = aggregate_mission_landscapes(mission)
     mission.events = aggregate_mission_events(mission)
@@ -1785,7 +1741,7 @@ function tick_mission(mission, tick)
         mission.reported = true
     end
 
-    if mission:complete() and distance_min_to_player(mission.locations[1].transform) > mission.locations[1].search_radius or mission.terminated then
+    if mission:complete() or mission.terminated then
         reward_mission(mission)
         clear_mission(mission)
     end
@@ -1806,7 +1762,19 @@ function aggregate_mission_landscapes(mission)
 end
 
 function aggregate_mission_events(mission)
-    return {}
+    local events = {}
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tags ~= nil and g_savedata.objects[i].tags.spillage ~= nil then
+            table.insert(events, strings.events[g_savedata.objects[i].tags.spillage])
+        elseif g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].type == "oil_spill" then
+            table.insert(events, strings.events.oil)
+        end
+    end
+
+    events = table.distinct(events)
+
+    return events
 end
 
 function aggregate_mission_objectives(mission)
@@ -1872,6 +1840,10 @@ function aggregate_mission_units(mission)
     }
 end
 
+function has_explosive_event(mission)
+    return table.contains(mission.events, strings.events.chemical) or table.contains(mission.events, strings.events.dust) or table.contains(mission.events, strings.events.oil) or table.contains(mission.events, strings.events.gas)
+end
+
 -- objects
 
 function initialize_object(id, type, name, tags, mission_id, component_id, parent_id, ...)
@@ -1893,7 +1865,7 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
     object.completed = false
     object.cleared = false
     object.elapsed_clear = 0
-    object.transform = nil
+    object.transform = position(object)
     object.tracker = nil
     object.ai = nil
     object.mounted = false
@@ -1936,7 +1908,6 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
 
     if object.tracker ~= nil then
         based(object, object_trackers[object.tracker])
-        object.transform = object:position()
         object:init(table.unpack(params))
     end
 
@@ -1977,7 +1948,7 @@ end
 
 function tick_object(object, tick)
     if object.tracker ~= nil then
-        object.transform = object:position()
+        object.transform = position(object)
         object:tick(tick)
 
         server.removeMapID(-1, object.marker_id)
@@ -2023,20 +1994,15 @@ function tick_object(object, tick)
 
     if object.type == "vehicle" and #object.actions > 0 and object.command == nil then
         local nearby = false
-        local transform = object.transform
-
-        if object.tracker == nil then
-            transform = server.getVehiclePos(object.id)
-        end
 
         for i = 1, #g_savedata.objects do
             if g_savedata.objects[i].tracker == "unit" then
-                nearby = nearby or matrix.distance(g_savedata.objects[i].transform, transform) < 500
+                nearby = nearby or matrix.distance(g_savedata.objects[i].transform, object.transform) < 500
             end
         end
 
         for i = 1, #players do
-            nearby = nearby or matrix.distance(players[i].transform, transform) < 500
+            nearby = nearby or matrix.distance(players[i].transform, object.transform) < 500
         end
 
         if nearby then
@@ -2114,12 +2080,26 @@ function is_doctor_nearby(transform)
     return is
 end
 
+function position(object)
+    if is_vehicle(object) then
+        return server.getVehiclePos(object.id)
+    elseif is_object(object) then
+        return server.getObjectPos(object.id)
+    elseif is_static(object) then
+        return object.transform or matrix.identity()
+    end
+end
+
 function is_vehicle(object)
-    return object.type ~= nil and object.type == "vehicle"
+    return object.type == "vehicle"
 end
 
 function is_object(object)
-    return object.type ~= nil and (object.type == "zone" or object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or object.type == "ice")
+    return object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or object.type == "ice"
+end
+
+function is_static(object)
+    return object.type == "zone" or object.type == "forest_fire" or object.type == "oil_spill"
 end
 
 function mount_vehicle(vehicle)
