@@ -29,7 +29,7 @@ g_savedata = {
             tick = 0,
             transition = 0,
             duration = 0,
-            target_min = property.slider("Minimum level of fog (%)", 0, 100, 1, 0),
+            target_min = property.slider("Minimum level of fog (%)", 0, 100, 1, 20),
             target_max = property.slider("Maximum level of fog (%)", 0, 100, 1, 40),
             clear = property.slider("Clear rate of fog (%)", 0, 100, 1, 0),
         }
