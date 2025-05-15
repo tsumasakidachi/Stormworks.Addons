@@ -284,6 +284,12 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
     end
 end
 
+function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
+	if not is_auth then
+		server.addAuth(peer_id)
+	end
+end
+
 function onVehicleDespawn(vehicle_id, peer_id)
     if peer_id < 0 then
         return
