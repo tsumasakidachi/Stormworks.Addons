@@ -406,6 +406,20 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "パトロールからの通報"
+}, {
+    pattern = "^mission:wind_turbine_fire_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    report = "火災\n洋上風力発電機のエレベーターが故障し火災が発生, タービン室から降りられず閉じこめられている.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "パトロールからの通報"
     -- }, {
     --     pattern = "^mission:hostile_offshore_%d+$",
     --     tracker = "sar",
@@ -1930,7 +1944,7 @@ end
 
 function tick_object(object, tick)
     if object.tracker ~= nil then
-        object.transform = position(object)
+        object.transform = position(object) or object.transform
         object:tick(tick)
 
         server.removeMapID(-1, object.marker_id)
@@ -2136,7 +2150,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
                     goto continue_zone
                 end
 
-                if (not is_main_location or g_savedata.subsystems.mission.range_limited) and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
+                if not is_main_location and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
                     goto continue_zone
                 end
 
@@ -2189,7 +2203,7 @@ function random_location(center, range_max, range_min, location_names, zone_name
             local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
             location_candidate.transform = transform
 
-            if not is_success or g_savedata.subsystems.mission.range_limited and matrix.distance(center, location_candidate.transform) > range_max then
+            if not is_success or matrix.distance(center, location_candidate.transform) > range_max then
                 goto continue_location
             end
 
@@ -2774,9 +2788,20 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "limit-count" and is_admin then
             local set = ...
             g_savedata.subsystems.mission.count_limited = set_or_not(g_savedata.subsystems.mission.count_limited, set)
-        elseif verb == "limit-range" and is_admin then
-            local set = ...
-            g_savedata.subsystems.mission.range_limited = set_or_not(g_savedata.subsystems.mission.range_limited, set)
+        elseif verb == "range-min" and is_admin then
+            local range = ...
+            local range = tonumber(range)
+
+            if range ~= nil then
+                g_savedata.subsystems.mission.range_min = range * 1000
+            end
+        elseif verb == "range-max" and is_admin then
+            local range = ...
+            local range = tonumber(range)
+
+            if range ~= nil then
+                g_savedata.subsystems.mission.range_max = range * 1000
+            end
         elseif verb == "gather" and is_admin then
             local mission_id = ...
             mission_id = tonumber(mission_id)
