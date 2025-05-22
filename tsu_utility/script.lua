@@ -28,9 +28,8 @@ function onTick()
     end
 end
 
-function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, target, ...)
-    -- hop
-    if command == "?hop" then
+function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
+    if command == "?hop" then -- hop
         -- local peer_id = tonumber(peer_id) or peer_id
         local transform = server.getPlayerPos(peer_id)
         local hop = matrix.multiply(transform, matrix.translation(0, 10, 0))
@@ -38,11 +37,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
         server.setPlayerPos(peer_id, hop)
         server.announce("[UTILITY]", string.format("%s hopped.", player.name))
-    end
-
-    -- pin
-    if command == "?pin" then
-        local target = target or "Pin"
+    elseif command == "?pin" then -- pin
+        local target = ... or "Pin"
         local transform = server.getPlayerPos(peer_id)
         local player = get_player(peer_id)
         local x, y, z = matrix.position(transform)
@@ -56,23 +52,18 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             transform = transform,
             remain = 18000
         })
-    end
+    elseif command == "?kill" then -- kill
+        local target = ...
+        local peer_id = tonumber(target) or peer_id
+        local object_id = server.getPlayerCharacterID(peer_id)
 
-    -- kill
-    if command == "?kill" then
-        local object = server.getPlayerCharacterID(peer_id)
-        server.killCharacter(object)
-    end
-
-    -- list vehicles
-    if command == "?liv" and is_admin then
+        server.killCharacter(object_id)
+    elseif command == "?liv" and is_admin then -- list vehicles
         for i = 1, #g_savedata.vehicles do
             server.announce("liv", vehicle_spec_table(g_savedata.vehicles[i]), peer_id)
         end
-    end
-
-    -- clear vehicle
-    if command == "?clv" and is_admin then
+    elseif command == "?clv" and is_admin then -- clear vehicle
+        local target = ...
         local group_id = tonumber(target)
 
         if not group_id then
@@ -81,11 +72,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
         despawn_vehicle_group(group_id, true)
         server.announce("clv", string.format("Removed vehicle #%d", group_id), peer_id)
-    end
-
-    -- clear player vehicle
-    if command == "?clpv" and is_admin then
-        local peer_id = tonumber(target)
+    elseif command == "?clpv" and is_admin then -- clear player vehicle
+        local target = ...
+        local peer_id = tonumber(target) or peer_id
         local player = get_player(peer_id)
 
         if not player then
@@ -94,12 +83,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
 
         despawn_players_vehicle(player)
         server.announce("clpv", string.format("Removed %s's vehicle", player.name), peer_id)
-    end
-
-    -- teleport to player
-    if command == "?ttp" and is_admin then
-        local target_peer_id = tonumber(target)
-        local transform, is_success = server.getPlayerPos(target_peer_id)
+    elseif command == "?ttp" and is_admin then -- teleport to player
+        local destination, target = ...
+        local destination = tonumber(destination)
+        local peer_id = tonumber(target) or peer_id
+        local transform, is_success = server.getPlayerPos(destination)
         transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
 
         if not is_success then
@@ -107,12 +95,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         end
 
         server.setPlayerPos(peer_id, transform)
-    end
-
-    -- teleport to object
-    if command == "?tto" and is_admin then
-        local target_object_id = tonumber(target)
-        local transform, is_success = server.getObjectPos(target_object_id)
+    elseif command == "?tto" and is_admin then -- teleport to object
+        local destination, target = ...
+        local destination = tonumber(destination)
+        local peer_id = tonumber(target) or peer_id
+        local transform, is_success = server.getObjectPos(destination)
         transform = matrix.multiply(transform, matrix.translation(0, 5, 0))
 
         if not is_success then
@@ -120,43 +107,35 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
         end
 
         server.setPlayerPos(peer_id, transform)
-    end
+    elseif command == "?ttv" and is_admin then -- teleport to vehicle
+        local destination, target = ...
+        local target = tonumber(target) or peer_id
+        local vehicle_id = tonumber(destination)
+        -- local params = {...}
 
-    -- teleport to vehicle
-    if command == "?ttv" and is_admin then
-        if target == nil then
-            server.announce("[ERROR]", "Vehicle identifier is invalid.")
-            return
-        end
+        -- if vehicle_id == nil or #params > 1 then
+        --     local pattern = target
 
-        local vehicle_id = tonumber(target)
-        local addition = {...}
+        --     for i = 1, #params do
+        --         pattern = pattern .. " " .. params[i]
+        --     end
 
-        if vehicle_id == nil or #addition > 0 then
-            local pattern = "^" .. target
+        --     local vehicle = table.find(g_savedata.vehicles, function(x)
+        --         return string.match(string.lower(x.name), pattern) ~= nil
+        --     end)
 
-            for i = 1, #addition do
-                pattern = pattern .. " " .. addition[i]
-            end
+        --     if vehicle == nil then
+        --         server.announce("[ERROR]", string.format("Vehicle %s not found.", pattern), peer_id)
+        --         return
+        --     end
 
-            local vehicle = table.find(g_savedata.vehicles, function(x)
-                return string.match(string.lower(x.name), pattern) ~= nil
-            end)
-
-            if vehicle == nil then
-                server.announce("[ERROR]", string.format("Vehicle %s not found.", pattern), peer_id)
-                return
-            end
-
-            vehicle_id = vehicle.id
-        end
+        --     vehicle_id = vehicle.id
+        -- end
 
         teleport_to_empty_seat(vehicle_id, peer_id)
-    end
-
-    -- telelport here player
-    if command == "?thp" and is_admin then
-        local target_peer_id = tonumber(target)
+    elseif command == "?thp" and is_admin then -- telelport here player
+        local target = ...
+        target = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
         transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
@@ -164,12 +143,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             return
         end
 
-        server.setPlayerPos(target_peer_id, transform)
-    end
-
-    -- teleport here object
-    if command == "?tho" and is_admin then
-        local target_object_id = tonumber(target)
+        server.setPlayerPos(target, transform)
+    elseif command == "?tho" and is_admin then -- teleport here object
+        local target = ...
+        target = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
         transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
@@ -177,12 +154,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             return
         end
 
-        server.setObjectPos(target_object_id, transform)
-    end
-
-    -- teleport here vehicle
-    if command == "?thv" and is_admin then
-        local target_vehicle_id = tonumber(target)
+        server.setObjectPos(target, transform)
+    elseif command == "?thv" and is_admin then -- teleport here vehicle
+        local target = ...
+        target = tonumber(target)
         local transform, is_success = server.getPlayerPos(peer_id)
         transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
@@ -190,31 +165,23 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, targ
             return
         end
 
-        server.setVehiclePos(target_vehicle_id, transform)
-    end
-
-    -- budget
-    if command == "?budget" and is_admin then
-        local amount = ...
+        server.setVehiclePos(target, transform)
+    elseif command == "?budget" and is_admin then -- budget
+        local verb, amount = ...
         local amount = tonumber(amount)
 
-        if target == "add" then
+        if verb == "add" then
             local currency = server.getCurrency()
             server.setCurrency(currency + amount)
-        elseif target == "set" then
+        elseif verb == "set" then
             server.setCurrency(amount)
         end
-    end
-
-    -- position
-    if command == "?pos" and is_admin then
+    elseif command == "?pos" and is_admin then -- position
         local transform, is_success = server.getPlayerPos(peer_id)
         local x, y, z = matrix.position(transform)
 
         server.announce("[LOG]", string.format("%.00f, %.00f, %.00f", x, y, z))
-    end
-
-    if command == "?util" and target == "tooltip" and is_admin then
+    elseif command == "?util" and target == "tooltip" and is_admin then
         local value = ...
 
         if value == "true" then
@@ -285,9 +252,9 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
 end
 
 function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
-	if not is_auth then
-		server.addAuth(peer_id)
-	end
+    if not is_auth then
+        server.addAuth(peer_id)
+    end
 end
 
 function onVehicleDespawn(vehicle_id, peer_id)

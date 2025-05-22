@@ -2816,6 +2816,22 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "clear-disabled-components" and is_admin then
             g_savedata.disabled_components = {}
         end
+    elseif command == "?tp" then
+        local target = tonumber(verb)
+
+        if target == nil then return end
+
+        local object_id, s = server.getPlayerCharacterID(target)
+
+        if not s then return end
+        
+        local vehicle_id = server.getCharacterVehicle(object_id)
+
+        if vehicle_id > 0 then
+            server.command(string.format("?ttv %d %d", vehicle_id, peer_id))
+        else
+            server.command(string.format("?ttp %d %d", target, peer_id))
+        end
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
     elseif command == "?kill" then
