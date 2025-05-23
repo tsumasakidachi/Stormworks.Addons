@@ -25,17 +25,20 @@ g_savedata = {
             range_limited = true,
             count = 0,
             count_limited = true,
-            palyer_factor = property.slider("Approximate number of players required to complete per mission", 1, 32, 1, 4)
+            palyer_factor = property.slider("Approximate number of players required to complete per mission", 1, 32, 1, 4),
+            eot = "END OF TABLE"
         },
         rescuee = {
             dispensable = false,
             cpa_recurrence_rate = property.slider("CPA recurrence rate (%)", 0, 100, 1, 20),
             cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 8),
-            has_strobe = property.checkbox("Rescuees has strobe", true)
+            has_strobe = property.checkbox("Rescuees has strobe", true),
+            eot = "END OF TABLE"
         },
         fire = {
             dispensable = false,
-            rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5)
+            rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
+            eot = "END OF TABLE"
         },
         forest_fire = {
             dispensable = false
@@ -64,16 +67,16 @@ g_savedata = {
 }
 
 location_properties = {{
-    pattern = "^mission:expedition_missing_%d+$",
+    pattern = "^mission:climber_missing_%d+$",
     tracker = "sar",
-    suitable_zones = {"forest", "island", "mountain"},
-    is_main_location = true,
-    sub_locations = {"^mission:expedition_missing_%d+$", "^mission:raft_%d+$"},
+    suitable_zones = {"forest", "mountain"},
+    is_main_location = false,
+    sub_locations = {"^mission:climber_missing_%d+$", "^mission:raft_%d+$"},
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
     search_radius = 500,
-    report = "行方不明者\n探検隊との連絡が3日前から途絶している. 要救助者は広範囲にわたり散り散りになっている可能性が高いためこの範囲をくまなく捜索せよ.",
+    report = "行方不明者\n悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "警察署からの通報"
@@ -397,7 +400,7 @@ location_properties = {{
     tracker = "sar",
     suitable_zones = {"forest", "field", "mountain", "hill"},
     is_main_location = true,
-    sub_locations = {"^mission:expedition_missing_%d+$"},
+    sub_locations = {"^mission:climber_missing_%d+$"},
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
@@ -823,8 +826,8 @@ object_trackers = {
 
             if g_savedata.subsystems.rescuee.has_strobe then
                 local distance = distance_min_to_player(self.transform)
-                local opt = (self.strobe.opt or distance <= 250) and not picked
-                local ir = (self.strobe.ir or distance <= 1000) and not picked
+                local opt = (self.strobe.opt or distance <= 100) and not picked
+                local ir = (self.strobe.ir or distance <= 500) and not picked
                 local dead = not self.vital.dead and vital_update.dead
 
                 if opt ~= self.strobe.opt or dead then
@@ -2844,12 +2847,16 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif command == "?tp" then
         local target = tonumber(verb)
 
-        if target == nil then return end
+        if target == nil then
+            return
+        end
 
         local object_id, s = server.getPlayerCharacterID(target)
 
-        if not s then return end
-        
+        if not s then
+            return
+        end
+
         local vehicle_id = server.getCharacterVehicle(object_id)
 
         if vehicle_id > 0 then
