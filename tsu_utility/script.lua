@@ -8,6 +8,7 @@ g_savedata = {
 timing_default = 60
 timing = timing_default
 pilot_seats = {"pilot", "driver", "co-pilot", "copilot"}
+spawn_by_myself = false
 
 function onTick()
     for i = #g_savedata.pins, 1, -1 do
@@ -71,7 +72,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         end
 
         despawn_vehicle_group(group_id, true)
-        server.announce("clv", string.format("Removed vehicle #%d", group_id), peer_id)
+        server.announce("clv", string.format("Removed vehicle #%d and child vehicles.", group_id), peer_id)
     elseif command == "?clpv" and is_admin then -- clear player vehicle
         local target = ...
         local peer_id = tonumber(target) or peer_id
@@ -82,7 +83,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         end
 
         despawn_players_vehicle(player)
-        server.announce("clpv", string.format("Removed %s's vehicle", player.name), peer_id)
+        server.announce("clpv", string.format("Removed %s's vehicles.", player.name), peer_id)
     elseif command == "?ttp" and is_admin then -- teleport to player
         local destination, target = ...
         local destination = tonumber(destination)
@@ -158,14 +159,42 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
     elseif command == "?thv" and is_admin then -- teleport here vehicle
         local target = ...
         target = tonumber(target)
+        local data, s = server.getVehicleData(target)
+
+        if not s then
+            console.error("Vehicle %d is not exist.", target)
+            return
+        end
+
         local transform, is_success = server.getPlayerPos(peer_id)
-        transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
+        local x, y, z = server.getPlayerLookDirection(peer_id)
+        local rotation = matrix.rotationToFaceXZ(x, z)
+        local ty = matrix.rotationY(z * 0.5)
+        transform = matrix.multiply(transform, rotation)
+        -- transform = matrix.multiply(transform, matrix.translation(0, 2, 0))
 
         if not is_success then
             return
         end
 
-        server.setVehiclePos(target, transform)
+        server.setGroupPos(data.group_id, transform)
+    elseif command == "?mv" and is_admin then
+        local target, x, y, z = ...
+        target = tonumber(target)
+        local data, s = server.getVehicleData(target)
+
+        if not s then
+            console.error("Vehicle %d is not exist.", target)
+            return
+        end
+
+        x = tonumber(x) or 0
+        y = tonumber(y) or 0
+        z = tonumber(z) or 0
+
+        local pos = server.getVehiclePos(target)
+        pos = matrix.multiply(pos, matrix.translation(x, y, z))
+        server.setGroupPos(data.group_id, pos)
     elseif command == "?budget" and is_admin then -- budget
         local verb, amount = ...
         local amount = tonumber(amount)
@@ -181,73 +210,113 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local x, y, z = matrix.position(transform)
 
         server.announce("[LOG]", string.format("%.00f, %.00f, %.00f", x, y, z))
-    elseif command == "?util" and target == "tooltip" and is_admin then
-        local value = ...
+    elseif (command == "?location" or command == "?l") and is_admin then
+        local verb, name = ...
 
-        if value == "true" then
-            g_savedata.vehicle_tooltip = true
-        elseif value == "false" then
-            g_savedata.vehicle_tooltip = false
-        elseif value == nil then
-            g_savedata.vehicle_tooltip = not g_savedata.vehicle_tooltip
-        end
+        if verb == "spawn" then
+            local ls = locations.load()
+            local l = table.find(ls, function(x)
+                return x.name == name
+            end)
 
-        for i = 1, #g_savedata.vehicles do
-            if g_savedata.vehicle_tooltip then
-                set_vehicle_tooltip(g_savedata.vehicles[i])
+            if l == nil then
+                console.error(string.format("Location %s is not found."))
+            end
+
+            local pos = matrix.identity()
+            spawn_by_myself = true
+            local outpos, s = server.spawnAddonLocation(pos, l.addon.index, l.index)
+            spawn_by_myself = false
+
+            if s then
+                console.log("Location spawn succeeded.", peer_id)
             else
-                clear_vehicle_tooltip(g_savedata.vehicles[i])
+                console.log("Location spawn failed.", peer_id)
+            end
+        elseif verb == "list" then
+            local l = locations.load()
+
+            for i = 1, #l do
+                console.log(l[i].name, peer_id)
             end
         end
+    elseif (command == "?vehicle" or command == "?v") and is_admin then
+        local verb, name = ...
 
-        server.announce("[NOTICE]", string.format("Vehicle tooltip: %s", g_savedata.vehicle_tooltip))
-    elseif command == "?util" and target == "clearing" and is_admin then
-        local value = ...
+        if verb == "autoclear" and is_admin then
+            local _, value = ...
 
-        if value == "true" then
-            g_savedata.vehicle_clearing = true
-        elseif value == "false" then
-            g_savedata.vehicle_clearing = false
-        elseif value == nil then
-            g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
+            if value == "true" then
+                g_savedata.vehicle_clearing = true
+            elseif value == "false" then
+                g_savedata.vehicle_clearing = false
+            elseif value == nil then
+                g_savedata.vehicle_clearing = not g_savedata.vehicle_clearing
+            end
+
+            server.announce("[NOTICE]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
+        elseif verb == "tooltip" then
+            local _, value = ...
+
+            if value == "true" then
+                g_savedata.vehicle_tooltip = true
+            elseif value == "false" then
+                g_savedata.vehicle_tooltip = false
+            elseif value == nil then
+                g_savedata.vehicle_tooltip = not g_savedata.vehicle_tooltip
+            end
+
+            for i = 1, #g_savedata.vehicles do
+                if g_savedata.vehicle_tooltip then
+                    set_vehicle_tooltip(g_savedata.vehicles[i])
+                else
+                    clear_vehicle_tooltip(g_savedata.vehicles[i])
+                end
+            end
+
+            server.announce("[NOTICE]", string.format("Vehicle tooltip: %s", g_savedata.vehicle_tooltip))
+        elseif verb == "list" then
+            for i = 1, #g_savedata.vehicles do
+                local data = server.getVehicleData(g_savedata.vehicles[i].id)
+
+                console.log(string.format("#%d %s\n%s, static: %s", g_savedata.vehicles[i].id, data.name or "No name", g_savedata.vehicles[i].player.name, data.static), peer_id)
+            end
+
+            console.log(string.format("%d vehicles", #g_savedata.vehicles), peer_id)
         end
-
-        server.announce("[NOTICE]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
     end
 end
 
 function onGroupSpawn(group_id, peer_id, x, y, z, cost)
-    if peer_id < 0 then
-        return
-    end
+    if peer_id >= 0 or spawn_by_myself then
+        local player = get_player(peer_id)
 
-    local player = get_player(peer_id)
+        for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
+            local data, s = server.getVehicleData(vehicle_id)
 
-    for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
-        local data, s = server.getVehicleData(vehicle_id)
+            if data.name == "" then
+                data.name = "Vehicle"
+            end
 
-        if data.name == "" then
-            data.name = "Vehicle"
+            local vehicle = {
+                id = vehicle_id,
+                name = data.name,
+                group_id = group_id,
+                vehicle_id = vehicle_id,
+                cost = cost,
+                player = player
+            }
+
+            table.insert(g_savedata.vehicles, vehicle)
+
+            if g_savedata.vehicle_tooltip then
+                set_vehicle_tooltip(vehicle)
+            end
         end
 
-        local vehicle = {
-            id = vehicle_id,
-            name = data.name,
-            group_id = group_id,
-            vehicle_id = vehicle_id,
-            cost = cost,
-            player = player
-        }
-
-        table.insert(g_savedata.vehicles, vehicle)
-
-        if g_savedata.vehicle_tooltip then
-            set_vehicle_tooltip(vehicle)
+        if not server.getGameSettings().infinite_money then
+            server.notify(-1, string.format("Paid out $%.00f", cost), string.format("%s deployed vehicle.", player.name), 2)
         end
-    end
-
-    if not server.getGameSettings().infinite_money then
-        server.notify(-1, string.format("Paid out $%.00f", cost), string.format("%s deployed vehicle.", player.name), 2)
     end
 end
 
@@ -347,6 +416,61 @@ function vehicle_spec_table(vehicle)
     end
 
     return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, owner, vehicle.group_id, vehicle.id, vehicle.cost)
+end
+
+locations = {}
+
+function locations.load()
+    local items = {}
+    local addon_index = 0
+    local addon_count = server.getAddonCount()
+
+    while addon_index < addon_count do
+        local addon_data = server.getAddonData(addon_index)
+        addon_data.index = addon_index
+        local location_index = 0
+        local location_count = addon_data ~= nil and addon_data.location_count or 0
+
+        while location_index < location_count do
+            local location_data = server.getLocationData(addon_index, location_index)
+
+            if location_data ~= nil then
+                location_data.index = location_index
+                location_data.addon = addon_data
+                table.insert(items, location_data)
+            end
+
+            location_index = location_index + 1
+        end
+
+        addon_index = addon_index + 1
+    end
+
+    return items
+end
+
+console = {}
+
+function console.log(text, peer_id)
+    if peer_id == nil then
+        peer_id = -1
+    end
+
+    server.announce("[LOG]", text, peer_id)
+end
+
+function console.notify(text, peer_id)
+    peer_id = peer_id or -1
+
+    if g_savedata.mode == "debug" then
+        server.announce("[NOTICE]", text, peer_id)
+    end
+end
+
+function console.error(text, peer_id)
+    peer_id = peer_id or -1
+
+    server.announce("[ERROR]", text, peer_id)
 end
 
 function table.contains(t, x)
