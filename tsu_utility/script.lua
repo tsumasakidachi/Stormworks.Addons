@@ -9,6 +9,7 @@ timing_default = 60
 timing = timing_default
 pilot_seats = {"pilot", "driver", "co-pilot", "copilot"}
 spawn_by_myself = false
+spawn_location = nil
 
 function onTick()
     for i = #g_savedata.pins, 1, -1 do
@@ -33,7 +34,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
     if command == "?hop" then -- hop
         -- local peer_id = tonumber(peer_id) or peer_id
         local transform = server.getPlayerPos(peer_id)
-        local hop = matrix.multiply(transform, matrix.translation(0, 10, 0))
+        local hop = matrix.multiply(transform, matrix.translation(0, 5, 0))
         local player = get_player(peer_id)
 
         server.setPlayerPos(peer_id, hop)
@@ -45,7 +46,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local x, y, z = matrix.position(transform)
         local marker = server.getMapID()
 
-        server.addMapObject(-1, marker, 0, 9, x, z, 0, 0, nil, nil, target, 0, "By " .. player.name, 0, 255, 255, 255)
+        server.addMapObject(-1, marker, 0, 9, x, z, 0, 0, nil, nil, target, 250, "By " .. player.name, 0, 255, 255, 255)
         server.notify(-1, target, "By " .. player.name, 0)
         table.insert(g_savedata.pins, {
             marker = marker,
@@ -214,25 +215,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local verb, name = ...
 
         if verb == "spawn" then
-            local ls = locations.load()
-            local l = table.find(ls, function(x)
-                return x.name == name
-            end)
-
-            if l == nil then
-                console.error(string.format("Location %s is not found."))
-            end
-
-            local pos = matrix.identity()
-            spawn_by_myself = true
-            local outpos, s = server.spawnAddonLocation(pos, l.addon.index, l.index)
-            spawn_by_myself = false
-
-            if s then
-                console.log("Location spawn succeeded.", peer_id)
-            else
-                console.log("Location spawn failed.", peer_id)
-            end
+            locations.spawn(name, peer_id)
+        elseif verb == "despawn" then
+            locations.despawn(name, peer_id)
         elseif verb == "list" then
             local l = locations.load()
 
@@ -293,6 +278,11 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
 
         for k, vehicle_id in pairs((server.getVehicleGroup(group_id))) do
             local data, s = server.getVehicleData(vehicle_id)
+            local tags = string.parse_tags(data.tags_full)
+
+            if tags.cost ~= nil then
+                cost = tonumber(tags.cost)
+            end
 
             if data.name == "" then
                 data.name = "Vehicle"
@@ -307,6 +297,13 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
                 player = player
             }
 
+            if spawn_by_myself then
+                vehicle.location = spawn_location
+                vehicle.tags = tags
+
+                transact(-vehicle.cost, string.format("Purchased a vehicle: %s.", vehicle.location))
+            end
+
             table.insert(g_savedata.vehicles, vehicle)
 
             if g_savedata.vehicle_tooltip then
@@ -314,7 +311,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
             end
         end
 
-        if not server.getGameSettings().infinite_money then
+        if not server.getGameSettings().infinite_money and player ~= nil then
             server.notify(-1, string.format("Paid out $%.00f", cost), string.format("%s deployed vehicle.", player.name), 2)
         end
     end
@@ -418,35 +415,85 @@ function vehicle_spec_table(vehicle)
     return string.format("%s\n\nOwner: %s\nGroup ID: %d\nVehicle ID: %d\nCost: %d", vehicle.name, owner, vehicle.group_id, vehicle.id, vehicle.cost)
 end
 
-locations = {}
+locations = {
+    load = function()
+        local items = {}
+        local addon_index = 0
+        local addon_count = server.getAddonCount()
 
-function locations.load()
-    local items = {}
-    local addon_index = 0
-    local addon_count = server.getAddonCount()
+        while addon_index < addon_count do
+            local addon_data = server.getAddonData(addon_index)
+            addon_data.index = addon_index
+            local location_index = 0
+            local location_count = addon_data ~= nil and addon_data.location_count or 0
 
-    while addon_index < addon_count do
-        local addon_data = server.getAddonData(addon_index)
-        addon_data.index = addon_index
-        local location_index = 0
-        local location_count = addon_data ~= nil and addon_data.location_count or 0
+            while location_index < location_count do
+                local location_data = server.getLocationData(addon_index, location_index)
 
-        while location_index < location_count do
-            local location_data = server.getLocationData(addon_index, location_index)
+                if location_data ~= nil then
+                    location_data.index = location_index
+                    location_data.addon = addon_data
+                    table.insert(items, location_data)
+                end
 
-            if location_data ~= nil then
-                location_data.index = location_index
-                location_data.addon = addon_data
-                table.insert(items, location_data)
+                location_index = location_index + 1
             end
 
-            location_index = location_index + 1
+            addon_index = addon_index + 1
         end
 
-        addon_index = addon_index + 1
+        return items
+    end,
+    spawn = function(name, peer_id)
+        local ls = locations.load()
+        local l = table.find(ls, function(x)
+            return x.name == name
+        end)
+
+        if l == nil then
+            console.error(string.format("Location %s is not found.", name), peer_id)
+            return
+        end
+
+        local pos = matrix.identity()
+        spawn_by_myself = true
+        spawn_location = name
+        local outpos, s = server.spawnAddonLocation(pos, l.addon.index, l.index)
+        spawn_by_myself = false
+        spawn_location = nil
+
+        if not s then
+            console.error(string.format("Failed to spawn a location %s.", name), peer_id)
+        end
+    end,
+    despawn = function(name, peer_id)
+        for i = #g_savedata.vehicles, 1 do
+            if g_savedata.vehicles[i].location == name then
+                server.despawnVehicle(g_savedata.vehicles[i].id, true)
+            end
+        end
+    end
+}
+
+function transact(amount, title)
+    if server.getGameSettings().infinite_money then
+        return
     end
 
-    return items
+    local not_type = 4
+    local text = "Accepted $%d"
+
+    if amount == 0 then
+        return
+    elseif amount < 0 then
+        not_type = 2
+        text = "Paid out $%d"
+    end
+
+    local money = server.getCurrency() + amount
+
+    server.setCurrency(money)
+    server.notify(-1, string.format(text, amount), title, not_type)
 end
 
 console = {}
@@ -471,6 +518,16 @@ function console.error(text, peer_id)
     peer_id = peer_id or -1
 
     server.announce("[ERROR]", text, peer_id)
+end
+
+function string.parse_tags(tags_full)
+    local t = {}
+
+    for k, v in string.gmatch(tags_full, "([%w_]+)=([^%s%c,]+)") do
+        t[k] = v
+    end
+
+    return t
 end
 
 function table.contains(t, x)
