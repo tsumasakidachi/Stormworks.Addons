@@ -8,6 +8,7 @@ g_savedata = {
     objects = {},
     oil_spills = {},
     oil_spill_gross = 0,
+    disasters_gross = 0,
     players = {},
     players_map = {},
     locations = {},
@@ -164,7 +165,7 @@ location_properties = {{
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
-    note = "乗組員からの通報"
+    note = "乗員からの通報"
 }, {
     pattern = "^mission:ferry_fire_%d+$",
     tracker = "sar",
@@ -180,7 +181,7 @@ location_properties = {{
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
-    note = "乗組員からの通報"
+    note = "乗員からの通報"
 }, {
     pattern = "^mission:tanker_fire_%d+$",
     tracker = "sar",
@@ -196,7 +197,7 @@ location_properties = {{
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
-    note = "乗組員からの通報"
+    note = "乗員からの通報"
 }, {
     pattern = "^mission:boat_sink_%d+$",
     tracker = "sar",
@@ -242,7 +243,7 @@ location_properties = {{
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
-    note = "乗組員からの通報"
+    note = "乗員からの通報"
 }, {
     pattern = "^mission:fishboat_fire_%d+$",
     tracker = "sar",
@@ -258,7 +259,23 @@ location_properties = {{
     report_timer_max = 0,
     rescuee_min = 25,
     rescuee_max = 75,
-    note = "乗組員からの通報"
+    note = "乗員からの通報"
+}, {
+    pattern = "^mission:heli_crash_wind_turbine_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 750,
+    report = "メーデー\nヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    rescuee_min = 25,
+    rescuee_max = 75,
+    note = "乗員からの通報"
 }, {
     pattern = "^mission:diver_yacht_%d+$",
     tracker = "sar",
@@ -557,6 +574,48 @@ location_properties = {{
     report_timer_min = 0,
     report_timer_max = 0,
     note = "哨戒機からの通報"
+}, {
+    pattern = "^mission:tornado_alert_%d+$",
+    tracker = "disaster",
+    suitable_zones = {"channel", "late", "ait", "forest", "field", "beach"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 1000,
+    report = "竜巻警報\nこのエリアで竜巻が発生する可能性が高まっている...",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "気象当局からの通報"
+}, {
+    pattern = "^mission:whirlpool_alert_%d+$",
+    tracker = "disaster",
+    suitable_zones = {"offshore"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 1000,
+    report = "大渦警報\nこのエリアで大渦が発生する可能性が高まっている...",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "気象当局からの通報"
+}, {
+    pattern = "^mission:meteor_alert_%d+$",
+    tracker = "disaster",
+    suitable_zones = {"offshore"},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 1000,
+    report = "隕石警報\nこのエリアに隕石の落下が予測されており, その直径によっては津波発生のおそれがある...",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    note = "気象当局からの通報"
 }}
 
 zone_properties = {{
@@ -655,6 +714,9 @@ strings = {
         tsunami = "tsunami",
         eruption = "eruption",
         meteor = "meteor"
+    },
+    disasters = {
+        massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ."
     }
 }
 
@@ -757,6 +819,68 @@ mission_trackers = {
                     text = text .. " " .. string.upper(name)
                 end
             end
+
+            return text
+        end
+    },
+    disaster = {
+        init = function(self)
+            local type = string.match(self.locations[1].name, "^mission:(%w+)_alert_%d+$")
+            self.type = type
+            self.started = false
+            self.start_timer = math.random(14400, 28800)
+
+            if self.type == "tornado" or self.type == "whirlpool" then
+                self.finish_timer = self.start_timer + 36000
+            elseif self.type == "meteor" then
+                self.finish_timer = self.start_timer + 3600
+            else
+                self.finish_timer = 0
+            end
+        end,
+        clear = function(self)
+        end,
+        tick = function(self, tick)
+            self.start_timer = math.max(self.start_timer - tick, 0)
+            self.finish_timer = math.max(self.finish_timer - tick, 0)
+
+            if not self.started and self.start_timer <= 0 then
+                if self.type == "tornado" then
+                    server.spawnTornado(self.search_center)
+                    console.notify(string.format("Tornado has occurred."))
+                elseif self.type == "whirlpool" then
+                    local magnitude = math.random() ^ 2
+                    server.spawnWhirlpool(self.search_center, magnitude)
+                    console.notify(string.format("Whirlpool of magnitude %.3f has occurred.", magnitude))
+                elseif self.type == "meteor" then
+                    local magnitude = math.random() ^ 2
+                    local tsunami = magnitude > 0.75
+
+                    if tsunami then
+                        self.finish_timer = 28800
+                        self.search_radius = 7500
+                        self.locations[1].report = strings.disasters.massive_meteor_impact
+                    end
+
+                    server.spawnMeteor(self.search_center, magnitude, tsunami)
+                    console.notify(string.format("Meteor of magnitude %.3f has occurred.", magnitude))
+                end
+
+                self.started = true
+            end
+        end,
+        complete = function(self)
+            return self.finish_timer <= 0
+        end,
+        reward = function(self)
+            return 0
+        end,
+        report = function(self)
+            return string.format("#%d %s", self.id, self.locations[1].report)
+        end,
+        status = function(self)
+            local text = self.locations[1].note
+            text = text .. string.format("\n\n[半径]\n%dm", self.search_radius)
 
             return text
         end
@@ -1603,7 +1727,7 @@ function random_mission(center, range_max, range_min)
     initialize_mission(center, range_min, location.tracker, location)
 end
 
-function initialize_mission(center, range_min, tracker, location, report_timer)
+function initialize_mission(center, range_min, tracker, location, report_timer, ...)
     local mission = {}
     mission.cleared = false
     mission.id = g_savedata.subsystems.mission.count + 1
@@ -1613,7 +1737,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.start_position = center
     mission.tracker = tracker
     mission.locations = {location}
-    mission.search_center = nil
+    mission.search_center = mission.locations[1].transform
     mission.search_radius = mission.locations[1].search_radius
     mission.category = 0
     mission.reported = false
@@ -1628,7 +1752,7 @@ function initialize_mission(center, range_min, tracker, location, report_timer)
     mission.events = aggregate_mission_events(mission)
     mission.category = aggregate_mission_category(mission)
     mission.units = aggregate_mission_units(mission)
-    mission:init()
+    mission:init({...})
 
     record_location_history(location)
     table.insert(g_savedata.missions, mission)
@@ -1667,23 +1791,26 @@ function tick_mission(mission, tick)
             spawn_location(mission.locations[i], mission.id)
         end
 
-        local c, x, y, z = 0, 0, 0, 0
+        if #g_savedata.objects > 0 then
+            local c, x, y, z = 0, 0, 0, 0
 
-        for i = 1, #g_savedata.objects do
-            if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil and g_savedata.objects[i].transform ~= nil then
-                local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-                c = c + 1
-                x = x + ox
-                y = y + oy
-                z = z + oz
+            for i = 1, #g_savedata.objects do
+                if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil and g_savedata.objects[i].transform ~= nil then
+                    local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
+                    c = c + 1
+                    x = x + ox
+                    y = y + oy
+                    z = z + oz
+                end
             end
+
+            x = x / c
+            y = y / c
+            z = z / c
+
+            mission.search_center = matrix.translation(x, y, z)
         end
 
-        x = x / c
-        y = y / c
-        z = z / c
-
-        mission.search_center = matrix.translation(x, y, z)
         mission.spawned = true
 
         console.notify(string.format("Spawned mission #%d.", mission.id))
@@ -1711,7 +1838,7 @@ function tick_mission(mission, tick)
         for i = 1, #players do
             if players[i].map_open then
                 server.removeMapID(players[i].id, mission.marker_id)
-                server.addMapObject(players[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.locations[1].search_radius, label_hover, color[1], color[2], color[3], color[4])
+                server.addMapObject(players[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.search_radius, label_hover, color[1], color[2], color[3], color[4])
             end
         end
     end
@@ -1812,9 +1939,9 @@ function aggregate_mission_category(mission)
     local category_basis = 0
     local category_bonus = 0
 
-    if mission.objectives.rescuee.count >= 10 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius >= 1000 then
+    if mission.objectives.rescuee.count >= 10 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius > 1000 then
         category_basis = 2
-    elseif mission.objectives.rescuee.count >= 5 or mission.objectives.fire.count >= 5 or mission.objectives.suspect.count >= 2 or mission.search_radius >= 500 then
+    elseif mission.objectives.rescuee.count >= 5 or mission.objectives.fire.count >= 5 or mission.objectives.suspect.count >= 2 or mission.search_radius > 500 then
         category_basis = 1
     else
         category_basis = 0
@@ -1840,7 +1967,7 @@ function aggregate_mission_units(mission)
 end
 
 function has_explosive_event(mission)
-    return table.contains(mission.events, strings.events.chemical) or table.contains(mission.events, strings.events.dust) or table.contains(mission.events, strings.events.oil) or table.contains(mission.events, strings.events.gas)
+    return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
 end
 
 -- objects
@@ -1880,7 +2007,7 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
     end
 
     for k, v in pairs(object_trackers) do
-        if v:test_type(id, type, tags, component_id, mission_id, table.unpack(params)) then
+        if v.test_type(object, id, type, tags, component_id, mission_id, table.unpack(params)) then
             object.tracker = k
             break
         end
@@ -2014,17 +2141,9 @@ function tick_object(object, tick)
 end
 
 function find_parent_object(vehicle_parent_component_id, mission_id)
-    local obj = table.find(g_savedata.objects, function(x)
+    return table.find(g_savedata.objects, function(x)
         return x.mission == mission_id and x.component_id == vehicle_parent_component_id
     end)
-
-    if obj == nil then
-        obj = table.find(g_savedata.objects, function(x)
-            return x.mission == mission_id and x.component_id == vehicle_parent_component_id
-        end)
-    end
-
-    return obj
 end
 
 function spawn_character(transform, data)
@@ -2101,6 +2220,10 @@ end
 
 function is_zone(object)
     return object.type == "zone"
+end
+
+function is_disaster(object)
+    return object.type == "tornado" or object.type == "tsunami" or object.type == "whirlpool" or object.type == "meteor" or object.type == "eruption"
 end
 
 function mount_vehicle(vehicle)
@@ -2354,7 +2477,13 @@ function spawn_component(component, transform, mission_id)
 
     local tags = string.parse_tags(object.tags_full)
 
-    initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.id, parent_object_id)
+    if is_vehicle(object) then
+        for i = 1, #object.vehicle_ids do
+            initialize_object(object.vehicle_ids[i], object.type, object.display_name, tags, mission_id, component.id, parent_object_id)
+        end
+    else
+        initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.id, parent_object_id)
+    end
 end
 
 function load_locations()
@@ -2403,6 +2532,7 @@ function load_locations()
                         location.fire_max = location_properties[i].fire_max or 100
                         location.hostile_min = location_properties[i].hostile_min or 100
                         location.hostile_max = location_properties[i].hostile_max or 100
+                        location.disaster = location_properties[i].disaster or nil
                         location.note = location_properties[i].note or ""
 
                         table.insert(g_savedata.locations, location)
@@ -3098,6 +3228,8 @@ function onCreate(is_world_create)
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
+    console.notify(string.format("Mission range limited: %s", g_savedata.subsystems.mission.range_limited))
+    console.notify(string.format("Mission count limited: %s", g_savedata.subsystems.mission.count_limited))
 end
 
 function onEquipmentDrop(object_id_actor, object_id_target, equipment_id)

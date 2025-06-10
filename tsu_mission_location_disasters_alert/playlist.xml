@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_mission_location_disasters_alert" file_store="4" name="TSU Mission Location Disasters Alert">
+	<locations location_id_counter="3">
+		<locations>
+			<l id="1" name="mission:tornado_alert_1" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="2" name="mission:meteor_alert_1" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="3" name="mission:whirlpool_alert_1" env_mod_spawn_num="1">
+				<components/>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
