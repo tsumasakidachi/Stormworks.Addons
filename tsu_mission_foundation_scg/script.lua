@@ -217,14 +217,14 @@ location_properties = {{
 }, {
     pattern = "^mission:overboard_%d+$",
     tracker = "sar",
-    suitable_zones = {"offshore", "channel"},
+    suitable_zones = {"offshore", "channel", "beach"},
     is_main_location = true,
     sub_locations = {"^mission:passenger_fallen_water_%d+$"},
     sub_location_min = 1,
     sub_location_max = 1,
     is_unique_sub_location = false,
     search_radius = 750,
-    report = "水難事故\nボートから人が落ちた!",
+    report = "水難事故\n船から人が落ちた!",
     report_timer_min = 0,
     report_timer_max = 0,
     note = "職員からの通報"
@@ -263,18 +263,18 @@ location_properties = {{
 }, {
     pattern = "^mission:heli_crash_wind_turbine_%d+$",
     tracker = "sar",
-    suitable_zones = {},
+    suitable_zones = {"wind_turbine"},
     is_main_location = true,
     sub_locations = {},
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 750,
+    search_radius = 500,
     report = "メーデー\nヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
     report_timer_min = 0,
     report_timer_max = 0,
-    rescuee_min = 25,
-    rescuee_max = 75,
+    rescuee_min = 100,
+    rescuee_max = 100,
     note = "乗員からの通報"
 }, {
     pattern = "^mission:diver_yacht_%d+$",
@@ -463,7 +463,7 @@ location_properties = {{
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 500,
     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -507,7 +507,7 @@ location_properties = {{
     sub_location_min = 0,
     sub_location_max = 0,
     is_unique_sub_location = false,
-    search_radius = 50,
+    search_radius = 100,
     report = "鉄道事故\n旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -689,6 +689,8 @@ zone_properties = {{
 }, {
     landscape = "building"
 }, {
+    landscape = "wind_turbine"
+}, {
     landscape = "plant"
 }, {
     landscape = "mine"
@@ -831,7 +833,7 @@ mission_trackers = {
             self.start_timer = math.random(14400, 28800)
 
             if self.type == "tornado" or self.type == "whirlpool" then
-                self.finish_timer = self.start_timer + 36000
+                self.finish_timer = self.start_timer + 21600
             elseif self.type == "meteor" then
                 self.finish_timer = self.start_timer + 3600
             else
@@ -849,9 +851,14 @@ mission_trackers = {
                     server.spawnTornado(self.search_center)
                     console.notify(string.format("Tornado has occurred."))
                 elseif self.type == "whirlpool" then
-                    local magnitude = math.random() ^ 2
-                    server.spawnWhirlpool(self.search_center, magnitude)
-                    console.notify(string.format("Whirlpool of magnitude %.3f has occurred.", magnitude))
+                    local magnitude = math.max(math.random() ^ 2, 0.5)
+                    local s = server.spawnWhirlpool(self.search_center, magnitude)
+
+                    if s then
+                        console.notify(string.format("Whirlpool of magnitude %.3f has occurred.", magnitude))
+                    else
+                        console.notify("Failed to spawn whirlpool")
+                    end
                 elseif self.type == "meteor" then
                     local magnitude = math.random() ^ 2
                     local tsunami = magnitude > 0.75
@@ -1787,26 +1794,37 @@ end
 
 function tick_mission(mission, tick)
     if not mission.spawned then
-        for i = 1, #mission.locations do
+        local cm = #mission.locations
+        for i = 1, cm do
             spawn_location(mission.locations[i], mission.id)
         end
 
-        if #g_savedata.objects > 0 then
-            local c, x, y, z = 0, 0, 0, 0
+        local co, x, y, z = 0, 0, 0, 0
 
-            for i = 1, #g_savedata.objects do
-                if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil and g_savedata.objects[i].transform ~= nil then
-                    local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-                    c = c + 1
-                    x = x + ox
-                    y = y + oy
-                    z = z + oz
-                end
+        for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+                local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
+                co = co + 1
+                x = x + ox
+                y = y + oy
+                z = z + oz
             end
+        end
 
-            x = x / c
-            y = y / c
-            z = z / c
+        if co >= 2 then
+            x = x / co
+            y = y / co
+            z = z / co
+
+            mission.search_center = matrix.translation(x, y, z)
+        end
+
+        if cm == 1 then
+            local r = math.random() * mission.search_radius
+            local t = math.random() * 2 * math.pi
+
+            x = x + r * math.cos(t)
+            z = z + r * math.sin(t)
 
             mission.search_center = matrix.translation(x, y, z)
         end
@@ -1939,7 +1957,7 @@ function aggregate_mission_category(mission)
     local category_basis = 0
     local category_bonus = 0
 
-    if mission.objectives.rescuee.count >= 10 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius > 1000 then
+    if mission.objectives.rescuee.count >= 20 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius > 1000 then
         category_basis = 2
     elseif mission.objectives.rescuee.count >= 5 or mission.objectives.fire.count >= 5 or mission.objectives.suspect.count >= 2 or mission.search_radius > 500 then
         category_basis = 1
