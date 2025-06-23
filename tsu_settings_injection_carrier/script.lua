@@ -10,7 +10,7 @@ function onCreate(is_world_create)
     end
 end
 
-function replace_onCustomCommand(message, user_id, admin, auth, command, one, two, three, four)
+function onCustomCommand(message, user_id, admin, auth, command, one, two, three, four)
     -- if server.getGameSettings().settings_menu == false then
     -- 	return
     -- end
@@ -55,7 +55,7 @@ function replace_onCustomCommand(message, user_id, admin, auth, command, one, tw
     end
 end
 
-function replace_getDifficulty()
+function getDifficulty()
     local mission_difficulty_factor = 1
     local base = 0
 
@@ -64,8 +64,9 @@ function replace_getDifficulty()
     end
 
     if server.getGameSettings().no_clip == false then
-        mission_difficulty_factor = math.min(1, server.getDateValue() / 60) + base
+        mission_difficulty_factor = math.min(1, server.getDateValue() / 60 + base)
     end
+    
     return mission_difficulty_factor
 end
 
