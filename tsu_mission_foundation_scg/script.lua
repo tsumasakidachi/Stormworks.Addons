@@ -936,9 +936,9 @@ object_trackers = {
                 return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
             end)
             local vital_update = server.getCharacterData(self.id)
-            local is_in_hospital = is_in_landscape(self.transform, "hospital")
-            local is_in_clinic = is_in_landscape(self.transform, "clinic")
-            local is_in_base = is_in_landscape(self.transform, "base")
+            local is_in_hospital = zones:is_in_landscape(self.transform, "hospital")
+            local is_in_clinic = zones:is_in_landscape(self.transform, "clinic")
+            local is_in_base = zones:is_in_landscape(self.transform, "base")
             local activated = self.activated or is_player_nearby(self.transform, 500)
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
@@ -1143,8 +1143,8 @@ object_trackers = {
         tick = function(self, tick)
             local vital_update = server.getCharacterData(self.id)
             local vehicle_id = server.getCharacterVehicle(self.id)
-            local is_in_police_sta = is_in_landscape(self.transform, "police_station")
-            local is_in_base = is_in_landscape(self.transform, "base")
+            local is_in_police_sta = zones:is_in_landscape(self.transform, "police_station")
+            local is_in_base = zones:is_in_landscape(self.transform, "base")
 
             if is_in_base or is_in_police_sta then
                 self.admitted_time = self.admitted_time + tick
@@ -1318,7 +1318,7 @@ object_trackers = {
         unload = function(self)
         end,
         tick = function(self, tick)
-            if is_in_landscape(self.transform, "scrap_yard") then
+            if zones:is_in_landscape(self.transform, "scrap_yard") then
                 self.completion_timer = self.completion_timer + tick
             end
         end,
@@ -2258,6 +2258,37 @@ end
 
 -- locations
 
+locations = {
+    load = function()
+        local items = {}
+        local addon_index = 0
+        local addon_count = server.getAddonCount()
+
+        while addon_index < addon_count do
+            local addon_data = server.getAddonData(addon_index)
+            addon_data.index = addon_index
+            local location_index = 0
+            local location_count = addon_data ~= nil and addon_data.location_count or 0
+
+            while location_index < location_count do
+                local location_data = server.getLocationData(addon_index, location_index)
+
+                if location_data ~= nil then
+                    location_data.index = location_index
+                    location_data.addon = addon_data
+                    table.insert(items, location_data)
+                end
+
+                location_index = location_index + 1
+            end
+
+            addon_index = addon_index + 1
+        end
+
+        return items
+    end
+}
+
 function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
     if #g_savedata.locations == 0 then
         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
@@ -2286,18 +2317,22 @@ function random_location(center, range_max, range_min, location_names, zone_name
             local zone_candidate_types = {}
 
             for j = 1, #g_savedata.zones do
+                -- ランドスケープの指定に一致しないものを除去
                 if #zone_names > 0 and not table.contains(zone_names, g_savedata.zones[j].landscape) then
                     goto continue_zone
                 end
 
+                -- ロケーションの適地でないものを除去
                 if not table.contains(g_savedata.locations[i].suitable_zones, g_savedata.zones[j].landscape) then
                     goto continue_zone
                 end
 
-                if not is_main_location and not is_zone_in_range(g_savedata.zones[j], center, range_max, range_min) then
+                -- 発生範囲外のものを除去
+                if not is_main_location and not zones:is_in_range(g_savedata.zones[j], center, range_max, range_min) then
                     goto continue_zone
                 end
 
+                -- 他の現在進行形のミッションで使われているものを除去
                 for k = 1, #g_savedata.missions do
                     for l = 1, #g_savedata.missions[k].locations do
                         if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
@@ -2587,28 +2622,100 @@ end
 
 -- zones
 
-function is_zone_out_range(zone, center, range_max)
-    return matrix.distance(center, zone.transform) > range_max
-end
+zones = {
+    items = {},
+    load = function(self)
+        local items = server.getZones()
+        local zones = {}
 
-function is_zone_in_range(zone, center, range_max, range_min)
-    local d = matrix.distance(center, zone.transform)
-    return d >= range_min and d <= range_max
-end
+        for i = 1, #items do
+            local z = self:init(items[i])
 
-function is_in_landscape(transform, landscape)
-    local is = false
+            if i ~= nil then
+                table.insert(zones, z)
+            end
+        end
 
-    for i = 1, #g_savedata.zones do
-        is = is or g_savedata.zones[i].landscape == landscape and is_in_zone(transform, g_savedata.zones[i])
+        return zones
+    end,
+    init = function(self, obj)
+            local tags = string.parse_tags(obj.tags_full)
+            local prop = table.find(zone_properties, function (x) return tags.landscape == x.landscape end)
+
+            if prop == nil then
+                return nil
+            end
+
+            obj.tags = tags
+            obj.landscape = prop.landscape
+            obj.marker_id = server.getMapID()
+            obj.mapped = prop.mapped or false
+            obj.icon = prop.icon or 0
+
+            return obj
+    end,
+    refresh = function(self)
+        self.items = self:load()
+    end,
+    is_in_landscape = function(self, transform, landscape)
+        local is = false
+
+        for i = 1, #self.items do
+            is = is or self.items[i].landscape == landscape and self:is_in_zone(transform, self.items[i])
+        end
+
+        return is
+    end,
+    is_in = function(self, transform, zone)
+        return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
+    end,
+    is_in_range = function(self, zone, center, min, max)
+        local d = matrix.distance(zone.transform, center.transform)
+        return d >= min and d <= max
+    end,
+    is_occupied = function(self, zone)
+        local is = false
+
+        for j = 1, #g_savedata.missions do
+            for k = 1, #g_savedata.missions[j].locations do
+                if g_savedata.missions[j].locations[k].zone ~= nil then
+                    is = is or self:is_in_zone(zone.transform, g_savedata.missions[j].locations[k].zone)
+                end
+            end
+        end
+
+        return is
+    end,
+    find = function(self, test)
+        return table.find(self.items, test)
+    end,
+    find_all = function(self, test)
+        return table.find_all(self.items, test)
     end
+}
 
-    return is
-end
+-- function is_zone_out_range(zone, center, range_max)
+--     return matrix.distance(center, zone.transform) > range_max
+-- end
 
-function is_in_zone(transform, zone)
-    return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
-end
+-- function is_zone_in_range(zone, center, range_max, range_min)
+--     local d = matrix.distance(center, zone.transform)
+--     return d >= range_min and d <= range_max
+-- end
+
+-- function is_in_landscape(transform, landscape)
+--     local is = false
+
+--     for i = 1, #g_savedata.zones do
+--         is = is or g_savedata.zones[i].landscape == landscape and is_in_zone(transform, g_savedata.zones[i])
+--     end
+
+--     return is
+-- end
+
+-- function is_in_zone(transform, zone)
+--     return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
+-- end
 
 function random_offshore_zone(center, range_max, range_min)
     local transform, is_success = server.getOceanTransform(center, range_min, range_max)
@@ -2659,36 +2766,36 @@ function map_zone(zone, peer_id)
     end
 end
 
-function load_zones()
-    for i = 1, #g_savedata.zones do
-        server.removeMapID(-1, g_savedata.zones[i].marker_id)
-    end
+-- function load_zones()
+--     for i = 1, #g_savedata.zones do
+--         server.removeMapID(-1, g_savedata.zones[i].marker_id)
+--     end
 
-    g_savedata.zones = {}
+--     g_savedata.zones = {}
 
-    local zone_type_ids = table.keys(zone_properties)
-    local id = 1
+--     local zone_type_ids = table.keys(zone_properties)
+--     local id = 1
 
-    for _, zone in pairs(server.getZones()) do
-        local tags = string.parse_tags(zone.tags_full)
+--     for _, zone in pairs(server.getZones()) do
+--         local tags = string.parse_tags(zone.tags_full)
 
-        for i = 1, #zone_properties do
-            if tags.landscape and zone_properties[i].landscape == tags.landscape then
-                zone.id = id
-                zone.tags = tags
-                zone.landscape = zone_properties[i].landscape
-                zone.marker_id = server.getMapID()
-                zone.mapped = zone_properties[i].mapped or false
-                zone.icon = zone_properties[i].icon or 0
+--         for i = 1, #zone_properties do
+--             if tags.landscape and zone_properties[i].landscape == tags.landscape then
+--                 zone.id = id
+--                 zone.tags = tags
+--                 zone.landscape = zone_properties[i].landscape
+--                 zone.marker_id = server.getMapID()
+--                 zone.mapped = zone_properties[i].mapped or false
+--                 zone.icon = zone_properties[i].icon or 0
 
-                map_zone(zone)
-                table.insert(g_savedata.zones, zone)
+--                 map_zone(zone)
+--                 table.insert(g_savedata.zones, zone)
 
-                id = id + 1
-            end
-        end
-    end
-end
+--                 id = id + 1
+--             end
+--         end
+--     end
+-- end
 
 -- headquarter
 
@@ -2816,7 +2923,8 @@ function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
     if timing % 10 == 0 then
-        tick_players()
+        tick_players(tick * 10)
+        zones:refresh()
     end
 
     for i = #g_savedata.objects, 1, -1 do
@@ -3032,7 +3140,7 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 
     local transform = server.getPlayerPos(peer_id)
 
-    if is_in_landscape(transform, "first_spawn") then
+    if zones:is_in_landscape(transform, "first_spawn") then
         teleport_to_spawn_points(peer_id)
     end
 end
@@ -3220,11 +3328,6 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
-    -- if is_world_create then
-    if true then
-        load_zones()
-    end
-
     load_locations()
 
     for i = 1, #g_savedata.objects do
@@ -3237,12 +3340,13 @@ function onCreate(is_world_create)
         based(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
     end
 
+    zones:refresh()
     tick_players()
 
     console.notify(name)
     console.notify(version)
     console.notify(string.format("Locations: %d", #g_savedata.locations))
-    console.notify(string.format("Zones: %d", #g_savedata.zones))
+    console.notify(string.format("Zones: %d", #zones.items))
     console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
     console.notify(string.format("Active missions: %d", #g_savedata.missions))
     console.notify(string.format("Active objects: %d", #g_savedata.objects))
