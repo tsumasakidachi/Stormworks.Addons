@@ -331,7 +331,7 @@ location_properties = {{
     sub_location_min = 3,
     sub_location_max = 5,
     is_unique_sub_location = false,
-    search_radius = 250,
+    search_radius = 500,
     report = "火災\nトンネルの中が全部燃えていてこのままでは全員焼け死んでしまう!",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -1724,7 +1724,11 @@ object_trackers = {
 -- main logics
 -- missions
 
-function random_mission(center, range_max, range_min, pattern)
+function random_mission(center, range_max, range_min, is_unprecedented, pattern)
+    if is_unprecedented == nil then
+        is_unprecedented = true
+    end
+
     local patterns = {}
 
     if pattern ~= nil then
@@ -1732,7 +1736,7 @@ function random_mission(center, range_max, range_min, pattern)
     end
 
     -- local locations, e = random_location(center, range_max, range_min, {}, {}, true, true)
-    local _locations = locations:random(center, range_min, range_max, true, true, patterns)
+    local _locations = locations:random(center, range_min, range_max, true, is_unprecedented, patterns)
 
     if #_locations == 0 then
         return
@@ -1771,16 +1775,6 @@ function initialize_mission(_locations, report_timer, ...)
     record_location_history(mission.locations[1])
     table.insert(g_savedata.missions, mission)
     g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
-
-    local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
-
-    -- for i = 1, sub_location_count do
-    --     local sub_location = locations:random(mission.locations[1].transform, mission.search_radius, 0, mission.locations[1].sub_locations, {}, false, true)
-
-    --     if sub_location then
-    --         table.insert(mission.locations, sub_location)
-    --     end
-    -- end
 end
 
 function clear_mission(mission)
@@ -1802,6 +1796,7 @@ end
 function tick_mission(mission, tick)
     if not mission.spawned then
         local cl = #mission.locations
+
         for i = 1, cl do
             spawn_location(mission.locations[i], mission.id)
         end
@@ -1827,13 +1822,24 @@ function tick_mission(mission, tick)
         end
 
         if cl == 1 then
-            local r = math.random() * mission.search_radius
+            local r = math.random() * 0.75 * mission.search_radius
             local t = math.random() * 2 * math.pi
 
-            x = x + r * math.cos(t)
-            z = z + r * math.sin(t)
+            x = r * math.cos(t)
+            z = r * math.sin(t)
 
             mission.search_center = matrix.multiply(mission.search_center, matrix.translation(x, y, z))
+        end
+
+        local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
+
+        for i = 1, sub_location_count do
+            local sub_locations = locations:random(mission.search_center, 0, mission.search_radius, false, false, mission.locations[1].sub_locations)
+
+            for j = 1, #sub_locations do
+                spawn_location(sub_locations[j], mission.id)
+                table.insert(mission.locations, sub_locations[j])
+            end
         end
 
         mission.spawned = true
@@ -2419,55 +2425,23 @@ locations = {
 
         return transform, s
     end,
-    find_all = function(self, pattern, center, range_max, range_min)
-        local ls = table.find_all(self.items, function(x)
-            return string.match(x.name, pattern) ~= nil
-        end)
-
-        for i = #ls, 1, -1 do
-            if ls[i].tile == "" then
-                local landscape = table.random(ls[i].suitable_zones)
-                local zs = zones:find_all(function(x)
-                    local d = matrix.distance(x.transform, center)
-                    return d >= range_min and d <= range_max and x.landscape == landscape
-                end)
-
-                ls[i].zone = table.random(zs)
-
-                if ls[i].zone ~= nil then
-                    ls[i].transform = ls[i].zone.transform
-                elseif landscape == "offshore" then
-                    local transform, s = server.getOceanTransform(center, range_min, range_max)
-
-                    ls[i].transform = s and transform or nil
-                end
-            else
-                local transform, s = server.getTileTransform(center, ls[i].tile, range_max)
-
-                ls[i].transform = s and transform or nil
-            end
-
-            if ls[i].transform == nil then
-                table.remove(ls, i)
-            end
-        end
-
-        return ls
-    end,
     random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns)
-        -- local _zones = zones:find_all(function(x)
-        --     return zones:is_in_range(x, center, range_min, range_max) and not zones:is_in_another_mission(x)
-        -- end)
-
         local result = {}
         local _locations = table.find_all(self.items, function(x)
-            return (#patterns == 0 or self:is_match_multipattern(x, patterns)) and (not is_main or x.is_main_location)
-            and self:is_suitable(x, center, range_min, range_max)
-            and (not is_unprecedented or self:is_unprecedented(x))
+            return (#patterns == 0 or self:is_match_multipattern(x, patterns)) and (not is_main or x.is_main_location) and self:is_suitable(x, center, range_min, range_max) and (not is_main or not is_unprecedented or self:is_unprecedented(x))
         end)
 
         if #_locations == 0 then
-            console.log(string.format("No locations matching your criteria were found"))
+            local text = "No locations matching your criteria were found: "
+            for i = 1, #patterns do
+                if i > 1 then
+                    text = text .. ", "
+                end
+
+                text = text .. patterns[i]
+            end
+
+            console.log(text)
             return {}
         end
 
@@ -2484,7 +2458,7 @@ locations = {
         for i = #_locations, 1, -1 do
             if _locations[i].tile == "" then
                 local _zones = zones:find_all(function(x)
-                    return zones:is_suitable(x, _locations[i], center, range_min, range_max)
+                    return zones:is_suitable(x, _locations[i], center, range_min, range_max) and (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius))
                 end)
                 local _zones_landscape = table.distinct(table.select(_zones, function(x)
                     return x.landscape
@@ -2520,6 +2494,12 @@ locations = {
                 local transform, s = server.getTileTransform(center, _locations[i].tile, range_max)
 
                 _locations[i].transform = s and transform or nil
+            end
+
+            if is_main and _locations[i].transform ~= nil then
+                center = _locations[i].transform
+                range_min = 0
+                range_max = _locations[i].search_radius
             end
 
             if _locations[i].transform == nil then
@@ -2936,17 +2916,17 @@ zones = {
 
         return is
     end,
-    is_in_another_mission = function(self, zone)
+    is_in_another_mission = function(self, zone, clearance)
         local is = false
 
         for i = 1, #g_savedata.missions do
-            is = is or matrix.distance(g_savedata.missions[i].search_center, zone.transform) <= g_savedata.missions[i].search_radius
+            is = is or matrix.distance(g_savedata.missions[i].search_center, zone.transform) <= g_savedata.missions[i].search_radius + clearance
         end
 
         return is
     end,
     is_suitable = function(self, zone, location, center, range_min, range_max)
-        return self:is_in_range(zone, center, range_min, range_max) and not self:is_in_another_mission(zone) and self:is_match_landscapes(location.suitable_zones, zone)
+        return self:is_in_range(zone, center, range_min, range_max) and self:is_match_landscapes(location.suitable_zones, zone)
     end,
     is_match_landscapes = function(self, landscapes, zone)
         return table.contains(landscapes, zone.landscape)
@@ -3243,7 +3223,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
                 return
             end
 
-            random_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, location)
+            random_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, false, location)
         elseif verb == "clear-all" and is_admin then
             for i = #g_savedata.missions, 1, -1 do
                 clear_mission(g_savedata.missions[i])
