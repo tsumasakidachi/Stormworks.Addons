@@ -1735,7 +1735,6 @@ function random_mission(center, range_max, range_min, is_unprecedented, pattern)
         patterns[1] = pattern
     end
 
-    -- local locations, e = random_location(center, range_max, range_min, {}, {}, true, true)
     local _locations = locations:random(center, range_min, range_max, true, is_unprecedented, patterns)
 
     if #_locations == 0 then
@@ -2432,7 +2431,7 @@ locations = {
         end)
 
         if #_locations == 0 then
-            local text = "No locations matching your criteria were found: "
+            local text = "No locations matching your requirements were found: "
             for i = 1, #patterns do
                 if i > 1 then
                     text = text .. ", "
@@ -2503,182 +2502,189 @@ locations = {
             end
 
             if _locations[i].transform == nil then
-                console.log(string.format("Although locations matching the criteria were found, no landscapes were found for them: %s", _locations[i].name))
+                console.log(string.format("Although locations matching the requirements were found, no landscapes were found for them: %s", _locations[i].name))
                 table.remove(_locations, i)
             end
         end
 
         return _locations
+    end,
+    list = function(self, peer_id)
+        for i = 1, #self.items do
+            server.announce("[Mission Foundation]", self.items[i].name, peer_id)
+        end
+
+        server.announce("[Mission Foundation]", string.format("%d all locations", #self.items), peer_id)
     end
 }
 
-function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
-    if #g_savedata.locations == 0 then
-        console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
-        return nil
-    end
+-- function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
+--     if #g_savedata.locations == 0 then
+--         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
+--         return nil
+--     end
 
-    local location_candidates = {}
+--     local location_candidates = {}
 
-    for i = 1, #g_savedata.locations do
-        -- メインロケーションを作成する時はメインロケーションでないものを除去
-        if is_main_location and not g_savedata.locations[i].is_main_location then
-            goto continue_location
-        end
+--     for i = 1, #g_savedata.locations do
+--         -- メインロケーションを作成する時はメインロケーションでないものを除去
+--         if is_main_location and not g_savedata.locations[i].is_main_location then
+--             goto continue_location
+--         end
 
-        -- 現在進行中のミッションで使用中または履歴にあるロケーションを除去
-        if check_dupe and (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
-            goto continue_location
-        end
+--         -- 現在進行中のミッションで使用中または履歴にあるロケーションを除去
+--         if check_dupe and (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
+--             goto continue_location
+--         end
 
-        -- 名前が一致しないロケーションを除去
-        if #location_names > 0 and not match_location_name(g_savedata.locations[i], location_names) then
-            goto continue_location
-        end
+--         -- 名前が一致しないロケーションを除去
+--         if #location_names > 0 and not match_location_name(g_savedata.locations[i], location_names) then
+--             goto continue_location
+--         end
 
-        local location_candidate = table.copy(g_savedata.locations[i])
+--         local location_candidate = table.copy(g_savedata.locations[i])
 
-        if g_savedata.locations[i].tile == "" then
-            local zone_candidate_keys = {}
-            local zone_candidate_types = {}
+--         if g_savedata.locations[i].tile == "" then
+--             local zone_candidate_keys = {}
+--             local zone_candidate_types = {}
 
-            for j = 1, #g_savedata.zones do
-                -- ランドスケープの指定に一致しないものを除去
-                if #zone_names > 0 and not table.contains(zone_names, g_savedata.zones[j].landscape) then
-                    goto continue_zone
-                end
+--             for j = 1, #g_savedata.zones do
+--                 -- ランドスケープの指定に一致しないものを除去
+--                 if #zone_names > 0 and not table.contains(zone_names, g_savedata.zones[j].landscape) then
+--                     goto continue_zone
+--                 end
 
-                -- ロケーションの適地でないものを除去
-                if not table.contains(g_savedata.locations[i].suitable_zones, g_savedata.zones[j].landscape) then
-                    goto continue_zone
-                end
+--                 -- ロケーションの適地でないものを除去
+--                 if not table.contains(g_savedata.locations[i].suitable_zones, g_savedata.zones[j].landscape) then
+--                     goto continue_zone
+--                 end
 
-                -- 発生範囲外のものを除去
-                if not is_main_location and not zones:is_in_range(g_savedata.zones[j], center, range_max, range_min) then
-                    goto continue_zone
-                end
+--                 -- 発生範囲外のものを除去
+--                 if not is_main_location and not zones:is_in_range(g_savedata.zones[j], center, range_max, range_min) then
+--                     goto continue_zone
+--                 end
 
-                -- 他の現在進行形のミッションで使われているものを除去
-                for k = 1, #g_savedata.missions do
-                    for l = 1, #g_savedata.missions[k].locations do
-                        if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
-                            goto continue_zone
-                        end
-                    end
-                end
+--                 -- 他の現在進行形のミッションで使われているものを除去
+--                 for k = 1, #g_savedata.missions do
+--                     for l = 1, #g_savedata.missions[k].locations do
+--                         if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
+--                             goto continue_zone
+--                         end
+--                     end
+--                 end
 
-                table.insert(zone_candidate_keys, j)
-                table.insert(zone_candidate_types, g_savedata.zones[j].landscape)
+--                 table.insert(zone_candidate_keys, j)
+--                 table.insert(zone_candidate_types, g_savedata.zones[j].landscape)
 
-                ::continue_zone::
-            end
+--                 ::continue_zone::
+--             end
 
-            zone_candidate_types = table.distinct(zone_candidate_types)
+--             zone_candidate_types = table.distinct(zone_candidate_types)
 
-            if (#zone_names > 0 and table.contains(zone_names, "offshore")) or (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
-                table.insert(zone_candidate_types, "offshore")
-            end
+--             if (#zone_names > 0 and table.contains(zone_names, "offshore")) or (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
+--                 table.insert(zone_candidate_types, "offshore")
+--             end
 
-            local zone_candidate_type = table.random(zone_candidate_types)
+--             local zone_candidate_type = table.random(zone_candidate_types)
 
-            if zone_candidate_type == "offshore" then
-                location_candidate.zone = random_offshore_zone(center, range_max, range_min)
+--             if zone_candidate_type == "offshore" then
+--                 location_candidate.zone = random_offshore_zone(center, range_max, range_min)
 
-                if location_candidate.zone == nil then
-                    goto continue_location
-                end
-            else
-                for j = #zone_candidate_keys, 1, -1 do
-                    if g_savedata.zones[zone_candidate_keys[j]].landscape ~= zone_candidate_type then
-                        table.remove(zone_candidate_keys, j)
-                    end
-                end
+--                 if location_candidate.zone == nil then
+--                     goto continue_location
+--                 end
+--             else
+--                 for j = #zone_candidate_keys, 1, -1 do
+--                     if g_savedata.zones[zone_candidate_keys[j]].landscape ~= zone_candidate_type then
+--                         table.remove(zone_candidate_keys, j)
+--                     end
+--                 end
 
-                if #zone_candidate_keys == 0 then
-                    goto continue_location
-                end
+--                 if #zone_candidate_keys == 0 then
+--                     goto continue_location
+--                 end
 
-                local zone_candidate_key = table.random(zone_candidate_keys)
+--                 local zone_candidate_key = table.random(zone_candidate_keys)
 
-                location_candidate.zone = table.copy(g_savedata.zones[zone_candidate_key])
-            end
+--                 location_candidate.zone = table.copy(g_savedata.zones[zone_candidate_key])
+--             end
 
-            location_candidate.transform = location_candidate.zone.transform
-        else
-            local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
-            location_candidate.transform = transform
+--             location_candidate.transform = location_candidate.zone.transform
+--         else
+--             local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
+--             location_candidate.transform = transform
 
-            if not is_success or matrix.distance(center, location_candidate.transform) > range_max then
-                goto continue_location
-            end
+--             if not is_success or matrix.distance(center, location_candidate.transform) > range_max then
+--                 goto continue_location
+--             end
 
-        end
+--         end
 
-        table.insert(location_candidates, location_candidate)
+--         table.insert(location_candidates, location_candidate)
 
-        ::continue_location::
-    end
+--         ::continue_location::
+--     end
 
-    if #location_candidates == 0 then
-        -- console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
+--     if #location_candidates == 0 then
+--         -- console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
 
-        local text = "No available locations were found with name: "
+--         local text = "No available locations were found with name: "
 
-        for i = 1, #location_names do
-            text = text .. location_names[i]
+--         for i = 1, #location_names do
+--             text = text .. location_names[i]
 
-            if i < #location_names then
-                text = text .. ", "
-            end
-        end
+--             if i < #location_names then
+--                 text = text .. ", "
+--             end
+--         end
 
-        console.error(text)
+--         console.error(text)
 
-        return nil
-    end
+--         return nil
+--     end
 
-    return table.random(location_candidates)
-end
+--     return table.random(location_candidates)
+-- end
 
-function match_location_name(location, patterns)
-    local matched = false
+-- function match_location_name(location, patterns)
+--     local matched = false
 
-    for i = 1, #patterns do
-        matched = matched or string.match(location.name, patterns[i]) ~= nil
-    end
+--     for i = 1, #patterns do
+--         matched = matched or string.match(location.name, patterns[i]) ~= nil
+--     end
 
-    return matched
-end
+--     return matched
+-- end
 
-function is_location_duplicated(location)
-    local dupe = false
-    local l = {}
-    local unique = 0
+-- function is_location_duplicated(location)
+--     local dupe = false
+--     local l = {}
+--     local unique = 0
 
-    for i = 1, #g_savedata.missions do
-        for j = 1, #g_savedata.missions[i].locations do
-            dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
-        end
-    end
+--     for i = 1, #g_savedata.missions do
+--         for j = 1, #g_savedata.missions[i].locations do
+--             dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
+--         end
+--     end
 
-    for i = 1, #g_savedata.locations do
-        if g_savedata.locations[i].is_main_location then
-            l[g_savedata.locations[i][g_savedata.location_comparer]] = true
-        end
-    end
+--     for i = 1, #g_savedata.locations do
+--         if g_savedata.locations[i].is_main_location then
+--             l[g_savedata.locations[i][g_savedata.location_comparer]] = true
+--         end
+--     end
 
-    for _, v in pairs(l) do
-        unique = unique + 1
-    end
+--     for _, v in pairs(l) do
+--         unique = unique + 1
+--     end
 
-    local history_back = #g_savedata.locations_history - math.floor(unique * 0.75) + 1
+--     local history_back = #g_savedata.locations_history - math.floor(unique * 0.75) + 1
 
-    for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
-        dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
-    end
+--     for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
+--         dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
+--     end
 
-    return dupe
-end
+--     return dupe
+-- end
 
 function spawn_location(location, mission_id)
     local vehicles = {}
@@ -2765,76 +2771,76 @@ function spawn_component(component, transform, mission_id)
     end
 end
 
-function load_locations()
-    g_savedata.locations = {}
+-- function load_locations()
+--     g_savedata.locations = {}
 
-    local addon_count = server.getAddonCount()
-    local addon_index = 0
+--     local addon_count = server.getAddonCount()
+--     local addon_index = 0
 
-    while addon_index <= addon_count do
-        local location_count = (server.getAddonData(addon_index) or {
-            location_count = 0
-        }).location_count
-        local location_index = 0
+--     while addon_index <= addon_count do
+--         local location_count = (server.getAddonData(addon_index) or {
+--             location_count = 0
+--         }).location_count
+--         local location_index = 0
 
-        while location_index <= location_count do
-            local location = server.getLocationData(addon_index, location_index)
+--         while location_index <= location_count do
+--             local location = server.getLocationData(addon_index, location_index)
 
-            if location and not location.env_mod then
-                for i = 1, #location_properties do
-                    if string.match(location.name, location_properties[i].pattern) then
-                        location.id = #g_savedata.locations + 1
-                        location.addon_index = addon_index
-                        location.location_index = location_index
-                        location.pattern = location_properties[i].pattern or nil
-                        location.tracker = location_properties[i].tracker or nil
-                        location.suitable_zones = location_properties[i].suitable_zones or {}
+--             if location and not location.env_mod then
+--                 for i = 1, #location_properties do
+--                     if string.match(location.name, location_properties[i].pattern) then
+--                         location.id = #g_savedata.locations + 1
+--                         location.addon_index = addon_index
+--                         location.location_index = location_index
+--                         location.pattern = location_properties[i].pattern or nil
+--                         location.tracker = location_properties[i].tracker or nil
+--                         location.suitable_zones = location_properties[i].suitable_zones or {}
 
-                        if location_properties[i].is_main_location ~= nil then
-                            location.is_main_location = location_properties[i].is_main_location
-                        else
-                            location.is_main_location = true
-                        end
+--                         if location_properties[i].is_main_location ~= nil then
+--                             location.is_main_location = location_properties[i].is_main_location
+--                         else
+--                             location.is_main_location = true
+--                         end
 
-                        location.sub_locations = location_properties[i].sub_locations or {}
-                        location.sub_location_min = location_properties[i].sub_location_min or 0
-                        location.sub_location_max = location_properties[i].sub_location_max or 0
-                        location.is_unique_sub_location = location_properties[i].is_unique_sub_location or false
-                        location.search_radius = location_properties[i].search_radius or 0
-                        location.category = location_properties[i].category or nil
-                        location.report = location_properties[i].report or ""
-                        location.report_timer_min = location_properties[i].report_timer_min or 0
-                        location.report_timer_max = location_properties[i].report_timer_max or 0
-                        location.rescuee_min = location_properties[i].rescuee_min or 100
-                        location.rescuee_max = location_properties[i].rescuee_max or 100
-                        location.fire_min = location_properties[i].fire_min or 100
-                        location.fire_max = location_properties[i].fire_max or 100
-                        location.hostile_min = location_properties[i].hostile_min or 100
-                        location.hostile_max = location_properties[i].hostile_max or 100
-                        location.disaster = location_properties[i].disaster or nil
-                        location.note = location_properties[i].note or ""
+--                         location.sub_locations = location_properties[i].sub_locations or {}
+--                         location.sub_location_min = location_properties[i].sub_location_min or 0
+--                         location.sub_location_max = location_properties[i].sub_location_max or 0
+--                         location.is_unique_sub_location = location_properties[i].is_unique_sub_location or false
+--                         location.search_radius = location_properties[i].search_radius or 0
+--                         location.category = location_properties[i].category or nil
+--                         location.report = location_properties[i].report or ""
+--                         location.report_timer_min = location_properties[i].report_timer_min or 0
+--                         location.report_timer_max = location_properties[i].report_timer_max or 0
+--                         location.rescuee_min = location_properties[i].rescuee_min or 100
+--                         location.rescuee_max = location_properties[i].rescuee_max or 100
+--                         location.fire_min = location_properties[i].fire_min or 100
+--                         location.fire_max = location_properties[i].fire_max or 100
+--                         location.hostile_min = location_properties[i].hostile_min or 100
+--                         location.hostile_max = location_properties[i].hostile_max or 100
+--                         location.disaster = location_properties[i].disaster or nil
+--                         location.note = location_properties[i].note or ""
 
-                        table.insert(g_savedata.locations, location)
-                    end
-                end
-            end
+--                         table.insert(g_savedata.locations, location)
+--                     end
+--                 end
+--             end
 
-            location_index = location_index + 1
-        end
+--             location_index = location_index + 1
+--         end
 
-        addon_index = addon_index + 1
-    end
-end
+--         addon_index = addon_index + 1
+--     end
+-- end
 
-function list_locations(peer_id)
-    local ls = locations:load()
+-- function list_locations(peer_id)
+--     local ls = locations:load()
 
-    for i = 1, #ls do
-        server.announce("[Mission Foundation]", ls[i].name, peer_id)
-    end
+--     for i = 1, #ls do
+--         server.announce("[Mission Foundation]", ls[i].name, peer_id)
+--     end
 
-    server.announce("[Mission Foundation]", string.format("%d all locations", #ls), peer_id)
-end
+--     server.announce("[Mission Foundation]", string.format("%d all locations", #ls), peer_id)
+-- end
 
 function record_location_history(location)
     table.insert(g_savedata.locations_history, table.copy(location))
@@ -2962,38 +2968,38 @@ zones = {
 --     return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
 -- end
 
-function random_offshore_zone(center, range_max, range_min)
-    local transform, is_success = server.getOceanTransform(center, range_min, range_max)
+-- function random_offshore_zone(center, range_max, range_min)
+--     local transform, is_success = server.getOceanTransform(center, range_min, range_max)
 
-    if not is_success then
-        return nil
-    end
+--     if not is_success then
+--         return nil
+--     end
 
-    local x, y, z = matrix.position(transform)
-    local error = matrix.translation(math.random() * 500, 0, math.random() * 500)
-    transform = matrix.multiply(transform, error)
-    local id = #g_savedata.zones + 1
-    local zone = {
-        id = id,
-        tags_full = "",
-        tags = {},
-        display_name = "",
-        transform = transform,
-        size = {
-            x = 20,
-            y = 20,
-            z = 20
-        },
-        radius = 10,
-        type = 0,
-        parent_vehicle_id = nil,
-        parent_relative_transform = nil,
-        mapped = false,
-        icon = 0
-    }
+--     local x, y, z = matrix.position(transform)
+--     local error = matrix.translation(math.random() * 500, 0, math.random() * 500)
+--     transform = matrix.multiply(transform, error)
+--     local id = #g_savedata.zones + 1
+--     local zone = {
+--         id = id,
+--         tags_full = "",
+--         tags = {},
+--         display_name = "",
+--         transform = transform,
+--         size = {
+--             x = 20,
+--             y = 20,
+--             z = 20
+--         },
+--         radius = 10,
+--         type = 0,
+--         parent_vehicle_id = nil,
+--         parent_relative_transform = nil,
+--         mapped = false,
+--         icon = 0
+--     }
 
-    return zone
-end
+--     return zone
+-- end
 
 function map_zone(zone, peer_id)
     local peer_id = peer_id or -1
@@ -3205,7 +3211,7 @@ end
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb, ...)
     if command == "?mission" or command == "?m" then
         if verb == "list" and is_admin then
-            list_locations(peer_id)
+            locations:list(peer_id)
         elseif verb == "history" then
             list_location_history(peer_id)
         elseif verb == "start" and is_admin then
