@@ -285,7 +285,7 @@ location_properties = {{
     sub_location_min = 1,
     sub_location_max = 3,
     is_unique_sub_location = false,
-    search_radius = 1000,
+    search_radius = 500,
     report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
     report_timer_min = 0,
     report_timer_max = 0,
@@ -1773,6 +1773,7 @@ function initialize_mission(_locations, report_timer, ...)
 
     record_location_history(mission.locations[1])
     table.insert(g_savedata.missions, mission)
+    spawn_mission(mission)
     g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 end
 
@@ -1794,56 +1795,6 @@ end
 
 function tick_mission(mission, tick)
     if not mission.spawned then
-        local cl = #mission.locations
-
-        for i = 1, cl do
-            spawn_location(mission.locations[i], mission.id)
-        end
-
-        local co, x, y, z = 0, 0, 0, 0
-
-        for i = 1, #g_savedata.objects do
-            if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
-                local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-                co = co + 1
-                x = x + ox
-                y = y + oy
-                z = z + oz
-            end
-        end
-
-        if co >= 2 then
-            x = x / co
-            y = y / co
-            z = z / co
-
-            mission.search_center = matrix.translation(x, y, z)
-        end
-
-        if cl == 1 then
-            local r = math.random() * 0.75 * mission.search_radius
-            local t = math.random() * 2 * math.pi
-
-            x = r * math.cos(t)
-            z = r * math.sin(t)
-
-            mission.search_center = matrix.multiply(mission.search_center, matrix.translation(x, y, z))
-        end
-
-        local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
-
-        for i = 1, sub_location_count do
-            local sub_locations = locations:random(mission.search_center, 0, mission.search_radius, false, false, mission.locations[1].sub_locations)
-
-            for j = 1, #sub_locations do
-                spawn_location(sub_locations[j], mission.id)
-                table.insert(mission.locations, sub_locations[j])
-            end
-        end
-
-        mission.spawned = true
-
-        console.notify(string.format("Spawned mission #%d.", mission.id))
     end
 
     mission.objectives = aggregate_mission_objectives(mission)
@@ -1892,6 +1843,59 @@ function tick_mission(mission, tick)
         reward_mission(mission)
         clear_mission(mission)
     end
+end
+
+function spawn_mission(mission)
+    local cl = #mission.locations
+
+    for i = 1, cl do
+        spawn_location(mission.locations[i], mission.id)
+    end
+
+    local co, x, y, z = 0, 0, 0, 0
+
+    for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+            local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
+            co = co + 1
+            x = x + ox
+            y = y + oy
+            z = z + oz
+        end
+    end
+
+    if co >= 2 then
+        x = x / co
+        y = y / co
+        z = z / co
+
+        mission.search_center = matrix.translation(x, y, z)
+    end
+
+    if cl == 1 then
+        local r = math.random() * 0.75 * mission.search_radius
+        local t = math.random() * 2 * math.pi
+
+        x = r * math.cos(t)
+        z = r * math.sin(t)
+
+        mission.search_center = matrix.multiply(mission.search_center, matrix.translation(x, y, z))
+    end
+
+    local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
+
+    for i = 1, sub_location_count do
+        local sub_locations = locations:random(mission.search_center, 0, mission.search_radius, false, false, mission.locations[1].sub_locations, {}, mission.locations)
+
+        for j = 1, #sub_locations do
+            spawn_location(sub_locations[j], mission.id)
+            table.insert(mission.locations, sub_locations[j])
+        end
+    end
+
+    mission.spawned = true
+
+    console.notify(string.format("Spawned mission #%d.", mission.id))
 end
 
 function reward_mission(mission)
@@ -2424,8 +2428,21 @@ locations = {
 
         return transform, s
     end,
-    random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns)
+    random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns, landscapes, sibling_locations)
         local result = {}
+
+        if patterns == nil then
+            patterns = {}
+        end
+
+        if landscapes == nil then
+            landscapes = {}
+        end
+
+        if sibling_locations == nil then
+            sibling_locations = {}
+        end
+
         local _locations = table.find_all(self.items, function(x)
             return (#patterns == 0 or self:is_match_multipattern(x, patterns)) and (not is_main or x.is_main_location) and self:is_suitable(x, center, range_min, range_max) and (not is_main or not is_unprecedented or self:is_unprecedented(x))
         end)
@@ -2455,9 +2472,12 @@ locations = {
         end)
 
         for i = #_locations, 1, -1 do
+            local zone = nil
+            local transform = nil
+
             if _locations[i].tile == "" then
                 local _zones = zones:find_all(function(x)
-                    return zones:is_suitable(x, _locations[i], center, range_min, range_max) and (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius))
+                    return zones:is_suitable(x, _locations[i], center, range_min, range_max) and (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius)) and not zones:is_occupied(x, result) and not zones:is_occupied(x, sibling_locations)
                 end)
                 local _zones_landscape = table.distinct(table.select(_zones, function(x)
                     return x.landscape
@@ -2476,38 +2496,43 @@ locations = {
                 local landscape = table.random(_zones_landscape)
 
                 if landscape == "offshore" then
-                    local transform, s = self:random_offshore(center, range_min, range_max)
+                    local t, s = self:random_offshore(center, range_min, range_max)
 
-                    _locations[i].transform = s and transform or nil
+                    transform = s and t or nil
                 else
                     local _zones = table.find_all(_zones, function(x)
                         return x.landscape == landscape
                     end)
-                    _locations[i].zone = table.random(_zones)
+                    zone = table.random(_zones)
 
-                    if _locations[i].zone ~= nil then
-                        _locations[i].transform = _locations[i].zone.transform
+                    if zone ~= nil then
+                        transform = zone.transform
                     end
                 end
             else
-                local transform, s = server.getTileTransform(center, _locations[i].tile, range_max)
+                local t, s = server.getTileTransform(center, _locations[i].tile, range_max)
 
-                _locations[i].transform = s and transform or nil
+                transform = s and t or nil
             end
 
-            if is_main and _locations[i].transform ~= nil then
-                center = _locations[i].transform
-                range_min = 0
-                range_max = _locations[i].search_radius
-            end
+            if transform ~= nil then
+                local l = table.copy(_locations[i])
+                l.zone = zone
+                l.transform = transform
 
-            if _locations[i].transform == nil then
+                table.insert(result, l)
+
+                if is_main then
+                    center = transform
+                    range_min = 0
+                    range_max = _locations[i].search_radius
+                end
+            else
                 console.log(string.format("Although locations matching the requirements were found, no landscapes were found for them: %s", _locations[i].name))
-                table.remove(_locations, i)
             end
         end
 
-        return _locations
+        return result
     end,
     list = function(self, peer_id)
         for i = 1, #self.items do
@@ -2909,14 +2934,12 @@ zones = {
         local d = matrix.distance(zone.transform, center)
         return d >= min and d <= max
     end,
-    is_occupied = function(self, zone)
+    is_occupied = function(self, zone, locations)
         local is = false
 
-        for j = 1, #g_savedata.missions do
-            for k = 1, #g_savedata.missions[j].locations do
-                if g_savedata.missions[j].locations[k].zone ~= nil then
-                    is = is or self:is_in_zone(zone.transform, g_savedata.missions[j].locations[k].zone)
-                end
+        for i = 1, #locations do
+            if locations[i].zone ~= nil then
+                is = is or self:is_in(zone.transform, locations[i].zone)
             end
         end
 
