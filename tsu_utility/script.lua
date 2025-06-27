@@ -2,7 +2,11 @@ g_savedata = {
     vehicles = {},
     pins = {},
     vehicle_tooltip = property.checkbox("Display custom vehicle tooltip", false),
-    vehicle_clearing = property.checkbox("Clear players vehicle on die", false)
+    vehicle_clearing = property.checkbox("Clear players vehicle on die", false),
+    autosave_interval = property.slider("Autosave interval (min, -1 = disable)", -1, 60, 1, -1) * 3600,
+    autosave_next = 0,
+    time = 0,
+    eot = "END OF TABLE"
 }
 
 timing_default = 60
@@ -11,10 +15,10 @@ pilot_seats = {"pilot", "driver", "co-pilot", "copilot"}
 spawn_by_myself = false
 spawn_location = nil
 
-function onTick()
+function onTick(tick)
     for i = #g_savedata.pins, 1, -1 do
-        if i % timing_default == timing then
-            g_savedata.pins[i].remain = g_savedata.pins[i].remain - timing_default
+        if i % 60 == g_savedata.time % 60 then
+            g_savedata.pins[i].remain = g_savedata.pins[i].remain - tick * 60
 
             if g_savedata.pins[i].remain < 0 then
                 server.removeMapID(-1, g_savedata.pins[i].marker)
@@ -23,10 +27,16 @@ function onTick()
         end
     end
 
-    timing = timing - 1
+    if g_savedata.autosave_interval >= 0 and g_savedata.time >= g_savedata.autosave_next then
+        local date = server.getDateValue()
+        server.save()
+        g_savedata.autosave_next = g_savedata.time + g_savedata.autosave_interval
+    end
 
-    if timing <= 0 then
-        timing = timing_default
+    g_savedata.time = g_savedata.time + 1
+
+    if g_savedata.time >= math.maxinteger then
+        g_savedata.time = 0
     end
 end
 
@@ -268,6 +278,13 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
             end
 
             console.log(string.format("%d vehicles", #g_savedata.vehicles), peer_id)
+        end
+    elseif command == "?autosave-interval" and is_admin then
+        local interval = ...
+        interval = tonumber(interval)
+        
+        if interval ~= nil then
+            g_savedata.autosave_interval = interval * 3600
         end
     end
 end

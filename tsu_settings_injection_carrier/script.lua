@@ -1,5 +1,5 @@
 g_savedata = {
-    mission_difficulty_base = 0
+    date_base = 0
 }
 
 function onCreate(is_world_create)
@@ -7,6 +7,7 @@ function onCreate(is_world_create)
         server.command("?mdisaster false")
         server.command("?mfreq 7.5")
         server.command("?mlife 45")
+        server.command("?autosave-interval 10")
     end
 end
 
@@ -48,25 +49,22 @@ function onCustomCommand(message, user_id, admin, auth, command, one, two, three
     end
 
     if command == "?mdata" and admin == true then
-        server.announce("[Mission]", string.format("Mission difficulty: %.1f", g_savedata.mission_difficulty_base or 0))
         server.announce("[Mission]", string.format("Mission frequency: %.1fmin", g_savedata.mission_frequency / 60 / 60))
         server.announce("[Mission]", string.format("Mission lifetime: %.1fmin", g_savedata.mission_life_base / 60 / 60))
         server.announce("[Mission]", string.format("Disaster: %s", g_savedata.enable_disasters))
+        server.announce("[Mission]", string.format("Date: %d", getDate()))
     end
 end
 
 function getDifficulty()
-    local mission_difficulty_factor = 1
-    local base = 0
+	local mission_difficulty_factor = 1
+	if server.getGameSettings().no_clip == false then
+		mission_difficulty_factor = math.min(1, getDate() / 60)
+	end
+	return mission_difficulty_factor
+end
 
-    if g_savedata.mission_difficulty_base ~= nil then
-        base = g_savedata.mission_difficulty_base
-    end
-
-    if server.getGameSettings().no_clip == false then
-        mission_difficulty_factor = math.min(1, server.getDateValue() / 60 + base)
-    end
-    
-    return mission_difficulty_factor
+function getDate()
+    return server.getDateValue() + g_savedata.date_base
 end
 
