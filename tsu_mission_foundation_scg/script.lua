@@ -547,6 +547,38 @@ location_properties = {{
     rescuee_max = 75,
     note = "職員からの通報"
 }, {
+    pattern = "^mission:highway_car_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    report = "交通事故\n高速道路で乗用車が衝突し横転, 本線を塞いでいる.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    rescuee_min = 100,
+    rescuee_max = 100,
+    note = "民間人からの通報"
+}, {
+    pattern = "^mission:highway_oil_tanker_%d+$",
+    tracker = "sar",
+    suitable_zones = {},
+    is_main_location = true,
+    sub_locations = {},
+    sub_location_min = 0,
+    sub_location_max = 0,
+    is_unique_sub_location = false,
+    search_radius = 100,
+    report = "交通事故\n高速道路でタンクローリーが横転, 炎上中. 運転手は無事だがインターチェンジを完全に塞いでいる.",
+    report_timer_min = 0,
+    report_timer_max = 0,
+    rescuee_min = 100,
+    rescuee_max = 100,
+    note = "民間人からの通報"
+}, {
     pattern = "^mission:air_medevac_%d+$",
     tracker = "sar",
     suitable_zones = {"airfield", "heliport"},
@@ -3382,6 +3414,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         else
             server.command(string.format("?ttp %d %d", target, peer_id))
         end
+
+        local player = table.find(players, function(x) return x.id == peer_id end)
+        local target_player = table.find(players, function(x) return x.id == target end)
+
+        console.log(string.format("%s has teleported to &s", player.name, target_player.name))
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
     elseif command == "?kill" then
