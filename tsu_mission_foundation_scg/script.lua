@@ -27,6 +27,7 @@ g_savedata = {
             count = 0,
             count_limited = true,
             player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
+            taken_to_long_threshold = property.slider("The time it takes volunteers to locate rescuees (minutes)", 5, 90, 1, 15) * 3600,
             eot = "END OF TABLE"
         },
         rescuee = {
@@ -1846,7 +1847,7 @@ function tick_mission(mission, tick)
         mission.elapsed = mission.elapsed + tick
     end
 
-    if not mission.taken_to_long and mission.elapsed > 54000 then
+    if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
         mission.taken_to_long = true
         server.notify(-1, string.format("ミッション#%dの要救助を発見した.", mission.id), "ボランティアの捜索者からの通報", 0)
     end
