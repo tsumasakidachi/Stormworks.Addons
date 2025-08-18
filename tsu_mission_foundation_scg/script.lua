@@ -7,7 +7,7 @@ g_savedata = {
     missions = {},
     objects = {},
     oil_spills = {},
-    oil_spill_gross = 0,
+    oil_spill_count = 0,
     disasters_gross = 0,
     players = {},
     players_map = {},
@@ -59,7 +59,9 @@ g_savedata = {
         mapping = {
             mission = {},
             object = {},
-            zone = {}
+            zone = {
+                markar_id = 0
+            }
         },
         eot = "END OF TABLE"
     },
@@ -1044,7 +1046,8 @@ object_trackers = {
             return true
         end,
         mapped = function(self)
-            return false
+            local mission = table.find(g_savedata.missions, function(x) return x.id == self.mission end)
+            return mission.taken_to_long
         end,
         reward_base = 1000,
         text = "要救助者を医療機関へ搬送",
@@ -1479,7 +1482,7 @@ object_trackers = {
             return true
         end,
         mapped = function(self)
-            return true
+            return false
         end,
         reward_base = 0,
         text = "捜査犬",
@@ -1701,7 +1704,7 @@ object_trackers = {
             return true
         end,
         mapped = function(self)
-            return true
+            return false
         end,
         reward_base = 0,
         text = "",
@@ -1713,12 +1716,19 @@ object_trackers = {
             return type == "vehicle" and owner ~= nil and cost ~= nil
         end,
         init = function(self, owner, cost)
+            self.components_checked = false
             self.owner_steam_id = owner
             self.cost = cost
+            self.mass = 0
         end,
         clear = function(self)
         end,
         load = function(self)
+            if not self.components_checked then
+                local d, s = server.getVehicleComponents(self.id)
+                self.mass = d.mass
+                self.components_checked = true
+            end
         end,
         unload = function(self)
         end,
@@ -1743,7 +1753,7 @@ object_trackers = {
             return true
         end,
         mapped = function(self)
-            return true
+            return false
         end,
         reward_base = 0,
         text = "",
@@ -1792,6 +1802,9 @@ function initialize_mission(_locations, report_timer, ...)
     mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
     mission.spawned = false
     mission.terminated = false
+    mission.elapsed = 0
+    mission.launched = false
+    mission.taken_to_long = false
     mission.marker_id = server.getMapID()
     mission.rewards = 0
     based(mission, mission_trackers[mission.tracker])
@@ -1825,14 +1838,25 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
-    if not mission.spawned then
+    if not mission.launched and players:is_in_range(mission.search_center, mission.search_radius) then
+        mission.launched = true
     end
 
+    if mission.launched then
+        mission.elapsed = mission.elapsed + tick
+    end
+
+    if not mission.taken_to_long and mission.elapsed > 54000 then
+        mission.taken_to_long = true
+        server.notify(-1, string.format("ミッション#%dの要救助を発見した.", mission.id), "ボランティアの捜索者からの通報", 0)
+    end
+    
     mission.objectives = aggregate_mission_objectives(mission)
     mission.landscapes = aggregate_mission_landscapes(mission)
     mission.events = aggregate_mission_events(mission)
     mission.category = aggregate_mission_category(mission)
     mission.units = aggregate_mission_units(mission)
+
     mission:tick(tick)
 
     if g_savedata.mode == "debug" or mission.search_center ~= nil then
@@ -2144,7 +2168,7 @@ function tick_object(object, tick)
 
         server.removeMapID(-1, object.marker_id)
 
-        if g_savedata.mode == "debug" then
+        if g_savedata.mode == "debug" or object.tracker ~= nil and object:mapped() then
             local x, y, z = matrix.position(object.transform)
             local r, g, b, a = 128, 128, 128, 255
             local label = string.format("%s #%d", object.tracker, object.id)
@@ -2301,6 +2325,18 @@ function mount_vehicle(vehicle)
         local seat = table.random(seats)
         server.setSeated(vehicle.mounts[i].id, vehicle.id, seat.pos.x, seat.pos.y, seat.pos.z)
     end
+end
+
+function wreck_players_vehicle(player)
+    local vehicles = table.find_all(g_savedata.objects, function(x) return x.owner_steam_id == player.steam_id end)
+    local cost = 0
+
+    for i = 1, #vehicles do
+        cost = cost - math.ceil(vehicles[i].mass * 5)
+        server.despawnVehicle(vehicles[i].id, true)
+    end
+
+    transact(cost, string.format("%s's vehicles has wrecked.", player.name))
 end
 
 -- locations
@@ -2574,174 +2610,6 @@ locations = {
     end
 }
 
--- function random_location(center, range_max, range_min, location_names, zone_names, is_main_location, check_dupe)
---     if #g_savedata.locations == 0 then
---         console.error("Mission location does not exist. Check if your add-ons contains valid mission location.")
---         return nil
---     end
-
---     local location_candidates = {}
-
---     for i = 1, #g_savedata.locations do
---         -- メインロケーションを作成する時はメインロケーションでないものを除去
---         if is_main_location and not g_savedata.locations[i].is_main_location then
---             goto continue_location
---         end
-
---         -- 現在進行中のミッションで使用中または履歴にあるロケーションを除去
---         if check_dupe and (is_main_location or g_savedata.locations[i].is_unique_sub_location) and is_location_duplicated(g_savedata.locations[i]) then
---             goto continue_location
---         end
-
---         -- 名前が一致しないロケーションを除去
---         if #location_names > 0 and not match_location_name(g_savedata.locations[i], location_names) then
---             goto continue_location
---         end
-
---         local location_candidate = table.copy(g_savedata.locations[i])
-
---         if g_savedata.locations[i].tile == "" then
---             local zone_candidate_keys = {}
---             local zone_candidate_types = {}
-
---             for j = 1, #g_savedata.zones do
---                 -- ランドスケープの指定に一致しないものを除去
---                 if #zone_names > 0 and not table.contains(zone_names, g_savedata.zones[j].landscape) then
---                     goto continue_zone
---                 end
-
---                 -- ロケーションの適地でないものを除去
---                 if not table.contains(g_savedata.locations[i].suitable_zones, g_savedata.zones[j].landscape) then
---                     goto continue_zone
---                 end
-
---                 -- 発生範囲外のものを除去
---                 if not is_main_location and not zones:is_in_range(g_savedata.zones[j], center, range_max, range_min) then
---                     goto continue_zone
---                 end
-
---                 -- 他の現在進行形のミッションで使われているものを除去
---                 for k = 1, #g_savedata.missions do
---                     for l = 1, #g_savedata.missions[k].locations do
---                         if g_savedata.missions[k].locations[l].zone and g_savedata.missions[k].locations[l].zone.id == g_savedata.zones[j].id then
---                             goto continue_zone
---                         end
---                     end
---                 end
-
---                 table.insert(zone_candidate_keys, j)
---                 table.insert(zone_candidate_types, g_savedata.zones[j].landscape)
-
---                 ::continue_zone::
---             end
-
---             zone_candidate_types = table.distinct(zone_candidate_types)
-
---             if (#zone_names > 0 and table.contains(zone_names, "offshore")) or (#zone_names == 0 and table.contains(g_savedata.locations[i].suitable_zones, "offshore")) then
---                 table.insert(zone_candidate_types, "offshore")
---             end
-
---             local zone_candidate_type = table.random(zone_candidate_types)
-
---             if zone_candidate_type == "offshore" then
---                 location_candidate.zone = random_offshore_zone(center, range_max, range_min)
-
---                 if location_candidate.zone == nil then
---                     goto continue_location
---                 end
---             else
---                 for j = #zone_candidate_keys, 1, -1 do
---                     if g_savedata.zones[zone_candidate_keys[j]].landscape ~= zone_candidate_type then
---                         table.remove(zone_candidate_keys, j)
---                     end
---                 end
-
---                 if #zone_candidate_keys == 0 then
---                     goto continue_location
---                 end
-
---                 local zone_candidate_key = table.random(zone_candidate_keys)
-
---                 location_candidate.zone = table.copy(g_savedata.zones[zone_candidate_key])
---             end
-
---             location_candidate.transform = location_candidate.zone.transform
---         else
---             local transform, is_success = server.getTileTransform(center, g_savedata.locations[i].tile, range_max)
---             location_candidate.transform = transform
-
---             if not is_success or matrix.distance(center, location_candidate.transform) > range_max then
---                 goto continue_location
---             end
-
---         end
-
---         table.insert(location_candidates, location_candidate)
-
---         ::continue_location::
---     end
-
---     if #location_candidates == 0 then
---         -- console.error("No available locations were found. Either overlap with missions ongoing, or there is no suitable zones within mission range.")
-
---         local text = "No available locations were found with name: "
-
---         for i = 1, #location_names do
---             text = text .. location_names[i]
-
---             if i < #location_names then
---                 text = text .. ", "
---             end
---         end
-
---         console.error(text)
-
---         return nil
---     end
-
---     return table.random(location_candidates)
--- end
-
--- function match_location_name(location, patterns)
---     local matched = false
-
---     for i = 1, #patterns do
---         matched = matched or string.match(location.name, patterns[i]) ~= nil
---     end
-
---     return matched
--- end
-
--- function is_location_duplicated(location)
---     local dupe = false
---     local l = {}
---     local unique = 0
-
---     for i = 1, #g_savedata.missions do
---         for j = 1, #g_savedata.missions[i].locations do
---             dupe = dupe or (g_savedata.missions[i].locations[j][g_savedata.location_comparer] == location[g_savedata.location_comparer])
---         end
---     end
-
---     for i = 1, #g_savedata.locations do
---         if g_savedata.locations[i].is_main_location then
---             l[g_savedata.locations[i][g_savedata.location_comparer]] = true
---         end
---     end
-
---     for _, v in pairs(l) do
---         unique = unique + 1
---     end
-
---     local history_back = #g_savedata.locations_history - math.floor(unique * 0.75) + 1
-
---     for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
---         dupe = dupe or g_savedata.locations_history[i][g_savedata.location_comparer] == location[g_savedata.location_comparer]
---     end
-
---     return dupe
--- end
-
 function spawn_location(location, mission_id)
     local vehicles = {}
     local rescuees = {}
@@ -2827,77 +2695,6 @@ function spawn_component(component, transform, mission_id)
     end
 end
 
--- function load_locations()
---     g_savedata.locations = {}
-
---     local addon_count = server.getAddonCount()
---     local addon_index = 0
-
---     while addon_index <= addon_count do
---         local location_count = (server.getAddonData(addon_index) or {
---             location_count = 0
---         }).location_count
---         local location_index = 0
-
---         while location_index <= location_count do
---             local location = server.getLocationData(addon_index, location_index)
-
---             if location and not location.env_mod then
---                 for i = 1, #location_properties do
---                     if string.match(location.name, location_properties[i].pattern) then
---                         location.id = #g_savedata.locations + 1
---                         location.addon_index = addon_index
---                         location.location_index = location_index
---                         location.pattern = location_properties[i].pattern or nil
---                         location.tracker = location_properties[i].tracker or nil
---                         location.suitable_zones = location_properties[i].suitable_zones or {}
-
---                         if location_properties[i].is_main_location ~= nil then
---                             location.is_main_location = location_properties[i].is_main_location
---                         else
---                             location.is_main_location = true
---                         end
-
---                         location.sub_locations = location_properties[i].sub_locations or {}
---                         location.sub_location_min = location_properties[i].sub_location_min or 0
---                         location.sub_location_max = location_properties[i].sub_location_max or 0
---                         location.is_unique_sub_location = location_properties[i].is_unique_sub_location or false
---                         location.search_radius = location_properties[i].search_radius or 0
---                         location.category = location_properties[i].category or nil
---                         location.report = location_properties[i].report or ""
---                         location.report_timer_min = location_properties[i].report_timer_min or 0
---                         location.report_timer_max = location_properties[i].report_timer_max or 0
---                         location.rescuee_min = location_properties[i].rescuee_min or 100
---                         location.rescuee_max = location_properties[i].rescuee_max or 100
---                         location.fire_min = location_properties[i].fire_min or 100
---                         location.fire_max = location_properties[i].fire_max or 100
---                         location.hostile_min = location_properties[i].hostile_min or 100
---                         location.hostile_max = location_properties[i].hostile_max or 100
---                         location.disaster = location_properties[i].disaster or nil
---                         location.note = location_properties[i].note or ""
-
---                         table.insert(g_savedata.locations, location)
---                     end
---                 end
---             end
-
---             location_index = location_index + 1
---         end
-
---         addon_index = addon_index + 1
---     end
--- end
-
--- function list_locations(peer_id)
---     local ls = locations:load()
-
---     for i = 1, #ls do
---         server.announce("[Mission Foundation]", ls[i].name, peer_id)
---     end
-
---     server.announce("[Mission Foundation]", string.format("%d all locations", #ls), peer_id)
--- end
-
 function record_location_history(location)
     table.insert(g_savedata.locations_history, table.copy(location))
 end
@@ -2947,7 +2744,21 @@ zones = {
         return obj
     end,
     refresh = function(self)
+        for j = 1, #players.items do
+            if players.items[j].map_opened then
+                self:clear_all_map(players.items[j].id)
+            end
+        end
+
         self.items = self:load()
+
+        for i = 1, #zones.items do
+            for j = 1, #players.items do
+                if players.items[j].map_opened then
+                    self:map(zones.items[i], players.items[j].id)
+                end
+            end
+        end
     end,
     is_in_landscape = function(self, transform, landscape)
         local is = false
@@ -2996,24 +2807,27 @@ zones = {
     end,
     find_all = function(self, test)
         return table.find_all(self.items, test)
+    end,
+    map = function(self, zone, peer_id)
+        local peer_id = peer_id or -1
+
+        if (g_savedata.mode == "debug") or zone.mapped then
+            local x, y, z = matrix.position(zone.transform)
+            local color = zone.icon == 8 and 255 or 0
+            local name = zone.name
+
+            if name == "" then
+                name = zone.landscape
+            end
+
+            server.addMapLabel(peer_id, g_savedata.subsystems.mapping.zone.markar_id, zone.icon, name, x, z, color, color, color, 255)
+        end
+    end,
+    clear_all_map = function(self, peer_id)
+        local peer_id = peer_id or -1
+        server.removeMapID(peer_id, g_savedata.subsystems.mapping.zone.markar_id)
     end
 }
-
-function map_zone(zone, peer_id)
-    local peer_id = peer_id or -1
-
-    if (g_savedata.mode == "debug") or zone.mapped then
-        local x, y, z = matrix.position(zone.transform)
-        local color = zone.icon == 8 and 255 or 0
-        local name = zone.name
-
-        if name == "" then
-            name = zone.landscape
-        end
-
-        server.addMapLabel(peer_id, zone.marker_id, zone.icon, name, x, z, color, color, color, 255)
-    end
-end
 
 -- headquarter
 
@@ -3027,11 +2841,11 @@ end
 
 -- oil spill
 
-oil_spill_threshold = 100
+oil_spill_threshold = 500
 
 function create_oil_spill_id()
-    g_savedata.oil_spill_gross = g_savedata.oil_spill_gross + 1
-    return g_savedata.oil_spill_gross
+    g_savedata.oil_spill_count = g_savedata.oil_spill_count + 1
+    return g_savedata.oil_spill_count
 end
 
 -- budgets
@@ -3052,9 +2866,11 @@ function transact(amount, title)
     end
 
     local money = server.getCurrency() + amount
+    local format = string.format(text, amount)
 
     server.setCurrency(money)
-    server.notify(-1, string.format(text, amount), title, not_type)
+    server.notify(-1, format, title, not_type)
+    console.log(format)
 end
 
 -- spawn point
@@ -3240,21 +3056,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             g_savedata.mode = "prod"
         elseif verb == "debug" and is_admin then
             g_savedata.mode = "debug"
-            -- elseif verb == "map" and is_admin then
-            --     local target = ...
-
-            --     if target == "mission" then
-            --         g_savedata.mission_mapped = not g_savedata.mission_mapped
-            --     elseif target == "zone" then
-            --         g_savedata.zone_mapped = not g_savedata.zone_mapped
-
-            --         for i = 1, #g_savedata.zones do
-            --             server.removeMapID(-1, g_savedata.zones[i].marker_id)
-            --             map_zone(g_savedata.zones[i])
-            --         end
-            --     elseif target == "object" then
-            --         g_savedata.object_mapped = not g_savedata.object_mapped
-            --     end
         elseif verb == "limit-count" and is_admin then
             local set = ...
             g_savedata.subsystems.mission.count_limited = set_or_not(g_savedata.subsystems.mission.count_limited, set)
@@ -3339,13 +3140,17 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             return x.id == target
         end)
 
-        console.log(string.format("%s has teleported to %s", player.name, target_player.name))
+        transact(-2500, string.format("%s has teleported."))
+        console.log(string.format("%s has teleported to %s.", player.name, target_player.name))
     elseif command == "?clear" then
-        server.command(string.format("?clpv %d", peer_id))
+        local player = players:find(function(x) return x.id == peer_id end)
+        wreck_players_vehicle(player)
     elseif command == "?kill" then
+        local player = players:find(function(x) return x.id == peer_id end)
         local object_id = server.getPlayerCharacterID(peer_id)
+        wreck_players_vehicle(player)
         server.killCharacter(object_id)
-        server.command(string.format("?clpv %d", peer_id))
+        transact(-10000, string.format("%s has bought a new life.", player.name))
     end
 end
 
@@ -3370,7 +3175,6 @@ function onPlayerRespawn(peer_id)
     end)
 
     teleport_to_spawn_points(peer_id)
-    transact(-10000, string.format("%s bought a new life.", player.name))
 end
 
 spawn_by_foundation = false
@@ -3535,7 +3339,6 @@ function onOilSpill(x, z, delta, total, vehicle_id)
 end
 
 function onClearOilSpill()
-
     g_savedata.oil_spills = {}
 end
 
@@ -3544,6 +3347,10 @@ function onToggleMap(peer_id, is_open)
 end
 
 function onCreate(is_world_create)
+    if is_world_create then
+        g_savedata.subsystems.mapping.zone.markar_id = server.getMapID()
+    end
+
     zones:refresh()
     locations:refresh()
     players:refresh()
