@@ -121,7 +121,12 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         server.setPlayerPos(peer_id, transform)
     elseif command == "?ttv" and is_admin then -- teleport to vehicle
         local destination, target = ...
-        local target = tonumber(target) or peer_id
+        local target = tonumber(target)
+
+        if target == nil then
+            target = peer_id
+        end
+
         local vehicle_id = tonumber(destination)
         -- local params = {...}
 
@@ -144,7 +149,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         --     vehicle_id = vehicle.id
         -- end
 
-        teleport_to_empty_seat(vehicle_id, peer_id)
+        teleport_to_empty_seat(vehicle_id, target)
     elseif command == "?thp" and is_admin then -- telelport here player
         local target = ...
         target = tonumber(target)

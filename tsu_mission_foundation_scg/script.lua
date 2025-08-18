@@ -26,7 +26,7 @@ g_savedata = {
             range_limited = true,
             count = 0,
             count_limited = true,
-            palyer_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 4),
+            player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
             eot = "END OF TABLE"
         },
         rescuee = {
@@ -971,11 +971,11 @@ object_trackers = {
             local is_in_hospital = zones:is_in_landscape(self.transform, "hospital")
             local is_in_clinic = zones:is_in_landscape(self.transform, "clinic")
             local is_in_base = zones:is_in_landscape(self.transform, "base")
-            local activated = self.activated or is_player_nearby(self.transform, 500)
+            local activated = self.activated or players:is_in_range(self.transform, 500)
             local is_doctor_nearby = is_doctor_nearby(self.transform)
             local is_safe = is_in_hospital or is_doctor_nearby
 
-            if #players >= g_savedata.subsystems.rescuee.cpa_recurrence_threshold_players and g_savedata.subsystems.rescuee.cpa_recurrence_rate > 0 and not is_safe then
+            if #players.items >= g_savedata.subsystems.rescuee.cpa_recurrence_threshold_players and g_savedata.subsystems.rescuee.cpa_recurrence_rate > 0 and not is_safe then
                 if not self.vital.incapacitated and vital_update.incapacitated then
                     self.is_cpa_recurrent = self.is_cpa_recurrent or math.random(0, 99) < g_savedata.subsystems.rescuee.cpa_recurrence_rate
 
@@ -988,9 +988,8 @@ object_trackers = {
             end
 
             if g_savedata.subsystems.rescuee.has_strobe then
-                local distance = distance_min_to_player(self.transform)
-                local opt = (self.strobe.opt or distance <= 100) and not picked
-                local ir = (self.strobe.ir or distance <= 500) and not picked
+                local opt = (self.strobe.opt or players:is_in_range(self.transform, 250)) and not picked
+                local ir = (self.strobe.ir or players:is_in_range(self.transform, 500)) and not picked
                 local dead = not self.vital.dead and vital_update.dead
 
                 if opt ~= self.strobe.opt or dead then
@@ -1355,7 +1354,7 @@ object_trackers = {
             end
         end,
         dispensable = function(self)
-            return not self.indispensable and not is_player_nearby(self.transform, 500)
+            return not self.indispensable and not players:is_in_range(self.transform, 500)
         end,
         complete = function(self)
             return self.completion_timer >= 300
@@ -1848,10 +1847,10 @@ function tick_mission(mission, tick)
             color = yellow
         end
 
-        for i = 1, #players do
-            if players[i].map_open then
-                server.removeMapID(players[i].id, mission.marker_id)
-                server.addMapObject(players[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.search_radius, label_hover, color[1], color[2], color[3], color[4])
+        for i = 1, #players.items do
+            if players.items[i].map_opened then
+                server.removeMapID(players.items[i].id, mission.marker_id)
+                server.addMapObject(players.items[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.search_radius, label_hover, color[1], color[2], color[3], color[4])
             end
         end
     end
@@ -2166,9 +2165,9 @@ function tick_object(object, tick)
 
             local label = object.text
 
-            for i = 1, #players do
-                if matrix.distance(object.transform, players[i].transform) <= 250 then
-                    server.notify(players[i].id, label, "Objective achieved", 4)
+            for i = 1, #players.items do
+                if matrix.distance(object.transform, players.items[i].transform) <= 250 then
+                    server.notify(players.items[i].id, label, "Objective achieved", 4)
                 end
             end
 
@@ -2193,8 +2192,8 @@ function tick_object(object, tick)
             end
         end
 
-        for i = 1, #players do
-            nearby = nearby or matrix.distance(players[i].transform, object.transform) < 500
+        for i = 1, #players.items do
+            nearby = nearby or matrix.distance(players.items[i].transform, object.transform) < 500
         end
 
         if nearby then
@@ -2916,18 +2915,18 @@ end
 zones = {
     items = {},
     load = function(self)
-        local items = server.getZones()
-        local zones = {}
+        local raws = server.getZones()
+        local models = {}
 
-        for i = 1, #items do
-            local z = self:init(items[i])
+        for i = 1, #raws do
+            local z = self:init(raws[i])
 
             if i ~= nil then
-                table.insert(zones, z)
+                table.insert(models, z)
             end
         end
 
-        return zones
+        return models
     end,
     init = function(self, obj)
         local tags = string.parse_tags(obj.tags_full)
@@ -3000,62 +2999,6 @@ zones = {
     end
 }
 
--- function is_zone_out_range(zone, center, range_max)
---     return matrix.distance(center, zone.transform) > range_max
--- end
-
--- function is_zone_in_range(zone, center, range_max, range_min)
---     local d = matrix.distance(center, zone.transform)
---     return d >= range_min and d <= range_max
--- end
-
--- function is_in_landscape(transform, landscape)
---     local is = false
-
---     for i = 1, #g_savedata.zones do
---         is = is or g_savedata.zones[i].landscape == landscape and is_in_zone(transform, g_savedata.zones[i])
---     end
-
---     return is
--- end
-
--- function is_in_zone(transform, zone)
---     return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
--- end
-
--- function random_offshore_zone(center, range_max, range_min)
---     local transform, is_success = server.getOceanTransform(center, range_min, range_max)
-
---     if not is_success then
---         return nil
---     end
-
---     local x, y, z = matrix.position(transform)
---     local error = matrix.translation(math.random() * 500, 0, math.random() * 500)
---     transform = matrix.multiply(transform, error)
---     local id = #g_savedata.zones + 1
---     local zone = {
---         id = id,
---         tags_full = "",
---         tags = {},
---         display_name = "",
---         transform = transform,
---         size = {
---             x = 20,
---             y = 20,
---             z = 20
---         },
---         radius = 10,
---         type = 0,
---         parent_vehicle_id = nil,
---         parent_relative_transform = nil,
---         mapped = false,
---         icon = 0
---     }
-
---     return zone
--- end
-
 function map_zone(zone, peer_id)
     local peer_id = peer_id or -1
 
@@ -3071,37 +3014,6 @@ function map_zone(zone, peer_id)
         server.addMapLabel(peer_id, zone.marker_id, zone.icon, name, x, z, color, color, color, 255)
     end
 end
-
--- function load_zones()
---     for i = 1, #g_savedata.zones do
---         server.removeMapID(-1, g_savedata.zones[i].marker_id)
---     end
-
---     g_savedata.zones = {}
-
---     local zone_type_ids = table.keys(zone_properties)
---     local id = 1
-
---     for _, zone in pairs(server.getZones()) do
---         local tags = string.parse_tags(zone.tags_full)
-
---         for i = 1, #zone_properties do
---             if tags.landscape and zone_properties[i].landscape == tags.landscape then
---                 zone.id = id
---                 zone.tags = tags
---                 zone.landscape = zone_properties[i].landscape
---                 zone.marker_id = server.getMapID()
---                 zone.mapped = zone_properties[i].mapped or false
---                 zone.icon = zone_properties[i].icon or 0
-
---                 map_zone(zone)
---                 table.insert(g_savedata.zones, zone)
-
---                 id = id + 1
---             end
---         end
---     end
--- end
 
 -- headquarter
 
@@ -3158,58 +3070,63 @@ end
 
 -- players
 
-players = {}
+players = {
+    items = {},
+    load = function(self)
+        local raws = server.getPlayers()
+        local models = {}
 
-function tick_players()
-    players = server.getPlayers()
+        for i = 1, #raws do
+            local model = self:init(raws[i])
 
-    if #players > 0 and players[1].name == "Server" then
-        table.remove(players, 1)
-    end
+            if model ~= nil then
+                table.insert(models, model)
+            end
+        end
 
-    for i = 1, #players do
-        players[i].steam_id = tostring(players[i].steam_id)
+        return models
+    end,
+    init = function(self, player)
+        if player.id == 0 and player.name == "Server" then
+            return nil
+        end
 
-        local transform, is_success = server.getPlayerPos(players[i].id)
+        player.steam_id = tostring(player.steam_id)
+
+        local transform, is_success = server.getPlayerPos(player.id)
 
         if is_success then
-            players[i].transform = transform
+            player.transform = transform
         else
-            players[i].transform = matrix.identity()
+            player.transform = matrix.identity()
         end
 
-        players[i].object_id = (server.getPlayerCharacterID(players[i].id))
-        players[i].vehicle_id = (server.getCharacterVehicle(players[i].object_id))
+        player.object_id = (server.getPlayerCharacterID(player.id))
+        player.vehicle_id = (server.getCharacterVehicle(player.object_id))
+        player.map_opened = g_savedata.players_map[player.id]
+        player.vital = server.getCharacterData(player.id)
 
-        if g_savedata.players_map[players[i].id] ~= nil then
-            players[i].map_open = g_savedata.players_map[players[i].id]
-        else
-            players[i].map_open = false
+        return player
+    end,
+    refresh = function(self)
+        self.items = self:load()
+    end,
+    find = function(self, test)
+        return table.find(self.items, test)
+    end,
+    find_all = function(self, test)
+        return table.find_all(self.items, test)
+    end,
+    is_in_range = function(self, transform, distance)
+        local is = false
+
+        for i = 1, #self.items do
+            is = is or matrix.distance(transform, self.items[i].transform) <= distance
         end
-    end
-end
 
-function is_player_nearby(transform, distance)
-    local result = false
-
-    for i = 1, #players do
-        local d = matrix.distance(players[i].transform, transform)
-
-        result = result or matrix.distance(players[i].transform, transform) <= distance
-    end
-
-    return result
-end
-
-function distance_min_to_player(transform)
-    local distance = math.huge
-
-    for i = 1, #players do
-        distance = math.min(distance, matrix.distance(players[i].transform, transform))
-    end
-
-    return distance
-end
+        return is
+    end,
+}
 
 -- callbacks
 
@@ -3220,7 +3137,7 @@ function onTick(tick)
     math.randomseed(server.getTimeMillisec())
 
     if timing % 10 == 0 then
-        tick_players(tick * 10)
+        players:refresh()
     end
 
     if timing % 15 == 0 then
@@ -3415,10 +3332,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
             server.command(string.format("?ttp %d %d", target, peer_id))
         end
 
-        local player = table.find(players, function(x) return x.id == peer_id end)
-        local target_player = table.find(players, function(x) return x.id == target end)
+        local player = players:find(function(x)
+            return x.id == peer_id
+        end)
+        local target_player = players:find(function(x)
+            return x.id == target
+        end)
 
-        console.log(string.format("%s has teleported to &s", player.name, target_player.name))
+        console.log(string.format("%s has teleported to %s", player.name, target_player.name))
     elseif command == "?clear" then
         server.command(string.format("?clpv %d", peer_id))
     elseif command == "?kill" then
@@ -3444,7 +3365,7 @@ function onPlayerLeave(steam_id, name, peer_id, is_admin, is_auth)
 end
 
 function onPlayerRespawn(peer_id)
-    local player = table.find(players, function(p)
+    local player = players:find(function(p)
         return p.id == peer_id
     end)
 
@@ -3465,7 +3386,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     local cost = nil
 
     if peer_id >= 0 then
-        local player = table.find(players, function(x)
+        local player = players:find(function(x)
             return x.id == peer_id
         end)
 
@@ -3625,6 +3546,7 @@ end
 function onCreate(is_world_create)
     zones:refresh()
     locations:refresh()
+    players:refresh()
 
     for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker ~= nil then
@@ -3635,8 +3557,6 @@ function onCreate(is_world_create)
     for i = 1, #g_savedata.missions do
         based(g_savedata.missions[i], mission_trackers[g_savedata.missions[i].tracker])
     end
-
-    tick_players()
 
     console.notify(name)
     console.notify(version)
@@ -3689,7 +3609,7 @@ function set_vehicle_keypad(vehicle_id, keypad, value)
 end
 
 function missions_less_than_limit()
-    return #g_savedata.missions < math.min(#players / g_savedata.subsystems.mission.palyer_factor, 48)
+    return #g_savedata.missions < (#players.items / g_savedata.subsystems.mission.player_factor)
 end
 
 function despawn_vehicle_group(group_id, is_instant)
