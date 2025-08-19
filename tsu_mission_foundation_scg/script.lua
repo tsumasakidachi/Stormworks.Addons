@@ -1,5 +1,5 @@
 name = "TSU Mission Foundation for SCG"
-version = "1.2.1"
+version = "1.2.2"
 
 -- properties
 g_savedata = {
@@ -8,9 +8,9 @@ g_savedata = {
   objects = {},
   oil_spills = {},
   oil_spill_count = 0,
-  disasters_gross = 0,
   players = {},
   players_map = {},
+  players_alert = {},
   locations = {},
   locations_history = {},
   zones = {},
@@ -27,8 +27,8 @@ g_savedata = {
       count = 0,
       count_limited = true,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
-      taken_to_long_threshold = property.slider("The time it takes volunteers to locate rescuees (minutes)", 5, 90, 1, 15) *
-      3600,
+      taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) *
+          3600,
       eot = "END OF TABLE"
     },
     rescuee = {
@@ -753,8 +753,9 @@ strings = {
     eruption = "eruption",
     meteor = "meteor"
   },
-  disasters = {
-    massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ."
+  notice = {
+    massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ.",
+    mission_taken_to_long = "協力者によってミッション#%dの残りの行方不明者が発見された."
   }
 }
 
@@ -902,7 +903,7 @@ mission_trackers = {
           if tsunami then
             self.finish_timer = 28800
             self.search_radius = 7500
-            self.locations[1].report = strings.disasters.massive_meteor_impact
+            self.locations[1].report = strings.notice.massive_meteor_impact
           end
 
           server.spawnMeteor(self.start_position, magnitude, tsunami)
@@ -983,10 +984,11 @@ object_trackers = {
       if #players.items >= g_savedata.subsystems.rescuee.cpa_recurrence_threshold_players and g_savedata.subsystems.rescuee.cpa_recurrence_rate > 0 and not is_safe then
         if not self.vital.incapacitated and vital_update.incapacitated then
           local weather = server.getWeather(self.transform)
-          local weather_factor = 1 + math.max(weather.fog * 1, weather.rain * 4, weather.snow * 9, weather.wind * 4)
+          local weather_factor = math.max(1 + weather.fog * 1, 1 + weather.rain * 4, 1 + weather.snow * 9,
+            1 + weather.wind * 4, 1 - weather.temp + 1)
 
           self.is_cpa_recurrent = self.is_cpa_recurrent or
-          math.random(0, 99) < g_savedata.subsystems.rescuee.cpa_recurrence_rate * weather_factor
+              math.random(0, 99) < g_savedata.subsystems.rescuee.cpa_recurrence_rate * weather_factor
 
           if self.is_cpa_recurrent then
             self.cpa_count = self.cpa_count + 1
@@ -1089,8 +1091,8 @@ object_trackers = {
 
       for i = 1, #g_savedata.missions do
         is_explosive = is_explosive or
-        g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and
-        math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+            g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and
+            math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
       end
 
       if is_explosive and not self.is_explosive then
@@ -1814,7 +1816,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.category = 0
   mission.reported = false
   mission.report_timer = report_timer or
-  math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
+      math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
   mission.spawned = false
   mission.terminated = false
   mission.elapsed = 0
@@ -1863,7 +1865,7 @@ function tick_mission(mission, tick)
 
   if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
     mission.taken_to_long = true
-    server.notify(-1, string.format("ミッション#%dの要救助を発見した.", mission.id), "ボランティアの捜索者からの通報", 0)
+    server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
   end
 
   mission.objectives = aggregate_mission_objectives(mission)
@@ -2066,18 +2068,18 @@ end
 function aggregate_mission_units(mission)
   return {
     sar = mission.units ~= nil and mission.units.sar or
-    mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
+        mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
     fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or
-    mission.objectives.fire.count >= 1,
+        mission.objectives.fire.count >= 1,
     med = mission.units ~= nil and mission.units.med or mission.objectives.rescuee.count >= 1,
     spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or
-    mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
+        mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
   }
 end
 
 function has_explosive_event(mission)
   return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or
-  table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
+      table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
 end
 
 -- objects
@@ -2303,7 +2305,7 @@ function is_doctor_nearby(transform)
 
   for i = 1, #g_savedata.objects do
     is = is or
-    g_savedata.objects[i].tracker == "doctor" and matrix.distance(transform, g_savedata.objects[i].transform) <= 10
+        g_savedata.objects[i].tracker == "doctor" and matrix.distance(transform, g_savedata.objects[i].transform) <= 10
   end
 
   return is
@@ -2323,8 +2325,8 @@ end
 
 function is_object(object)
   return object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or
-  object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or
-  object.type == "ice"
+      object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or
+      object.type == "ice"
 end
 
 function is_tile(object)
@@ -2337,7 +2339,7 @@ end
 
 function is_disaster(object)
   return object.type == "tornado" or object.type == "tsunami" or object.type == "whirlpool" or object.type == "meteor" or
-  object.type == "eruption"
+      object.type == "eruption"
 end
 
 function mount_vehicle(vehicle)
@@ -2484,7 +2486,7 @@ locations = {
 
     for i = #g_savedata.locations_history, math.max(history_back, 1), -1 do
       is = is and g_savedata.locations_history[i][g_savedata.location_comparer] ~= location
-      [g_savedata.location_comparer]
+          [g_savedata.location_comparer]
     end
 
     return is
@@ -2541,8 +2543,8 @@ locations = {
 
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns)) and (not is_main or x.is_main_location) and
-      self:is_suitable(x, center, range_min, range_max) and
-      (not is_main or not is_unprecedented or self:is_unprecedented(x))
+          self:is_suitable(x, center, range_min, range_max) and
+          (not is_main or not is_unprecedented or self:is_unprecedented(x))
     end)
 
     if #_locations == 0 then
@@ -2576,8 +2578,8 @@ locations = {
       if _locations[i].tile == "" then
         local _zones = zones:find_all(function(x)
           return zones:is_suitable(x, _locations[i], center, range_min, range_max) and
-          (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius)) and
-          not zones:is_occupied(x, result) and not zones:is_occupied(x, sibling_locations)
+              (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius)) and
+              not zones:is_occupied(x, result) and not zones:is_occupied(x, sibling_locations)
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
           return x.landscape
@@ -2629,7 +2631,7 @@ locations = {
         end
       else
         console.log(string.format(
-        "Although locations matching the requirements were found, no landscapes were found for them: %s",
+          "Although locations matching the requirements were found, no landscapes were found for them: %s",
           _locations[i].name))
       end
     end
@@ -2829,15 +2831,15 @@ zones = {
 
     for i = 1, #g_savedata.missions do
       is = is or
-      matrix.distance(g_savedata.missions[i].search_center, zone.transform) <=
-      g_savedata.missions[i].search_radius + clearance
+          matrix.distance(g_savedata.missions[i].search_center, zone.transform) <=
+          g_savedata.missions[i].search_radius + clearance
     end
 
     return is
   end,
   is_suitable = function(self, zone, location, center, range_min, range_max)
     return self:is_in_range(zone, center, range_min, range_max) and
-    self:is_match_landscapes(location.suitable_zones, zone)
+        self:is_match_landscapes(location.suitable_zones, zone)
   end,
   is_match_landscapes = function(self, landscapes, zone)
     return table.contains(landscapes, zone.landscape)
@@ -2919,7 +2921,7 @@ end
 function teleport_to_spawn_points(peer_id)
   local _zones = zones:find_all(function(x)
     return zones:is_in_range(x, start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
-    zones:is_match_landscapes({ "respawn" }, x)
+        zones:is_match_landscapes({ "respawn" }, x)
   end)
   local _z = table.random(_zones)
 
@@ -2959,15 +2961,43 @@ players = {
       player.transform = matrix.identity()
     end
 
-    player.object_id = (server.getPlayerCharacterID(player.id))
-    player.vehicle_id = (server.getCharacterVehicle(player.object_id))
+    player.object_id, s = server.getPlayerCharacterID(player.id)
+
+    if not s then
+      return nil
+    end
+
+    player.vehicle_id = server.getCharacterVehicle(player.object_id)
     player.map_opened = g_savedata.players_map[player.id]
-    player.vital = server.getCharacterData(player.id)
+    player.vital = server.getObjectData(player.object_id)
 
     return player
   end,
   refresh = function(self)
     self.items = self:load()
+
+    for i = 1, #self.items do
+      local alert = self.items[i].vital.incapacitated
+
+      for j = 1, #g_savedata.objects do
+        alert = alert or
+            g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].is_explosive and
+            matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
+      end
+
+      for j = 1, 10 do
+        local item = server.getCharacterItem(self.items[i].object_id, j)
+
+        if item == 23 and g_savedata.players_alert[self.items[i].steam_id] ~= alert then
+          server.setCharacterItem(self.items[i].object_id, j, 23, alert, 0, 100)
+          g_savedata.players_alert[self.items[i].steam_id] = alert
+
+          if alert then
+            console.notify(string.format("%s has issued alert.", self.items[i].name))
+          end
+        end
+      end
+    end
   end,
   find = function(self, test)
     return table.find(self.items, test)
@@ -3030,7 +3060,7 @@ function onTick(tick)
         g_savedata.subsystems.mission.interval_max)
     else
       g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval -
-      (tick * g_savedata.subsystems.mission.timer_tickrate)
+          (tick * g_savedata.subsystems.mission.timer_tickrate)
     end
   end
 
