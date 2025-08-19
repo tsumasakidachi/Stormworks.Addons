@@ -11,9 +11,7 @@ g_savedata = {
   players = {},
   players_map = {},
   players_alert = {},
-  locations = {},
   locations_history = {},
-  zones = {},
   location_comparer = "pattern",
   subsystems = {
     mission = {
@@ -27,8 +25,7 @@ g_savedata = {
       count = 0,
       count_limited = true,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
-      taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) *
-          3600,
+      taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) * 3600,
       eot = "END OF TABLE"
     },
     rescuee = {
@@ -61,7 +58,10 @@ g_savedata = {
     mapping = {
       mission = {},
       object = {},
-      zone = {
+      facility = {
+        markar_id = 0
+      },
+      landscape = {
         markar_id = 0
       }
     },
@@ -654,87 +654,34 @@ location_properties = { {
   note = "気象当局からの通報"
 } }
 
-zone_properties = { {
-  landscape = "base",
+facilty_properties = { {
+  facility = "base",
   mapped = true,
   icon = 11
 }, {
-  landscape = "hospital",
+  facility = "hospital",
   mapped = true,
   icon = 8
 }, {
-  landscape = "clinic",
+  facility = "clinic",
   mapped = true,
   icon = 8
 }, {
-  landscape = "police_station",
+  facility = "police_station",
   mapped = true,
   icon = 11
 }, {
-  landscape = "scrap_yard",
+  facility = "scrap_yard",
   mapped = true,
   icon = 3
 }, {
-  landscape = "forest"
+  facility = "first_spawn"
 }, {
-  landscape = "hill"
-}, {
-  landscape = "mountain"
-}, {
-  landscape = "volcano"
-}, {
-  landscape = "field"
-}, {
-  landscape = "beach"
-}, {
-  landscape = "ait"
-}, {
-  landscape = "island"
-}, {
-  landscape = "campsite"
-}, {
-  landscape = "offshore"
-}, {
-  landscape = "shallow"
-}, {
-  landscape = "underwater"
-}, {
-  landscape = "channel"
-}, {
-  landscape = "lake"
-}, {
-  landscape = "diving_spot"
-}, {
-  landscape = "airfield"
-}, {
-  landscape = "heliport"
-}, {
-  landscape = "runway"
-}, {
-  landscape = "road"
-}, {
-  landscape = "track"
-}, {
-  landscape = "crossing"
-}, {
-  landscape = "tunnel"
-}, {
-  landscape = "bridge"
-}, {
-  landscape = "house"
-}, {
-  landscape = "building"
-}, {
-  landscape = "wind_turbine"
-}, {
-  landscape = "plant"
-}, {
-  landscape = "mine"
-}, {
-  landscape = "first_spawn"
-}, {
-  landscape = "respawn"
+  facility = "respawn"
 } }
+
+landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
+  "bridge", "house", "building", "wind_turbine", "plant", "mine" }
 
 strings = {
   statuses = {
@@ -974,9 +921,9 @@ object_trackers = {
         return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
       end)
       local vital_update = server.getCharacterData(self.id)
-      local is_in_hospital = zones:is_in_landscape(self.transform, "hospital")
-      local is_in_clinic = zones:is_in_landscape(self.transform, "clinic")
-      local is_in_base = zones:is_in_landscape(self.transform, "base")
+      local is_in_hospital = facilities:is_in_facility(self.transform, "hospital")
+      local is_in_clinic = facilities:is_in_facility(self.transform, "clinic")
+      local is_in_base = facilities:is_in_facility(self.transform, "base")
       local activated = self.activated or players:is_in_range(self.transform, 500)
       local is_doctor_nearby = is_doctor_nearby(self.transform)
       local is_safe = is_in_hospital or is_doctor_nearby
@@ -1190,8 +1137,8 @@ object_trackers = {
     tick = function(self, tick)
       local vital_update = server.getCharacterData(self.id)
       local vehicle_id = server.getCharacterVehicle(self.id)
-      local is_in_police_sta = zones:is_in_landscape(self.transform, "police_station")
-      local is_in_base = zones:is_in_landscape(self.transform, "base")
+      local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
+      local is_in_base = facilities:is_in_facility(self.transform, "base")
 
       if is_in_base or is_in_police_sta then
         self.admitted_time = self.admitted_time + tick
@@ -1367,7 +1314,7 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
-      if zones:is_in_landscape(self.transform, "scrap_yard") then
+      if facilities:is_in_facility(self.transform, "scrap_yard") then
         self.completion_timer = self.completion_timer + tick
       end
     end,
@@ -1863,16 +1810,20 @@ function tick_mission(mission, tick)
     mission.elapsed = mission.elapsed + tick
   end
 
-  if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
-    mission.taken_to_long = true
-    server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
-  end
-
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.category = aggregate_mission_category(mission)
   mission.units = aggregate_mission_units(mission)
+
+  if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
+    mission.taken_to_long = true
+
+    if mission.objectives.rescuee.count > 0 then
+      server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
+      console.notify(string.format("Mission #%d is taking to long.", mission.id))
+    end
+  end
 
   mission:tick(tick)
 
@@ -2495,8 +2446,8 @@ locations = {
     local is = false
 
     if location.tile == "" then
-      for i = 1, #zones.items do
-        is = is or zones:is_suitable(zones.items[i], location, center, range_min, range_max)
+      for i = 1, #landscapes.items do
+        is = is or landscapes:is_suitable(landscapes.items[i], location, center, range_min, range_max)
       end
 
       if table.contains(location.suitable_zones, "offshore") then
@@ -2525,16 +2476,15 @@ locations = {
 
     return transform, s
   end,
-  random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns, landscapes,
-                    sibling_locations)
+  random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns, ls, sibling_locations)
     local result = {}
 
     if patterns == nil then
       patterns = {}
     end
 
-    if landscapes == nil then
-      landscapes = {}
+    if ls == nil then
+      ls = {}
     end
 
     if sibling_locations == nil then
@@ -2576,10 +2526,10 @@ locations = {
       local transform = nil
 
       if _locations[i].tile == "" then
-        local _zones = zones:find_all(function(x)
-          return zones:is_suitable(x, _locations[i], center, range_min, range_max) and
-              (not is_main or not zones:is_in_another_mission(x, _locations[i].search_radius)) and
-              not zones:is_occupied(x, result) and not zones:is_occupied(x, sibling_locations)
+        local _zones = landscapes:find_all(function(x)
+          return landscapes:is_suitable(x, _locations[i], center, range_min, range_max) and
+              (not is_main or not landscapes:is_in_another_mission(x, _locations[i].search_radius)) and
+              not landscapes:is_occupied(x, result) and not landscapes:is_occupied(x, sibling_locations)
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
           return x.landscape
@@ -2746,9 +2696,9 @@ function list_location_history(peer_id)
   end
 end
 
--- zones
+-- landscapes
 
-zones = {
+landscapes = {
   items = {},
   load = function(self)
     local raws = server.getZones()
@@ -2757,7 +2707,7 @@ zones = {
     for i = 1, #raws do
       local z = self:init(raws[i])
 
-      if i ~= nil then
+      if z ~= nil then
         table.insert(models, z)
       end
     end
@@ -2766,19 +2716,13 @@ zones = {
   end,
   init = function(self, obj)
     local tags = string.parse_tags(obj.tags_full)
-    local prop = table.find(zone_properties, function(x)
-      return tags.landscape == x.landscape
-    end)
 
-    if prop == nil then
-      return nil
-    end
+    if tags.landscape == nil then return nil end
+    if not table.contains(landscape_properties, tags.landscape) then return nil end
 
     obj.tags = tags
-    obj.landscape = prop.landscape
-    obj.marker_id = server.getMapID()
-    obj.mapped = prop.mapped or false
-    obj.icon = prop.icon or 0
+    obj.landscape = obj.tags.landscape
+    obj.icon = 1
 
     return obj
   end,
@@ -2791,10 +2735,10 @@ zones = {
 
     self.items = self:load()
 
-    for i = 1, #zones.items do
+    for i = 1, #self.items do
       for j = 1, #players.items do
         if players.items[j].map_opened then
-          self:map(zones.items[i], players.items[j].id)
+          self:map(self.items[i], players.items[j].id)
         end
       end
     end
@@ -2839,10 +2783,108 @@ zones = {
   end,
   is_suitable = function(self, zone, location, center, range_min, range_max)
     return self:is_in_range(zone, center, range_min, range_max) and
-        self:is_match_landscapes(location.suitable_zones, zone)
+        table.contains(location.suitable_zones, zone.landscape)
   end,
-  is_match_landscapes = function(self, landscapes, zone)
-    return table.contains(landscapes, zone.landscape)
+  find = function(self, test)
+    return table.find(self.items, test)
+  end,
+  find_all = function(self, test)
+    return table.find_all(self.items, test)
+  end,
+  map = function(self, zone, peer_id)
+    local peer_id = peer_id or -1
+
+    if g_savedata.mode == "debug" then
+      local x, y, z = matrix.position(zone.transform)
+      local color = zone.icon == 8 and 255 or 0
+      local name = zone.name
+
+      if name == "" then
+        name = zone.landscape
+      end
+
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.landscape.markar_id, zone.icon, name, x, z, color, color,
+        color, 255)
+    end
+  end,
+  clear_all_map = function(self, peer_id)
+    local peer_id = peer_id or -1
+    server.removeMapID(peer_id, g_savedata.subsystems.mapping.landscape.markar_id)
+  end
+}
+
+-- facilities
+
+facilities = {
+  items = {},
+  load = function(self)
+    local models = {}
+
+    for i = 1, #facilty_properties do
+      if facilty_properties[i].facility ~= nil then
+        local raws = server.getZones(string.format("facility=%s", facilty_properties[i].facility))
+
+        for i = 1, #raws do
+          local z = self:init(raws[i])
+
+          if z ~= nil then
+            table.insert(models, z)
+          end
+        end
+      end
+    end
+
+    return models
+  end,
+  init = function(self, obj)
+    local tags = string.parse_tags(obj.tags_full)
+    local prop = table.find(facilty_properties, function(x)
+      return tags.facility == x.facility
+    end)
+
+    if prop == nil then
+      return nil
+    end
+
+    obj.tags = tags
+    obj.facility = prop.facility
+    obj.mapped = prop.mapped or false
+    obj.icon = prop.icon or 0
+
+    return obj
+  end,
+  refresh = function(self)
+    for j = 1, #players.items do
+      if players.items[j].map_opened then
+        self:clear_all_map(players.items[j].id)
+      end
+    end
+
+    self.items = self:load()
+
+    for i = 1, #self.items do
+      for j = 1, #players.items do
+        if players.items[j].map_opened then
+          self:map(self.items[i], players.items[j].id)
+        end
+      end
+    end
+  end,
+  is_in_facility = function(self, transform, facility)
+    local is = false
+
+    for i = 1, #self.items do
+      is = is or self.items[i].facility == facility and self:is_in(transform, self.items[i])
+    end
+
+    return is
+  end,
+  is_in = function(self, transform, zone)
+    return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
+  end,
+  is_in_range = function(self, zone, center, min, max)
+    local d = matrix.distance(zone.transform, center)
+    return d >= min and d <= max
   end,
   find = function(self, test)
     return table.find(self.items, test)
@@ -2862,13 +2904,13 @@ zones = {
         name = zone.landscape
       end
 
-      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.zone.markar_id, zone.icon, name, x, z, color, color,
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.facility.markar_id, zone.icon, name, x, z, color, color,
         color, 255)
     end
   end,
   clear_all_map = function(self, peer_id)
     local peer_id = peer_id or -1
-    server.removeMapID(peer_id, g_savedata.subsystems.mapping.zone.markar_id)
+    server.removeMapID(peer_id, g_savedata.subsystems.mapping.facility.markar_id)
   end
 }
 
@@ -2919,9 +2961,9 @@ end
 -- spawn point
 
 function teleport_to_spawn_points(peer_id)
-  local _zones = zones:find_all(function(x)
-    return zones:is_in_range(x, start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
-        zones:is_match_landscapes({ "respawn" }, x)
+  local _zones = facilities:find_all(function(x)
+    return facilities:is_in_range(x, start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
+        x.facility == "respawn"
   end)
   local _z = table.random(_zones)
 
@@ -3029,7 +3071,7 @@ function onTick(tick)
   end
 
   if timing % 15 == 0 then
-    zones:refresh()
+    facilities:refresh()
   end
 
   for i = #g_savedata.objects, 1, -1 do
@@ -3241,7 +3283,7 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 
   local transform = server.getPlayerPos(peer_id)
 
-  if zones:is_in_landscape(transform, "first_spawn") then
+  if landscapes:is_in_landscape(transform, "first_spawn") then
     teleport_to_spawn_points(peer_id)
   end
 end
@@ -3428,10 +3470,12 @@ end
 
 function onCreate(is_world_create)
   if is_world_create then
-    g_savedata.subsystems.mapping.zone.markar_id = server.getMapID()
+    g_savedata.subsystems.mapping.landscape.markar_id = server.getMapID()
+    g_savedata.subsystems.mapping.facility.markar_id = server.getMapID()
   end
 
-  zones:refresh()
+  landscapes:refresh()
+  facilities:refresh()
   locations:refresh()
   players:refresh()
 
@@ -3448,7 +3492,7 @@ function onCreate(is_world_create)
   console.notify(name)
   console.notify(version)
   console.notify(string.format("Locations: %d", #locations.items))
-  console.notify(string.format("Zones: %d", #zones.items))
+  console.notify(string.format("Landscapes: %d", #landscapes.items))
   console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
   console.notify(string.format("Active missions: %d", #g_savedata.missions))
   console.notify(string.format("Active objects: %d", #g_savedata.objects))

@@ -13,7 +13,7 @@
 						<spawn_local_offset y="-1.5" z="-8.875"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="3" cargo_zone_import_cargo_type="landscape=respawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="3" cargo_zone_import_cargo_type="facility=respawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.485027" 02="0.874499" 20="-0.874499" 22="-0.485027" 30="184.368073" 31="8.050682" 32="-387.201172"/>
 						<spawn_bounds>
 							<min x="-1.97934" y="-1.469489" z="-1.460467"/>
@@ -21,7 +21,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="4" cargo_zone_import_cargo_type="landscape=first_spawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="4" cargo_zone_import_cargo_type="facility=first_spawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 30="-110.403763" 31="9.378839" 32="158.478073"/>
 						<spawn_bounds>
 							<min x="-5.835058" y="-1.809803" z="-2.517789"/>
@@ -38,7 +38,7 @@
 						<spawn_local_offset y="0.5" z="2.875"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,landscape=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,facility=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="151.528854" 31="1.308605" 32="-405.170288"/>
 						<spawn_bounds>
 							<min x="-5.770339" y="-14.142403" z="-13.108555"/>

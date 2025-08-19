@@ -14,7 +14,7 @@ g_savedata = {
 }
 
 locations = {}
-zones = {}
+landscapes = {}
 
 -- missions
 
@@ -376,7 +376,7 @@ mission_tracker = {
 		end,
 		tick = function(self, mission, tick)
 			if not mission.spawned then
-				local fire = random_static_fire(zones[mission.zone_index])
+				local fire = random_static_fire(landscapes[mission.zone_index])
 
 				if fire == nil then
 					return nil, "Mission initialization has failed because no fire was found"
@@ -450,7 +450,7 @@ mission_tracker = {
 			end
 
 			if mission.submission_timer <= 0 and mission.submission_count > 0 then
-				initialize_mission("evac", nil, nil, zones[mission.zone_index].transform, mission.radius)
+				initialize_mission("evac", nil, nil, landscapes[mission.zone_index].transform, mission.radius)
 				mission.submission_count = mission.submission_count - 1
 				mission.submission_timer = math.random() * 3600
 			elseif mission.submission_timer > 0 then
@@ -574,7 +574,7 @@ function spawn_mission_location(mission)
 	local transform = matrix.translation(0, 0, 0)
 
 	if mission.zone_index ~= nil then
-		transform = zones[mission.zone_index].transform
+		transform = landscapes[mission.zone_index].transform
 	end
 
 	local out_transform, is_success = server.spawnAddonLocation(transform, locations[mission.location_id].addon_index,
@@ -903,11 +903,11 @@ function load_zones()
 		end)
 
 		if scene_index ~= nil and matrix.distance(zone.transform, start_tile_matrix()) <= g_savedata.mission_range_max then
-			zone.zone_index = #zones + 1
+			zone.zone_index = #landscapes + 1
 			zone.marker_id = server.getMapID()
 			zone.available = true
 
-			table.insert(zones, zone.zone_index, zone)
+			table.insert(landscapes, zone.zone_index, zone)
 
 			scenes[scene_index].count = scenes[scene_index].count + 1
 		end
@@ -922,7 +922,7 @@ function initialize_offshore_zone()
 	x = x + math.random() * 2000 - 1
 	z = z + math.random() * 2000 - 1
 	transform = matrix.translation(x, y, z)
-	local zone_index = #zones + 1
+	local zone_index = #landscapes + 1
 	local zone = {
 		zone_index = zone_index,
 		tags_full = "",
@@ -940,7 +940,7 @@ function initialize_offshore_zone()
 		parent_relative_transform = nil
 	}
 
-	table.insert(zones, zone_index, zone)
+	table.insert(landscapes, zone_index, zone)
 
 	return zone
 end
@@ -970,7 +970,7 @@ function random_zone(pattern, center_transform, range)
 		return initialize_offshore_zone(), nil
 	end
 
-	local zones = table.find_all(zones, function(x)
+	local zones = table.find_all(landscapes, function(x)
 		return x.available and x.name == suitable_zone and
 			(center_transform == nil or matrix.distance(x.transform, center_transform) <= range)
 	end)
@@ -983,19 +983,19 @@ function random_zone(pattern, center_transform, range)
 end
 
 function enable_zone(zone_index)
-	if zones[zone_index] == nil then
+	if landscapes[zone_index] == nil then
 		return
 	end
 
-	zones[zone_index].available = true
+	landscapes[zone_index].available = true
 end
 
 function disable_zone(zone_index)
-	if zones[zone_index] == nil then
+	if landscapes[zone_index] == nil then
 		return
 	end
 
-	zones[zone_index].available = false
+	landscapes[zone_index].available = false
 end
 
 -- locations
@@ -1099,7 +1099,7 @@ function onCreate(is_world_create)
 	load_zones()
 	load_locations()
 
-	notice(#zones .. " zones loaded")
+	notice(#landscapes .. " zones loaded")
 
 	for k, v in pairs(scenes) do
 		notice(string.format("    %d %s", v.count, v.name))
@@ -1116,19 +1116,19 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 		return
 	end
 
-	for i = 1, #zones, 1 do
-		if zones[i].name == "clinic" then
-			local x, y, z = matrix.position(zones[i].transform)
-			server.addMapLabel(peer_id, zones[i].marker_id, 8, "Clinic", x, z)
-		elseif zones[i].name == "hospital" then
-			local x, y, z = matrix.position(zones[i].transform)
-			server.addMapLabel(peer_id, zones[i].marker_id, 8, "Hospital", x, z)
-		elseif zones[i].name == "freight terminal" then
-			local x, y, z = matrix.position(zones[i].transform)
-			server.addMapLabel(peer_id, zones[i].marker_id, 3, "Freight Terminal", x, z)
-		elseif zones[i].name == "safe zone" then
-			local x, y, z = matrix.position(zones[i].transform)
-			server.addMapLabel(peer_id, zones[i].marker_id, 11, "Safe Zone", x, z)
+	for i = 1, #landscapes, 1 do
+		if landscapes[i].name == "clinic" then
+			local x, y, z = matrix.position(landscapes[i].transform)
+			server.addMapLabel(peer_id, landscapes[i].marker_id, 8, "Clinic", x, z)
+		elseif landscapes[i].name == "hospital" then
+			local x, y, z = matrix.position(landscapes[i].transform)
+			server.addMapLabel(peer_id, landscapes[i].marker_id, 8, "Hospital", x, z)
+		elseif landscapes[i].name == "freight terminal" then
+			local x, y, z = matrix.position(landscapes[i].transform)
+			server.addMapLabel(peer_id, landscapes[i].marker_id, 3, "Freight Terminal", x, z)
+		elseif landscapes[i].name == "safe zone" then
+			local x, y, z = matrix.position(landscapes[i].transform)
+			server.addMapLabel(peer_id, landscapes[i].marker_id, 11, "Safe Zone", x, z)
 		end
 	end
 end

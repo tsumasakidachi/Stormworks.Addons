@@ -14,7 +14,7 @@ g_savedata = {
     }
 }
 
-zone_properties = {{
+facilty_properties = {{
     landscape = "base",
     mapped = false,
     icon = 4
@@ -955,20 +955,20 @@ function load_zones()
 
     g_savedata.zones = {}
 
-    local zone_type_ids = table.keys(zone_properties)
+    local zone_type_ids = table.keys(facilty_properties)
     local id = 1
     local z = server.getZones()
 
     for _, zone in pairs(z) do
         local tags = parse_tags(zone.tags)
 
-        for i = 1, #zone_properties do
-            if tags.landscape ~= nil and zone_properties[i].landscape == tags.landscape then
+        for i = 1, #facilty_properties do
+            if tags.landscape ~= nil and facilty_properties[i].landscape == tags.landscape then
                 zone.id = id
                 zone.tags = tags
                 zone.marker_id = server.getMapID()
-                zone.mapped = zone_properties[i].mapped or false
-                zone.icon = zone_properties[i].icon or 0
+                zone.mapped = facilty_properties[i].mapped or false
+                zone.icon = facilty_properties[i].icon or 0
 
                 map_zone(zone)
                 table.insert(g_savedata.zones, zone)
