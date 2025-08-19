@@ -18,12 +18,12 @@ zones = {}
 
 -- missions
 
-mission_template = {{
+mission_template = { {
 	type = "missing",
 	tracker = "sar",
 	report = "#%d Rescue Call",
 	caller = "police station",
-	suitable_zones = {"forest", "hill", "mountain", "island"},
+	suitable_zones = { "forest", "hill", "mountain", "island" },
 	is_submission = false,
 	ongoing = false,
 	radius = 1000,
@@ -33,7 +33,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Rescue Call",
 	caller = "citizen",
-	suitable_zones = {"forest", "hill", "field"},
+	suitable_zones = { "forest", "hill", "field" },
 	is_submission = true,
 	ongoing = false,
 	radius = 100,
@@ -43,7 +43,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Accident & Emergency Call",
 	caller = "citizen",
-	suitable_zones = {"campsite", "beach", "airfield"},
+	suitable_zones = { "campsite", "beach", "airfield" },
 	is_submission = true,
 	ongoing = false,
 	radius = 100,
@@ -53,7 +53,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Accident & Emergency Call",
 	caller = "citizen",
-	suitable_zones = {"road", "tunnel", "crossing"},
+	suitable_zones = { "road", "tunnel", "crossing" },
 	is_submission = false,
 	ongoing = false,
 	radius = 50,
@@ -63,7 +63,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Fire Call",
 	caller = "citizen",
-	suitable_zones = {"field"},
+	suitable_zones = { "field" },
 	is_submission = false,
 	ongoing = false,
 	radius = 50,
@@ -73,7 +73,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Rescue Call",
 	caller = "citizen",
-	suitable_zones = {"lake"},
+	suitable_zones = { "lake" },
 	is_submission = false,
 	ongoing = false,
 	radius = 100,
@@ -83,7 +83,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Mayday Call",
 	caller = "crew",
-	suitable_zones = {"channel", "offshore"},
+	suitable_zones = { "channel", "offshore" },
 	is_submission = false,
 	ongoing = false,
 	radius = 1000,
@@ -93,7 +93,7 @@ mission_template = {{
 	tracker = "sar",
 	report = "#%d Flotsam Call",
 	caller = "crew",
-	suitable_zones = {"channel"},
+	suitable_zones = { "channel" },
 	is_submission = false,
 	ongoing = false,
 	radius = 1000,
@@ -103,7 +103,7 @@ mission_template = {{
 	tracker = "fire",
 	report = "#%d Fire Call\nWind turbine on fire. It's a high spot that can't be reached by spraying water from ground.",
 	caller = "staff",
-	suitable_zones = {"wind farm"},
+	suitable_zones = { "wind farm" },
 	is_submission = false,
 	ongoing = false,
 	radius = 0,
@@ -113,7 +113,7 @@ mission_template = {{
 	tracker = "fire",
 	report = "#%d Fire Call\nFacilities at %s on fire. Extinguish too late could lead to a major fire hazard.",
 	caller = "staff",
-	suitable_zones = {"petrochemical plant", "power plant", "oil rig"},
+	suitable_zones = { "petrochemical plant", "power plant", "oil rig" },
 	is_submission = false,
 	ongoing = false,
 	radius = 0,
@@ -121,18 +121,19 @@ mission_template = {{
 }, {
 	type = "tornado",
 	tracker = "hazard",
-	report = "#%d Evacuation Alert\nTornado signs have been observed. Citizens are advised to evacuate from this area as a major hazard is expected.",
+	report =
+	"#%d Evacuation Alert\nTornado signs have been observed. Citizens are advised to evacuate from this area as a major hazard is expected.",
 	caller = "meteorology office",
-	suitable_zones = {"forest", "field", "hill", "lake", "road", "channel"},
+	suitable_zones = { "forest", "field", "hill", "lake", "road", "channel" },
 	is_submission = false,
-	submissions = {"evac"},
+	submissions = { "evac" },
 	ongoing = false,
 	radius = 4000,
 	fuzziness = 1,
 	clear_timer = 14400
-}}
+} }
 
-scenes = {{
+scenes = { {
 	name = "test",
 	count = 0
 }, {
@@ -216,7 +217,7 @@ scenes = {{
 }, {
 	name = "freight terminal",
 	count = 0
-}}
+} }
 
 mission_tracker = {
 	sar = {
@@ -225,9 +226,9 @@ mission_tracker = {
 
 			if location_id == nil then
 				return mission,
-								string.format(
-												"ミッション %s の初期化に失敗: ミッションロケーションが見つからない",
-												mission.type)
+					string.format(
+						"ミッション %s の初期化に失敗: ミッションロケーションが見つからない",
+						mission.type)
 			end
 
 			-- mission.addon_index = location.addon_index
@@ -237,7 +238,7 @@ mission_tracker = {
 			local suitable_zones = template.suitable_zones
 
 			if target_zone ~= nil then
-				suitable_zones = {target_zone}
+				suitable_zones = { target_zone }
 			end
 
 			local zone = random_zone(suitable_zones, center_transform, radius)
@@ -250,8 +251,9 @@ mission_tracker = {
 				mission.zone_index = nil
 				mission.scene = ""
 
-				return mission, string.format("Initialisation failed because a suitable location for %s mission could not be found",
-								mission.type)
+				return mission,
+					string.format("Initialisation failed because a suitable location for %s mission could not be found",
+						mission.type)
 			end
 
 			return mission, nil
@@ -304,7 +306,7 @@ mission_tracker = {
 		end,
 		report = function(self, mission)
 			return string.format(mission.report .. "\n" .. locations[mission.location_id].report, mission.mission_id,
-							mission.scene)
+				mission.scene)
 		end,
 		progress = function(self, mission)
 			local test = {}
@@ -330,7 +332,8 @@ mission_tracker = {
 
 			for k, v in pairs(test) do
 				if v.count > 0 then
-					table.insert(progresses, string.format(objective_tracker[k].progress, test[k].completed, test[k].count))
+					table.insert(progresses,
+						string.format(objective_tracker[k].progress, test[k].completed, test[k].count))
 				end
 			end
 
@@ -345,7 +348,7 @@ mission_tracker = {
 			local suitable_zones = template.suitable_zones
 
 			if target_zone ~= nil then
-				suitable_zones = {target_zone}
+				suitable_zones = { target_zone }
 			end
 
 			local zone = random_zone(suitable_zones, center_transform, radius)
@@ -358,8 +361,9 @@ mission_tracker = {
 				mission.zone_index = nil
 				mission.scene = ""
 
-				return mission, string.format("Initialisation failed because a suitable location for %s mission could not be found",
-								mission.type)
+				return mission,
+					string.format("Initialisation failed because a suitable location for %s mission could not be found",
+						mission.type)
 			end
 
 			mission.zone_index = zone.zone_index
@@ -406,7 +410,7 @@ mission_tracker = {
 			local suitable_zones = template.suitable_zones
 
 			if target_zone ~= nil then
-				suitable_zones = {target_zone}
+				suitable_zones = { target_zone }
 			end
 
 			local zone = random_zone(suitable_zones, center_transform, radius)
@@ -420,8 +424,9 @@ mission_tracker = {
 				mission.zone_index = nil
 				mission.scene = ""
 
-				return mission, string.format("Initialisation failed because a suitable location for %s mission could not be found",
-								mission.type)
+				return mission,
+					string.format("Initialisation failed because a suitable location for %s mission could not be found",
+						mission.type)
 			end
 
 			mission.spawn_timer = math.random(4, 8) * 3600
@@ -464,7 +469,7 @@ mission_tracker = {
 			return string.format(mission.report, mission.mission_id, mission.scene)
 		end,
 		progress = function(self, mission)
-			return {"Alert ongoing. Stand by for more emergency call."}
+			return { "Alert ongoing. Stand by for more emergency call." }
 		end,
 		in_scene = function(self, mission, distance)
 			return mission_tracker.sar:in_scene(mission, distance)
@@ -475,7 +480,7 @@ mission_tracker = {
 function initialize_mission(mission_type, target_zone, target_location, cencter_transform, radius)
 	local template = table.random(table.find_all(mission_template, function(x)
 		return (mission_type == nil or mission_type == x.type) and (mission_type ~= nil or not x.is_submission) and
-						       (mission_type ~= nil or not x.ongoing)
+			(mission_type ~= nil or not x.ongoing)
 	end))
 
 	if template == nil then
@@ -502,7 +507,7 @@ function initialize_mission(mission_type, target_zone, target_location, cencter_
 	mission.marker_y = 0
 
 	local mission, e = mission_tracker[template.tracker]:initialize(mission, template, target_zone, target_location,
-					cencter_transform, radius)
+		cencter_transform, radius)
 
 	if e ~= nil then
 		error(e)
@@ -511,7 +516,7 @@ function initialize_mission(mission_type, target_zone, target_location, cencter_
 
 	notice(string.format("Mission #%d has initialized", mission.mission_id))
 	server.notify(-1, mission_tracker[mission.tracker]:report(mission),
-					string.format("Emergency call from %s", mission.caller), 0)
+		string.format("Emergency call from %s", mission.caller), 0)
 	lock_ongoing_mission(mission.type)
 
 	for k, hq in pairs(g_savedata.headquarters) do
@@ -528,7 +533,7 @@ function reward_mission(mission)
 	local rp = server.getResearchPoints()
 	server.setCurrency(money, rp)
 	server.notify(-1, string.format("Receive $%d reward", reward),
-					string.format("Mission #%d has closed", mission.mission_id), 4)
+		string.format("Mission #%d has closed", mission.mission_id), 4)
 end
 
 function dispose_mission(mission)
@@ -540,7 +545,8 @@ function dispose_mission(mission)
 				server.despawnObject(g_savedata.objects[i].object_id, true)
 			end
 
-			notice(string.format("Object %s #%d has disposed", g_savedata.objects[i].type, g_savedata.objects[i].object_id))
+			notice(string.format("Object %s #%d has disposed", g_savedata.objects[i].type,
+				g_savedata.objects[i].object_id))
 			table.remove(g_savedata.objects, i)
 		end
 	end
@@ -572,7 +578,7 @@ function spawn_mission_location(mission)
 	end
 
 	local out_transform, is_success = server.spawnAddonLocation(transform, locations[mission.location_id].addon_index,
-					locations[mission.location_id].location_index)
+		locations[mission.location_id].location_index)
 
 	on_spawn_mission_id = nil
 
@@ -589,7 +595,8 @@ function arrived_to_missiion_scene(mission, player)
 
 	if not mission.arrived and mission_tracker[mission.tracker]:in_scene(mission, distance) then
 		mission.arrived = true
-		server.notify(-1, string.format("#%d - We have got a full report", mission.mission_id), "Team has arrived to scene", 0)
+		server.notify(-1, string.format("#%d - We have got a full report", mission.mission_id),
+			"Team has arrived to scene", 0)
 	end
 end
 
@@ -649,7 +656,8 @@ objective_tracker = {
 					objective.cpa_timer = math.random(1, 10) * 3600
 				end
 
-				server.setCharacterTooltip(objective.object_id, string.format("rescuee\nCPA Count: %d", objective.cpa_count))
+				server.setCharacterTooltip(objective.object_id,
+					string.format("rescuee\nCPA Count: %d", objective.cpa_count))
 			end
 
 			local transform = server.getObjectPos(objective.object_id)
@@ -689,8 +697,8 @@ objective_tracker = {
 		tick = function(self, objective, tick)
 			local transform = server.getObjectPos(objective.object_id)
 			objective.is_in_safe_zone = server.isInZone(transform, "clinic") or server.isInZone(transform, "hospital") or
-							                            server.isInZone(transform, "police station") or
-							                            server.isInZone(transform, "safe zone")
+				server.isInZone(transform, "police station") or
+				server.isInZone(transform, "safe zone")
 		end,
 		completed = function(self, objective)
 			return objective.is_in_safe_zone
@@ -841,8 +849,8 @@ function random_static_fire(zone)
 		local transform = server.getObjectPos(x.object_id)
 
 		return x.name == "static fire" and x.mission_id == nil and
-						       server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z) and
-						       distance_to_base(server.getObjectPos(x.object_id)) <= g_savedata.mission_range_max
+			server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z) and
+			distance_to_base(server.getObjectPos(x.object_id)) <= g_savedata.mission_range_max
 	end)
 
 	if #fires == 0 then
@@ -882,8 +890,8 @@ function refresh_mission_marker(peer, mission)
 
 	server.removeMapObject(peer, mission.marker_id)
 	server.addMapObject(peer, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil,
-					mission_tracker[mission.tracker]:report(mission), math.sqrt((mission.radius / 2) ^ 2 + (mission.radius / 2) ^ 2),
-					text, 255, 63, 191, 255)
+		mission_tracker[mission.tracker]:report(mission), math.sqrt((mission.radius / 2) ^ 2 + (mission.radius / 2) ^ 2),
+		text, 255, 63, 191, 255)
 end
 
 -- zones
@@ -909,7 +917,7 @@ end
 function initialize_offshore_zone()
 	local start_tile = server.getStartTile()
 	local transform, is_success = server.getOceanTransform(matrix.translation(start_tile.x, start_tile.y, start_tile.z),
-					4000, 12000)
+		4000, 12000)
 	local x, y, z = matrix.position(transform)
 	x = x + math.random() * 2000 - 1
 	z = z + math.random() * 2000 - 1
@@ -964,7 +972,7 @@ function random_zone(pattern, center_transform, range)
 
 	local zones = table.find_all(zones, function(x)
 		return x.available and x.name == suitable_zone and
-						       (center_transform == nil or matrix.distance(x.transform, center_transform) <= range)
+			(center_transform == nil or matrix.distance(x.transform, center_transform) <= range)
 	end)
 
 	if #zones == 0 then

@@ -226,6 +226,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local x, y, z = matrix.position(transform)
 
         server.announce("[LOG]", string.format("%.00f, %.00f, %.00f", x, y, z))
+    -- elseif command == "?weather" and is_admin then -- weather
+    --     local transform = server.getPlayerPos(peer_id)
+    --     local weather = server.getWeather(transform)
+
+    --     server.announce("[LOG]", string.format("fog: %.3f\nrain: %.3f\nsnow: %.3f\nwind: %.3f\ntemp: %.3f", weather.fog, weather.rain, weather.snow, weather.wind, weather.temp))
     elseif (command == "?location" or command == "?l") and is_admin then
         local verb, name = ...
 
