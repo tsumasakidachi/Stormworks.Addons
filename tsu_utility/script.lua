@@ -2,11 +2,11 @@ g_savedata = {
     vehicles = {},
     pins = {},
     vehicle_tooltip = property.checkbox("Display custom vehicle tooltip", false),
+    vehicle_keep_active = property.checkbox("Keep active all vehicles", false),
     vehicle_clearing = property.checkbox("Clear players vehicle on die", false),
     autosave_interval = property.slider("Autosave interval (min, -1 = disable)", -1, 60, 1, -1) * 3600,
     autosave_next = 0,
     time = 0,
-    eot = "END OF TABLE"
 }
 
 timing_default = 60
@@ -248,7 +248,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
     elseif (command == "?vehicle" or command == "?v") and is_admin then
         local verb, name = ...
 
-        if verb == "autoclear" and is_admin then
+        if verb == "autoclear" then
             local _, value = ...
 
             if value == "true" then
@@ -260,6 +260,10 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
             end
 
             server.announce("[NOTICE]", string.format("Vehicle clearing: %s", g_savedata.vehicle_clearing))
+        elseif verb == "keep-active" then
+            local _, value = ...
+
+            g_savedata.vehicle_keep_active = set_or_not(g_savedata.vehicle_keep_active, value)
         elseif verb == "tooltip" then
             local _, value = ...
 
@@ -335,6 +339,10 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
 
             if g_savedata.vehicle_tooltip then
                 set_vehicle_tooltip(vehicle)
+            end
+
+            if g_savedata.vehicle_keep_active then
+                server.setVehicleTransponder(vehicle.id, true)
             end
         end
 

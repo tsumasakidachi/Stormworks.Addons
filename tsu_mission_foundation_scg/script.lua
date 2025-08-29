@@ -26,19 +26,16 @@ g_savedata = {
       count_limited = true,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
       taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) * 3600,
-      eot = "END OF TABLE"
     },
     rescuee = {
       dispensable = false,
       cpa_recurrence_rate = property.slider("CPA recurrence rate (%)", 0, 100, 1, 20),
       cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 8),
       has_strobe = property.checkbox("Rescuees has strobe", true),
-      eot = "END OF TABLE"
     },
     fire = {
       dispensable = false,
       rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
-      eot = "END OF TABLE"
     },
     forest_fire = {
       dispensable = false
@@ -65,10 +62,8 @@ g_savedata = {
         markar_id = 0
       }
     },
-    eot = "END OF TABLE"
   },
   disabled_components = {},
-  eot = "END OF TABLE"
 }
 
 location_properties = { {
@@ -84,7 +79,7 @@ location_properties = { {
   report = "行方不明者\n悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "警察署からの通報"
+  note = "警察署からの通報",
 }, {
   pattern = "^mission:em_call_%d+$",
   tracker = "sar",
@@ -98,7 +93,7 @@ location_properties = { {
   report = "緊急搬送\nタス...ケ......タ......",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
   tracker = "sar",
@@ -112,7 +107,7 @@ location_properties = { {
   report = "落水者",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = ""
+  note = "",
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
   tracker = "sar",
@@ -126,7 +121,7 @@ location_properties = { {
   report = "落水者",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = ""
+  note = "",
 }, {
   pattern = "^mission:lifeboat_%d+$",
   tracker = "sar",
@@ -139,7 +134,7 @@ location_properties = { {
   search_radius = 500,
   report = "救命ボート",
   report_timer = 0,
-  note = ""
+  note = "",
 }, {
   pattern = "^mission:raft_%d+$",
   tracker = "sar",
@@ -153,7 +148,7 @@ location_properties = { {
   report = "水難事故\nいかだを作ってあそんでいたら転覆した!",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:freighter_fire_%d+$",
   tracker = "sar",
@@ -169,7 +164,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:ferry_fire_%d+$",
   tracker = "sar",
@@ -185,7 +180,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:tanker_fire_%d+$",
   tracker = "sar",
@@ -201,7 +196,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:boat_sink_%d+$",
   tracker = "sar",
@@ -217,7 +212,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 100,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:overboard_%d+$",
   tracker = "sar",
@@ -231,7 +226,7 @@ location_properties = { {
   report = "水難事故\n船から人が落ちた!",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "職員からの通報"
+  note = "職員からの通報",
 }, {
   pattern = "^mission:ferry_sink_%d+$",
   tracker = "sar",
@@ -247,7 +242,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:fishboat_fire_%d+$",
   tracker = "sar",
@@ -263,7 +258,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
   tracker = "sar",
@@ -279,7 +274,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 100,
   rescuee_max = 100,
-  note = "乗員からの通報"
+  note = "乗員からの通報",
 }, {
   pattern = "^mission:diver_yacht_%d+$",
   tracker = "sar",
@@ -293,7 +288,7 @@ location_properties = { {
   report = "行方不明者\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:diver_missing_%d+$",
   tracker = "sar",
@@ -307,7 +302,7 @@ location_properties = { {
   report = "行方不明のダイバー",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = ""
+  note = "",
 }, {
   pattern = "^mission:oil_platform_fire_%d+$",
   tracker = "sar",
@@ -325,7 +320,7 @@ location_properties = { {
   rescuee_max = 75,
   fire_min = 50,
   fire_max = 100,
-  note = "職員からの通報"
+  note = "職員からの通報",
 }, {
   pattern = "^mission:tunnel_fire_%d+$",
   tracker = "sar",
@@ -341,7 +336,7 @@ location_properties = { {
   report_timer_max = 0,
   fire_min = 50,
   fire_max = 100,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:car_collision_%d+$",
   tracker = "sar",
@@ -355,7 +350,7 @@ location_properties = { {
   report = "交通事故\n自動車が正面衝突しけが人がいる.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:car_stuck_%d+$",
   tracker = "sar",
@@ -369,7 +364,7 @@ location_properties = { {
   report = "スタックした自動車",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = ""
+  note = "",
 }, {
   pattern = "^mission:aircraft_down_%d+$",
   tracker = "sar",
@@ -383,7 +378,7 @@ location_properties = { {
   report = "メーデー\nバラバラになって落ちていく飛行機が見えた!",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
@@ -399,7 +394,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:campsite_fire_%d+$",
   tracker = "sar",
@@ -415,7 +410,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "キャンプ場からの通報"
+  note = "キャンプ場からの通報",
 }, {
   pattern = "^mission:hostile_forest_%d+$",
   tracker = "sar",
@@ -429,7 +424,7 @@ location_properties = { {
   report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "パトロールからの通報"
+  note = "パトロールからの通報",
 }, {
   pattern = "^mission:wind_turbine_fire_%d+$",
   tracker = "sar",
@@ -443,7 +438,7 @@ location_properties = { {
   report = "火災\n洋上風力発電機のエレベーターが故障, 落下し火災が発生. タービン室から降りられず閉じこめられている.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "パトロールからの通報"
+  note = "パトロールからの通報",
   -- }, {
   --     pattern = "^mission:hostile_offshore_%d+$",
   --     tracker = "sar",
@@ -457,7 +452,7 @@ location_properties = { {
   --     --     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   --     report_timer_min = 0,
   --     report_timer_max = 0,
-  --     note = "パトロールからの通報"
+  --     note = "パトロールからの通報",
 }, {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
@@ -471,7 +466,7 @@ location_properties = { {
   report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "パトロールからの通報"
+  note = "パトロールからの通報",
 }, {
   pattern = "^mission:naval_mine_%d+$",
   tracker = "sar",
@@ -485,7 +480,7 @@ location_properties = { {
   report = "落下物\n付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊 (報酬なし) またはスクラップヤードへ輸送 (報酬あり) せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "パトロールからの通報"
+  note = "パトロールからの通報",
 }, {
   pattern = "^mission:train_crash_head_on$",
   tracker = "sar",
@@ -501,7 +496,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "運転士からの通報"
+  note = "運転士からの通報",
 }, {
   pattern = "^mission:train_crash_log_trailer$",
   tracker = "sar",
@@ -517,7 +512,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "運転士からの通報"
+  note = "運転士からの通報",
 }, {
   pattern = "^mission:power_plant_fire_%d+$",
   tracker = "sar",
@@ -533,7 +528,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "職員からの通報"
+  note = "職員からの通報",
 }, {
   pattern = "^mission:chemical_storage_fire_%d+$",
   tracker = "sar",
@@ -549,7 +544,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 25,
   rescuee_max = 75,
-  note = "職員からの通報"
+  note = "職員からの通報",
 }, {
   pattern = "^mission:highway_car_%d+$",
   tracker = "sar",
@@ -565,7 +560,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 100,
   rescuee_max = 100,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:highway_oil_tanker_%d+$",
   tracker = "sar",
@@ -581,7 +576,7 @@ location_properties = { {
   report_timer_max = 0,
   rescuee_min = 100,
   rescuee_max = 100,
-  note = "民間人からの通報"
+  note = "民間人からの通報",
 }, {
   pattern = "^mission:air_medevac_%d+$",
   tracker = "sar",
@@ -595,7 +590,7 @@ location_properties = { {
   report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "職員からの通報"
+  note = "職員からの通報",
 }, {
   pattern = "^mission:pirate_boat_%d+$",
   tracker = "sar",
@@ -609,7 +604,7 @@ location_properties = { {
   report = "海賊",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "哨戒機からの通報"
+  note = "哨戒機からの通報",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
@@ -623,7 +618,7 @@ location_properties = { {
   report = "竜巻警報\nこのエリアで竜巻が発生する可能性が高まっている...",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "気象当局からの通報"
+  note = "気象当局からの通報",
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
@@ -637,7 +632,7 @@ location_properties = { {
   report = "大渦警報\nこのエリアで大渦が発生する可能性が高まっている...",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "気象当局からの通報"
+  note = "気象当局からの通報",
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
@@ -651,33 +646,29 @@ location_properties = { {
   report = "隕石警報\nこのエリアに隕石の落下が予測されている...",
   report_timer_min = 0,
   report_timer_max = 0,
-  note = "気象当局からの通報"
+  note = "気象当局からの通報",
 } }
 
 facilty_properties = { {
   facility = "base",
   mapped = true,
-  icon = 11
+  icon = 11,
 }, {
   facility = "hospital",
   mapped = true,
-  icon = 8
-}, {
-  facility = "clinic",
-  mapped = true,
-  icon = 8
+  icon = 8,
 }, {
   facility = "police_station",
   mapped = true,
-  icon = 11
+  icon = 11,
 }, {
   facility = "scrap_yard",
   mapped = true,
-  icon = 3
+  icon = 3,
 }, {
-  facility = "first_spawn"
+  facility = "first_spawn",
 }, {
-  facility = "respawn"
+  facility = "respawn",
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
@@ -698,12 +689,12 @@ strings = {
     tornado = "tornado",
     tsunami = "tsunami",
     eruption = "eruption",
-    meteor = "meteor"
+    meteor = "meteor",
   },
   notice = {
     massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ.",
-    mission_taken_to_long = "協力者によってミッション#%dの残りの行方不明者が発見された."
-  }
+    mission_taken_to_long = "協力者によってミッション#%dの残りの行方不明者が発見された.",
+  },
 }
 
 mission_trackers = {
@@ -922,7 +913,6 @@ object_trackers = {
       end)
       local vital_update = server.getCharacterData(self.id)
       local is_in_hospital = facilities:is_in_facility(self.transform, "hospital")
-      local is_in_clinic = facilities:is_in_facility(self.transform, "clinic")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
       local activated = self.activated or players:is_in_range(self.transform, 500)
       local is_doctor_nearby = is_doctor_nearby(self.transform)
@@ -970,7 +960,7 @@ object_trackers = {
       self.vital = vital_update
       self.activated = activated
 
-      if is_in_hospital or not self.is_cpa_recurrent and (is_in_base or is_in_clinic) then
+      if is_in_hospital or not self.is_cpa_recurrent and is_in_base then
         self.admitted_time = self.admitted_time + tick
       end
 
