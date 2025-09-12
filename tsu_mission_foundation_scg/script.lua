@@ -1,5 +1,5 @@
 name = "TSU Mission Foundation for SCG"
-version = "1.2.2"
+version = "1.3.0"
 
 -- properties
 g_savedata = {
@@ -21,9 +21,13 @@ g_savedata = {
       interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 20) * 3600,
       range_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
       range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
-      range_limited = true,
-      count = 0,
       count_limited = true,
+      count = 0,
+      area_limited = true,
+      area_x_min = -24000,
+      area_x_max = 10000,
+      area_y_min = -25000,
+      area_y_max = -12000,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
       taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) * 3600,
     },
@@ -2187,7 +2191,7 @@ function tick_object(object, tick)
     if nearby then
       object.command = table.random(object.actions)
 
-      console.log(string.format("%s#%d entered %s command.", object.type, object.id, object.command))
+      console.log(string.format("%s#%d has entered %s command.", object.type, object.id, object.command))
     end
   elseif object.type == "vehicle" and #object.actions > 0 and (object.command == "attack" or object.command == "escape") then
   end
@@ -2952,9 +2956,13 @@ end
 
 function teleport_to_spawn_points(peer_id)
   local _zones = facilities:find_all(function(x)
-    return facilities:is_in_range(x, start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
+    return facilities:is_in_range(x, get_start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
         x.facility == "respawn"
   end)
+
+  if #_zones == 0 then
+    console.error("Respawn points were not found.")
+  end
   local _z = table.random(_zones)
 
   server.setPlayerPos(peer_id, _z.transform)
@@ -3086,7 +3094,7 @@ function onTick(tick)
 
   if g_savedata.subsystems.mission.timer_tickrate > 0 then
     if g_savedata.subsystems.mission.interval <= 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
-      random_mission(start_tile_transform(), g_savedata.subsystems.mission.range_max,
+      random_mission(get_center_transform(), g_savedata.subsystems.mission.range_max,
         g_savedata.subsystems.mission.range_min)
       g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min,
         g_savedata.subsystems.mission.interval_max)
@@ -3114,8 +3122,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif verb == "stop" and is_admin then
       g_savedata.subsystems.mission.timer_tickrate = 0
     elseif verb == "init" and is_admin then
+      local center = get_center_transform()
       local location = ...
-      local center = start_tile_transform()
 
       if location ~= nil then
         location = "^" .. location .. "$"
@@ -3165,21 +3173,52 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif verb == "debug" and is_admin then
       g_savedata.mode = "debug"
     elseif verb == "limit-count" and is_admin then
-      local set = ...
-      g_savedata.subsystems.mission.count_limited = set_or_not(g_savedata.subsystems.mission.count_limited, set)
+      local value = ...
+      g_savedata.subsystems.mission.count_limited = set_or_not(g_savedata.subsystems.mission.count_limited, value)
     elseif verb == "range-min" and is_admin then
-      local range = ...
-      local range = tonumber(range)
+      local value = ...
+      value = tonumber(value)
 
-      if range ~= nil then
-        g_savedata.subsystems.mission.range_min = range * 1000
+      if value ~= nil then
+        g_savedata.subsystems.mission.range_min = value * 1000
       end
     elseif verb == "range-max" and is_admin then
-      local range = ...
-      local range = tonumber(range)
+      local value = ...
+      value = tonumber(value)
 
-      if range ~= nil then
-        g_savedata.subsystems.mission.range_max = range * 1000
+      if value ~= nil then
+        g_savedata.subsystems.mission.range_max = value * 1000
+      end
+    elseif verb == "limit-area" and is_admin then
+      local value = ...
+      g_savedata.subsystems.mission.area_limited = set_or_not(g_savedata.subsystems.mission.area_limited, value)
+    elseif verb == "area-x-min" and is_admin then
+      local value = ...
+      value = tonumber(value)
+
+      if value ~= nil then
+        g_savedata.subsystems.mission.area_x_min = value
+      end
+    elseif verb == "area-x-max" and is_admin then
+      local value = ...
+      value = tonumber(value)
+
+      if value ~= nil then
+        g_savedata.subsystems.mission.area_x_max = value
+      end
+    elseif verb == "area-y-min" and is_admin then
+      local value = ...
+      value = tonumber(value)
+
+      if value ~= nil then
+        g_savedata.subsystems.mission.area_y_min = value
+      end
+    elseif verb == "area-y-max" and is_admin then
+      local value = ...
+      value = tonumber(value)
+
+      if value ~= nil then
+        g_savedata.subsystems.mission.area_y_max = value
       end
     elseif verb == "gather" and is_admin then
       local mission_id = ...
@@ -3273,7 +3312,7 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
 
   local transform = server.getPlayerPos(peer_id)
 
-  if landscapes:is_in_landscape(transform, "first_spawn") then
+  if facilities:is_in_facility(transform, "first_spawn") then
     teleport_to_spawn_points(peer_id)
   end
 end
@@ -3486,7 +3525,7 @@ function onCreate(is_world_create)
   console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))
   console.notify(string.format("Active missions: %d", #g_savedata.missions))
   console.notify(string.format("Active objects: %d", #g_savedata.objects))
-  console.notify(string.format("Mission range limited: %s", g_savedata.subsystems.mission.range_limited))
+  console.notify(string.format("Mission area limited: %s", g_savedata.subsystems.mission.area_limited))
   console.notify(string.format("Mission count limited: %s", g_savedata.subsystems.mission.count_limited))
 end
 
@@ -3545,7 +3584,22 @@ function despawn_vehicle_group(group_id, is_instant)
   end
 end
 
-function start_tile_transform()
+function get_center_transform()
+  local hq = table.find(g_savedata.objects, function(x) return x.tracker == "headquarter" end)
+
+  if g_savedata.subsystems.mission.area_limited then
+    local x = math.random(0, g_savedata.subsystems.mission.area_x_max - g_savedata.subsystems.mission.area_x_min) + g_savedata.subsystems.mission.area_x_min
+    local y = math.random(0, g_savedata.subsystems.mission.area_y_max - g_savedata.subsystems.mission.area_y_min) + g_savedata.subsystems.mission.area_y_min
+
+    return matrix.translation(x, 0, y)
+  elseif hq ~= nil then
+    return hq.transform
+  else
+    return get_start_tile_transform()
+  end
+end
+
+function get_start_tile_transform()
   local start_tile = server.getStartTile()
   return matrix.translation(start_tile.x, start_tile.y, start_tile.z)
 end

@@ -1542,7 +1542,7 @@ function onTick(tick)
 
     if g_savedata.mission_timer_tickrate > 0 then
         if g_savedata.mission_interval <= 0 and (not g_savedata.mission_count_limited or missions_less_than_limit()) then
-            random_mission(start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min)
+            random_mission(get_start_tile_transform(), g_savedata.mission_range_max, g_savedata.mission_range_min)
             g_savedata.mission_interval = math.random(g_savedata.mission_interval_min, g_savedata.mission_interval_max)
         else
             g_savedata.mission_interval = g_savedata.mission_interval - (tick * g_savedata.mission_timer_tickrate)
@@ -1569,7 +1569,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         elseif verb == "init" and is_admin then
             local location, report_timer = ...
             local report_timer = tonumber(report_timer)
-            local center = start_tile_transform()
+            local center = get_start_tile_transform()
             location = "^" .. location .. "$"
             local location = random_location(center, g_savedata.mission_range_max, g_savedata.mission_range_min, {location}, {}, true, false)
 
@@ -1869,7 +1869,7 @@ function despawn_vehicle_group(group_id, is_instant)
     end
 end
 
-function start_tile_transform()
+function get_start_tile_transform()
     local start_tile = server.getStartTile()
     return matrix.translation(start_tile.x, start_tile.y, start_tile.z)
 end
