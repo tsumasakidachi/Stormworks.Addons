@@ -23,7 +23,7 @@ g_savedata = {
       range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
       count_limited = true,
       count = 0,
-      area_limited = true,
+      area_limited = false,
       area_x_min = -24000,
       area_x_max = 10000,
       area_y_min = -25000,
@@ -599,12 +599,12 @@ location_properties = { {
   pattern = "^mission:pirate_boat_%d+$",
   tracker = "sar",
   suitable_zones = { "offshore", "shallow", "channel" },
-  is_main_location = false,
+  is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 50,
+  search_radius = 1000,
   report = "海賊",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -876,7 +876,7 @@ mission_trackers = {
 object_trackers = {
   rescuee = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "character" and tags.tracker ~= nil and tags.tracker == "rescuee"
+      return type == "character" and tags.tracker == "rescuee"
     end,
     init = function(self)
       local hp_min = -20
@@ -976,6 +976,9 @@ object_trackers = {
     complete = function(self)
       return self.admitted_time > 120
     end,
+    fail = function(self)
+      return self.vital.dead and self.admitted_time > 120
+    end,
     reward = function(self)
       local value = math.ceil(self.reward_base * (math.floor(self.vital.hp / 25) / 4))
 
@@ -1049,6 +1052,9 @@ object_trackers = {
     complete = function(self)
       return self.cooling_timer <= 0
     end,
+    fail = function(self)
+      return false
+    end,
     reward = function(self)
       return self.reward_base
     end,
@@ -1091,6 +1097,9 @@ object_trackers = {
     complete = function(self)
       return not self.is_lit
     end,
+    fail = function(self)
+      return false
+    end,
     reward = function(self)
       return self.reward_base
     end,
@@ -1106,21 +1115,28 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 2000,
+    reward_base = 5000,
     text = "森林火災を鎮火",
     marker_type = 5,
     clear_timer = 0
   },
   suspect = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "character" and tags.tracker ~= nil and tags.tracker == "suspect"
+      return type == "character" and tags.tracker == "suspect"
     end,
     init = function(self)
       self.vital = server.getCharacterData(self.id)
-      self.path = {}
       self.admitted_time = 0
-
-      server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.ai ~= nil)
+      self.team = 2
+      self.neutralized = false
+      self.ai_state = 0
+      self.destination = nil
+      self.close_quarters = false
+      self.weapon = table.random({ { id = 35, slot = 2 }, { id = 39, slot = 1 } })
+      server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
+      server.setAICharacterTeam(self.id, self.team)
+      server.setAICharacterTargetTeam(self.id, 0, false)
+      server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, 0, 0.0)
     end,
     clear = function(self)
     end,
@@ -1134,53 +1150,116 @@ object_trackers = {
       local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
 
-      if is_in_base or is_in_police_sta then
-        self.admitted_time = self.admitted_time + tick
+      if self.loaded and not self.neutralized and (vital_update.incapacitated or vital_update.dead) then
+        self.neutralized = true
+        self.ai_state = 0
+        server.setAIState(self.id, self.ai_state)
+        server.setAICharacterTargetTeam(self.id, 0, false)
+        console.log(string.format("%s#%d has neutralized.", self.tracker, self.id))
       end
 
-      if self.ai ~= nil then
-        local command = nil
+      if self.loaded and not self.neutralized then
+        local target_vehicle = nil
+        local distance = math.maxinteger
 
         for i = 1, #g_savedata.objects do
-          if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
-            command = g_savedata.objects[i].command
+          if g_savedata.objects[i].tracker == "unit" then
+            local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
+
+            if _d < 500 and _d < distance then
+              distance = _d
+              target_vehicle = g_savedata.objects[i]
+            end
           end
         end
 
-        if command == "escape" then
-          if self.ai == "pilot" then
-            if #self.path > 0 then
-              if matrix.distance(self.transform, self.path[1]) <= 100 then
-                table.remove(self.path, 1)
-                self.targeted = false
-              end
+        local close_quarters_update = distance < 100 or target_vehicle == nil
 
-              if not self.targeted then
-                server.setAITarget(self.id, self.path[1])
-                server.setAIState(self.id, 1)
-                self.targeted = true
+        if self.role == "pilot" then
+          if self.command == "escape" then
+            if self.ai_state == 0 then
+              self.destination = locations:random_offshore(self.transform, 10000, 20000)
+              self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
+            end
+          elseif self.command == "attack" then
+            if target_vehicle ~= nil then
+              self.ai_state = 1
+              server.setAITarget(self.id, target_vehicle.transform)
+              server.setAIState(self.id, self.ai_state)
+              server.setAICharacterTargetTeam(self.id, 0, true)
+            end
+          end
+        elseif self.role == "gunner" then
+          if self.ai_state == 0 then
+            self.ai_state = 1
+            server.setAIState(self.id, self.ai_state)
+            server.setAICharacterTargetTeam(self.id, 0, true)
+          end
+        elseif self.role == "designator" then
+          if self.ai_state == 0 then
+            self.ai_state = 1
+            server.setAIState(self.id, self.ai_state)
+            server.setAICharacterTargetTeam(self.id, 0, true)
+          end
+        else
+          server.setAICharacterTargetTeam(self.id, 0, true)
 
-                local x, y, z = matrix.position(self.path[1])
+          if self.mount_vehicle ~= nil and self.mount_seat ~= nil then
+            if close_quarters_update and not self.close_quarters then
+              server.setObjectPos(self.id, self.transform)
+            elseif not close_quarters_update and self.close_quarters then
+              local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
+              local _d = matrix.distance(vehicle.transform, self.transform)
 
-                console.notify(string.format("%s#%d destination to %.0f, %.0f, %.0f", self.tracker, self.id, x, y, z))
-              end
-            else
-              local distance = math.random(5000, 10000)
-              local heading = math.random() * 2
-              local x = distance * math.cos(heading * math.pi)
-              local z = distance * math.sin(heading * math.pi)
-              local destination = matrix.multiply(self.transform, matrix.translation(x, 0, z))
-              local path = server.pathfind(self.transform, destination, "ocean_path", "")
-              self.path = {}
-
-              for i = 1, #path do
-                table.insert(self.path, matrix.translation(path[i].x, 0, path[i].z))
+              if _d <= 50 then
+                server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
               end
             end
           end
-        elseif command == nil then
-          server.setAIState(self.id, 0)
         end
+
+        self.close_quarters = close_quarters_update
+
+        -- if self.command == "escape" then
+        --   if self.role == "pilot" and self.ai_state == 0 then
+        --     self.destination = locations:random_offshore(self.transform, 10000, 20000)
+        --     self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
+        --   end
+        -- elseif self.command == "attack" then
+        --   if self.role == "pilot" then
+        --     if target_vehicle ~= nil then
+        --       self.ai_state = 1
+        --       server.setAITarget(self.id, target_vehicle.transform)
+        --       server.setAIState(self.id, self.ai_state)
+        --       server.setAICharacterTargetTeam(self.id, 0, true)
+        --     end
+        --   elseif self.role == "gunner" and self.ai_state == 0 then
+        --     self.ai_state = 1
+        --     server.setAIState(self.id, self.ai_state)
+        --     server.setAICharacterTargetTeam(self.id, 0, true)
+        --   elseif self.role == "designator" and self.ai_state == 0 then
+        --     self.ai_state = 1
+        --     server.setAIState(self.id, self.ai_state)
+        --     server.setAICharacterTargetTeam(self.id, 0, true)
+        --   elseif self.close_quarters ~= nil and self.mount_seat ~= nil then
+        --     server.setAICharacterTargetTeam(self.id, 0, true)
+
+        --     if close_quarters_update and not self.close_quarters then
+        --       server.setObjectPos(self.id, self.transform)
+        --     elseif not close_quarters_update and self.close_quarters then
+        --       local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
+        --       local _d = matrix.distance(vehicle.transform, self.transform)
+
+        --       if _d <= 50 then
+        --         server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
+        --       end
+        --     end
+        --   end
+        -- end
+      end
+
+      if is_in_base or is_in_police_sta then
+        self.admitted_time = self.admitted_time + tick
       end
 
       self.vital = vital_update
@@ -1190,6 +1269,9 @@ object_trackers = {
     end,
     complete = function(self)
       return self.admitted_time > 120
+    end,
+    fail = function(self)
+      return not self.neutralized and self.command ~= nil and not players:is_in_range(self.transform, 2000) or self.vital.dead
     end,
     reward = function(self)
       return self.reward_base
@@ -1206,7 +1288,7 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 100,
+    reward_base = 1000,
     text = "被疑者を制圧して基地へ連行",
     marker_type = 1,
     clear_timer = 300
@@ -1245,6 +1327,9 @@ object_trackers = {
     complete = function(self)
       return self.amount <= self.complete_threshold
     end,
+    fail = function(self)
+      return false
+    end,
     reward = function(self)
       return self.reward_base
     end,
@@ -1267,7 +1352,7 @@ object_trackers = {
   },
   wreckage = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "vehicle" and tags.tracker ~= nil and tags.tracker == "wreckage"
+      return type == "vehicle" and tags.tracker == "wreckage"
     end,
     init = function(self)
       self.components_checked = false
@@ -1317,6 +1402,9 @@ object_trackers = {
     end,
     complete = function(self)
       return self.completion_timer >= 300
+    end,
+    fail = function(self)
+      return false
     end,
     reward = function(self)
       return math.ceil(self.mass * self.reward_base / 100) * 100
@@ -1385,6 +1473,9 @@ object_trackers = {
     complete = function(self)
       return self.vital.incapacitated or self.vital.dead
     end,
+    fail = function(self)
+      return false
+    end,
     reward = function(self)
       return self.reward_base
     end,
@@ -1407,7 +1498,7 @@ object_trackers = {
   },
   sniffer = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "creature" and tags.tracker ~= nil and tags.tracker == "sniffer"
+      return type == "creature" and tags.tracker == "sniffer"
     end,
     init = function(self)
       server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
@@ -1424,6 +1515,9 @@ object_trackers = {
       return false
     end,
     complete = function(self)
+      return false
+    end,
+    fail = function(self)
       return false
     end,
     reward = function(self)
@@ -1448,7 +1542,7 @@ object_trackers = {
   },
   headquarter = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "vehicle" and tags.tracker ~= nil and tags.tracker == "headquarter"
+      return type == "vehicle" and tags.tracker == "headquarter"
     end,
     init = function(self)
       self.components_checked = false
@@ -1648,6 +1742,9 @@ object_trackers = {
     complete = function(self)
       return false
     end,
+    fail = function(self)
+      return false
+    end,
     reward = function(self)
       return self.reward_base
     end,
@@ -1695,6 +1792,9 @@ object_trackers = {
       return false
     end,
     complete = function(self)
+      return false
+    end,
+    fail = function(self)
       return false
     end,
     reward = function(self)
@@ -1746,9 +1846,6 @@ function initialize_mission(_locations, report_timer, ...)
   local mission = {}
   mission.cleared = false
   mission.id = g_savedata.subsystems.mission.count + 1
-
-  console.notify(string.format("Initializing mission #%d.", mission.id))
-
   mission.locations = _locations
   mission.start_position = mission.locations[1].transform
   mission.tracker = mission.locations[1].tracker
@@ -1777,11 +1874,11 @@ function initialize_mission(_locations, report_timer, ...)
   table.insert(g_savedata.missions, mission)
   spawn_mission(mission)
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
+  
+  console.notify(string.format("Mission #%d has initialized.", mission.id))
 end
 
 function clear_mission(mission)
-  console.notify(string.format("Clearing mission #%d.", mission.id))
-
   for i = #g_savedata.objects, 1, -1 do
     if g_savedata.objects[i].mission == mission.id then
       despawn_object(g_savedata.objects[i])
@@ -1792,7 +1889,7 @@ function clear_mission(mission)
   mission:clear()
   mission.cleared = true
 
-  server.notify(-1, string.format("Cleared mission #%d.", mission.id), mission:report(), 4)
+  console.notify(string.format("Mission #%d has cleared.", mission.id))
 end
 
 function tick_mission(mission, tick)
@@ -1858,7 +1955,12 @@ function tick_mission(mission, tick)
   end
 
   if mission:complete() or mission.terminated then
-    reward_mission(mission)
+    if not server.getGameSettings().infinite_money then
+      reward_mission(mission)
+    else
+      server.notify(-1, string.format("Mission #%d has cleared.", mission.id), nil, 4)
+    end
+
     clear_mission(mission)
   end
 end
@@ -1914,13 +2016,13 @@ function spawn_mission(mission)
 
   mission.spawned = true
 
-  console.notify(string.format("Spawned mission #%d.", mission.id))
+  console.notify(string.format("Mission #%d has spawned.", mission.id))
 end
 
 function reward_mission(mission)
   local reward = mission:reward()
 
-  transact(reward, string.format("Cleared mission #%d.", mission.id))
+  transact(reward, string.format("Mission #%d has cleared.", mission.id))
 end
 
 function terminate_mission(mission)
@@ -2046,22 +2148,25 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
   object.mission = mission_id
   object.loaded = false
   object.completed = false
+  object.failed = false
   object.cleared = false
   object.elapsed_clear = 0
   object.transform = position(object)
   object.tracker = nil
-  object.ai = nil
+  object.enroute = false
+  object.paths = {}
   object.mounted = false
   object.mounts = {}
+  object.team = 0
+  object.role = nil
+  object.commands = {}
 
-  if type == "vehicle" then
-    object.command = nil
-    object.actions = {}
-
-    if object.tags.actions ~= nil then
-      object.actions = string.split(object.tags.actions, ";")
-    end
+  if object.tags.commands ~= nil then
+    object.commands = string.split(object.tags.commands, ";")
   end
+
+  object.command = nil
+  object.invocation_distance = tonumber(object.tags.invocation_distance) or 100
 
   for k, v in pairs(object_trackers) do
     if v.test_type(object, id, type, tags, component_id, mission_id, table.unpack(params)) then
@@ -2070,19 +2175,12 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
     end
   end
 
-  if object.tags.mount_vehicle ~= nil and object.tags.mount_seat ~= nil then
+  if object.type == "character" and object.tags.mount ~= nil then
     for i = 1, #g_savedata.objects do
-      if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].mission == mission_id and string.lower(g_savedata.objects[i].name) == string.lower(object.tags.mount_vehicle) then
-        table.insert(g_savedata.objects[i].mounts, {
-          id = id,
-          seat = object.tags.mount_seat
-        })
+      if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].mission == mission_id and string.lower(g_savedata.objects[i].name) == string.lower(object.tags.mount) then
+        table.insert(g_savedata.objects[i].mounts, object.id)
       end
     end
-  end
-
-  if object.type == "character" and object.tags.ai ~= nil then
-    object.ai = object.tags.ai
   end
 
   if object.type == "vehicle" and object.tags.keep_active == "true" then
@@ -2106,7 +2204,6 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
 end
 
 function clear_object(object)
-  console.notify(string.format("Clearing object %s#%d.", object.type, object.id))
 
   if object.tracker ~= nil then
     object:clear()
@@ -2115,6 +2212,7 @@ function clear_object(object)
   server.removeMapID(-1, object.marker_id)
 
   object.cleared = true
+  console.notify(string.format("Cleared %s#%d.", object.type, object.id))
 end
 
 function despawn_object(object)
@@ -2130,8 +2228,36 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
+  object.transform = position(object)
+
+  if object.type == "character" and #object.commands > 0 and object.command == nil and players:is_in_range(object.transform, object.invocation_distance) then
+    object.command = table.random(object.commands)
+    console.log(string.format("%s#%d has invoked %s command.", object.type, object.id, object.command))
+
+    for i = 1, #g_savedata.objects do
+      if g_savedata.objects[i].mission == object.mission and g_savedata.objects[i].type == object.type and g_savedata.objects[i].team == object.team and matrix.distance(g_savedata.objects[i].transform, object.transform) <= 50 then
+        g_savedata.objects[i].command = object.command
+        console.log(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
+      end
+    end
+  end
+
+  if object.type == "character" and #object.paths > 0 then
+    if matrix.distance(object.transform, object.paths[1]) <= 100 then
+      table.remove(object.paths, 1)
+      object.enroute = false
+    end
+
+    if not object.enroute then
+      object.enroute = true
+      server.setAITarget(object.id, object.paths[1])
+      server.setAIState(object.id, object.ai_state)
+      local x, y, z = matrix.position(object.paths[1])
+      console.notify(string.format("%s#%d destination to %.0f, %.0f, %.0f.", object.tracker, object.id, x, y, z))
+    end
+  end
+
   if object.tracker ~= nil then
-    object.transform = position(object) or object.transform
     object:tick(tick)
 
     server.removeMapID(-1, object.marker_id)
@@ -2145,28 +2271,22 @@ function tick_object(object, tick)
       server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     end
 
-    if object.mission ~= nil and not object.completed and object:complete() then
-      for j = 1, #g_savedata.missions do
-        if g_savedata.missions[j].id == object.mission then
-          local reward = object:reward()
-          g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
+    if not object.failed and object:fail() then
+      object.failed = true
+      server.notify(-1, object.text, "Objective has failed.", 2)
+    end
 
-          console.notify(string.format("Reward: %d", reward))
-        end
-      end
-
-      local label = object.text
-
-      for i = 1, #players.items do
-        if matrix.distance(object.transform, players.items[i].transform) <= 250 then
-          server.notify(players.items[i].id, label, "Objective achieved", 4)
-        end
+    if not object.failed and not object.completed and object:complete() then
+      if not server.getGameSettings().infinite_money then
+        reward_object(object)
+      else
+        server.notify(-1, object.text, "Objective has achieved.", 4)
       end
 
       object.completed = true
     end
 
-    if object.mission ~= nil and object.completed then
+    if object.mission ~= nil and (object.completed or object.failed) then
       if object.elapsed_clear >= object.clear_timer then
         despawn_object(object)
       else
@@ -2174,26 +2294,19 @@ function tick_object(object, tick)
       end
     end
   end
+end
 
-  if object.type == "vehicle" and #object.actions > 0 and object.command == nil then
-    local nearby = false
+function reward_object(object)
+  local reward = object:reward()
 
-    for i = 1, #g_savedata.objects do
-      if g_savedata.objects[i].tracker == "unit" then
-        nearby = nearby or matrix.distance(g_savedata.objects[i].transform, object.transform) < 500
+  if object.mission ~= nil then
+    for j = 1, #g_savedata.missions do
+      if g_savedata.missions[j].id == object.mission then
+        g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
       end
     end
-
-    for i = 1, #players.items do
-      nearby = nearby or matrix.distance(players.items[i].transform, object.transform) < 500
-    end
-
-    if nearby then
-      object.command = table.random(object.actions)
-
-      console.log(string.format("%s#%d has entered %s command.", object.type, object.id, object.command))
-    end
-  elseif object.type == "vehicle" and #object.actions > 0 and (object.command == "attack" or object.command == "escape") then
+  else
+    transact(reward, "Objective has achieved.")
   end
 end
 
@@ -2261,6 +2374,10 @@ function position(object)
     return server.getVehiclePos(object.id)
   elseif is_object(object) then
     return server.getObjectPos(object.id)
+  elseif object.transform ~= nil then
+    return object.transform
+  else
+    return nil
   end
 end
 
@@ -2289,14 +2406,67 @@ end
 
 function mount_vehicle(vehicle)
   local components = server.getVehicleComponents(vehicle.id)
+  local priority_seats = { "pilot", "driver", "designator", "gunner" }
+  local m = 1
+  local m_end = #vehicle.mounts
+  local data = server.getVehicleData(vehicle.id)
 
-  for i = 1, #vehicle.mounts do
-    local seats = table.find_all(components.components.seats, function(x)
-      return string.lower(x.name) == string.lower(vehicle.mounts[i].seat)
-    end)
-    local seat = table.random(seats)
-    server.setSeated(vehicle.mounts[i].id, vehicle.id, seat.pos.x, seat.pos.y, seat.pos.z)
+  for i = 1, #priority_seats do
+    for j = 1, #components.components.seats do
+      if string.lower(components.components.seats[j].name) == priority_seats[i] then
+        server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[j].pos.x, components.components.seats[j].pos.y, components.components.seats[j].pos.z)
+        components.components.seats[j].seated_id = vehicle.mounts[m]
+
+        for k = 1, #g_savedata.objects do
+          if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
+            g_savedata.objects[k].role = priority_seats[i]
+            g_savedata.objects[k].mount_vehicle = vehicle.id
+            g_savedata.objects[k].mount_seat = components.components.seats[j]
+
+            if vehicle.team ~= g_savedata.objects[k].team then
+              local vehicle_ids = server.getVehicleGroup(data.group_id)
+              vehicle.team = g_savedata.objects[k].team
+
+              for l = 1, #vehicle_ids do
+                server.setAIVehicleTeam(vehicle_ids[l], vehicle.team)
+              end
+            end
+          end
+        end
+
+        m = m + 1
+
+        if m > m_end then
+          goto priority_seat_mount_completed
+        end
+      end
+    end
   end
+
+  ::priority_seat_mount_completed::
+
+  for i = 1, #components.components.seats do
+    if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
+      server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
+      components.components.seats[i].seated_id = vehicle.mounts[m]
+
+      for k = 1, #g_savedata.objects do
+        if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
+          g_savedata.objects[k].role = nil
+          g_savedata.objects[k].mount_vehicle = vehicle.id
+          g_savedata.objects[k].mount_seat = components.components.seats[i]
+        end
+      end
+
+      m = m + 1
+
+      if m > m_end then
+        goto other_seat_mount_completed
+      end
+    end
+  end
+
+  ::other_seat_mount_completed::
 end
 
 function wreck_players_vehicle(player)
@@ -2501,7 +2671,7 @@ locations = {
         text = text .. patterns[i]
       end
 
-      console.log(text)
+      console.error(text)
       return {}
     end
 
@@ -2574,7 +2744,7 @@ locations = {
           range_max = _locations[i].search_radius
         end
       else
-        console.log(string.format(
+        console.error(string.format(
           "Although locations matching the requirements were found, no landscapes were found for them: %s",
           _locations[i].name))
       end
@@ -3557,6 +3727,17 @@ function set_vehicle_button(vehicle_id, button, value)
   if s and ((value or data.on) and (not value or not data.on)) then
     press_vehicle_button(vehicle_id, button)
   end
+end
+
+function pathfind(location, destination, required_tags, avoided_tags)
+  local paths = server.pathfind(location, destination, required_tags, avoided_tags)
+  local transforms = {}
+
+  for i = 1, #paths do
+    table.insert(transforms, matrix.translation(paths[i].x, 0, paths[i].z))
+  end
+
+  return transforms
 end
 
 function press_vehicle_button(vehicle_id, button)
