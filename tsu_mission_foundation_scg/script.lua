@@ -605,7 +605,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 1000,
-  report = "海賊",
+  report = "海賊\n武装した小型船を発見した. 問答無用で拿捕せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "哨戒機からの通報",
@@ -619,7 +619,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 1000,
-  report = "密輸船",
+  report = "密輸船\n違法貨物を運搬している疑いのある小型船を発見した. 乗り込んで調査せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "哨戒機からの通報",
@@ -1173,7 +1173,8 @@ object_trackers = {
       end
 
       if self.loaded and not self.neutralized then
-        local target_vehicle = nil
+        local vehicle_closest = nil
+        local player_nearby = players:is_in_range(self.transform, 100)
         local distance = math.maxinteger
 
         for i = 1, #g_savedata.objects do
@@ -1182,12 +1183,12 @@ object_trackers = {
 
             if _d < 500 and _d < distance then
               distance = _d
-              target_vehicle = g_savedata.objects[i]
+              vehicle_closest = g_savedata.objects[i]
             end
           end
         end
 
-        local close_quarters_update = distance < 100
+        local close_quarters_update = distance < 100 or player_nearby
 
         if self.role == "pilot" then
           if self.command == "escape" then
@@ -1199,9 +1200,9 @@ object_trackers = {
               server.setAICharacterTargetTeam(self.id, 0, true)
             end
           elseif self.command == "attack" then
-            if target_vehicle ~= nil then
+            if vehicle_closest ~= nil then
               self.ai_state = 1
-              server.setAITarget(self.id, target_vehicle.transform)
+              server.setAITarget(self.id, vehicle_closest.transform)
               server.setAIState(self.id, self.ai_state)
               server.setAICharacterTargetTeam(self.id, 0, true)
             end
@@ -1236,43 +1237,6 @@ object_trackers = {
         end
 
         self.close_quarters = close_quarters_update
-
-        -- if self.command == "escape" then
-        --   if self.role == "pilot" and self.ai_state == 0 then
-        --     self.destination = locations:random_offshore(self.transform, 10000, 20000)
-        --     self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
-        --   end
-        -- elseif self.command == "attack" then
-        --   if self.role == "pilot" then
-        --     if target_vehicle ~= nil then
-        --       self.ai_state = 1
-        --       server.setAITarget(self.id, target_vehicle.transform)
-        --       server.setAIState(self.id, self.ai_state)
-        --       server.setAICharacterTargetTeam(self.id, 0, true)
-        --     end
-        --   elseif self.role == "gunner" and self.ai_state == 0 then
-        --     self.ai_state = 1
-        --     server.setAIState(self.id, self.ai_state)
-        --     server.setAICharacterTargetTeam(self.id, 0, true)
-        --   elseif self.role == "designator" and self.ai_state == 0 then
-        --     self.ai_state = 1
-        --     server.setAIState(self.id, self.ai_state)
-        --     server.setAICharacterTargetTeam(self.id, 0, true)
-        --   elseif self.close_quarters ~= nil and self.mount_seat ~= nil then
-        --     server.setAICharacterTargetTeam(self.id, 0, true)
-
-        --     if close_quarters_update and not self.close_quarters then
-        --       server.setObjectPos(self.id, self.transform)
-        --     elseif not close_quarters_update and self.close_quarters then
-        --       local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
-        --       local _d = matrix.distance(vehicle.transform, self.transform)
-
-        --       if _d <= 50 then
-        --         server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
-        --       end
-        --     end
-        --   end
-        -- end
       end
 
       if is_in_base or is_in_police_sta then
