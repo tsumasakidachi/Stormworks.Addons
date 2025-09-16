@@ -1146,11 +1146,11 @@ object_trackers = {
       self.ai_state = 0
       self.destination = nil
       self.close_quarters = false
-      self.weapon = table.random({ { id = 35, slot = 2 }, { id = 39, slot = 1 } })
+      self.weapon = nil
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
       server.setAICharacterTeam(self.id, self.team)
       server.setAICharacterTargetTeam(self.id, 0, false)
-      server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, 0, 0.0)
+      server.setCharacterItem(self.id, 9, 23, false, 1, 100)
     end,
     clear = function(self)
     end,
@@ -1164,11 +1164,16 @@ object_trackers = {
       local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
 
-      if self.loaded and not self.neutralized and (vital_update.incapacitated or vital_update.dead) then
+      if self.loaded and not self.neutralized and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
         self.neutralized = true
         self.ai_state = 0
         server.setAIState(self.id, self.ai_state)
         server.setAICharacterTargetTeam(self.id, 0, false)
+
+        if self.weapon ~= nil then
+          server.setCharacterItem(self.id, self.weapon.slot, 0, false, 0, 0.0)
+        end
+
         console.log(string.format("%s#%d has neutralized.", self.tracker, self.id))
       end
 
@@ -1187,8 +1192,6 @@ object_trackers = {
             end
           end
         end
-
-        local close_quarters_update = distance < 100 or player_nearby
 
         if self.role == "pilot" then
           if self.command == "escape" then
@@ -1220,9 +1223,15 @@ object_trackers = {
             server.setAICharacterTargetTeam(self.id, 0, true)
           end
         else
-          server.setAICharacterTargetTeam(self.id, 0, true)
+          if self.weapon == nil then
+            self.weapon = table.random({ { id = 35, slot = 2 }, { id = 39, slot = 1 } })
+            server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, 0, 0.0)
+            server.setAICharacterTargetTeam(self.id, 0, true)
+          end
 
           if self.mount_vehicle ~= nil and self.mount_seat ~= nil then
+            local close_quarters_update = distance < 100 or player_nearby
+
             if close_quarters_update and not self.close_quarters then
               server.setObjectPos(self.id, self.transform)
             elseif not close_quarters_update and self.close_quarters then
@@ -1233,10 +1242,10 @@ object_trackers = {
                 server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
               end
             end
+
+            self.close_quarters = close_quarters_update
           end
         end
-
-        self.close_quarters = close_quarters_update
       end
 
       if is_in_base or is_in_police_sta then
@@ -2230,7 +2239,6 @@ function tick_object(object, tick)
     end
 
     if not object.enroute then
-    -- if true then
       object.enroute = true
       object.ai_state = 1
       server.setAITarget(object.id, object.paths[1])
