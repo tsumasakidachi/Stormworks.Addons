@@ -1019,7 +1019,7 @@ object_trackers = {
       return mission.taken_to_long
     end,
     reward_base = 1000,
-    text = "要救助者を医療機関へ搬送",
+    text = "要救助者を医療機関か基地へ搬送",
     marker_type = 1,
     clear_timer = 300
   },
@@ -1279,7 +1279,7 @@ object_trackers = {
       return false
     end,
     reward_base = 1000,
-    text = "被疑者を制圧して基地へ連行",
+    text = "被疑者を制圧して警察署か基地へ連行",
     marker_type = 1,
     clear_timer = 300
   },
