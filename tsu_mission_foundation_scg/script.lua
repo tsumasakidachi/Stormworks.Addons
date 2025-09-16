@@ -596,9 +596,9 @@ location_properties = { {
   report_timer_max = 0,
   note = "職員からの通報",
 }, {
-  pattern = "^mission:pirate_boat_%d+$",
+  pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
-  suitable_zones = { "offshore", "shallow", "channel" },
+  suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
@@ -606,6 +606,20 @@ location_properties = { {
   is_unique_sub_location = false,
   search_radius = 1000,
   report = "海賊",
+  report_timer_min = 0,
+  report_timer_max = 0,
+  note = "哨戒機からの通報",
+}, {
+  pattern = "^mission:smuggler_%d+$",
+  tracker = "sar",
+  suitable_zones = { "offshore", "shallow" },
+  is_main_location = true,
+  sub_locations = {},
+  sub_location_min = 0,
+  sub_location_max = 0,
+  is_unique_sub_location = false,
+  search_radius = 1000,
+  report = "密輸船",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "哨戒機からの通報",
@@ -836,7 +850,7 @@ mission_trackers = {
           if s then
             console.notify(string.format("Whirlpool of magnitude %.3f has occurred.", magnitude))
           else
-            console.notify("Failed to spawn whirlpool")
+            console.notify("Failed to spawn whirlpool.")
           end
         elseif self.type == "meteor" then
           local magnitude = math.random() ^ 2
@@ -1173,13 +1187,16 @@ object_trackers = {
           end
         end
 
-        local close_quarters_update = distance < 100 or target_vehicle == nil
+        local close_quarters_update = distance < 100
 
         if self.role == "pilot" then
           if self.command == "escape" then
             if self.ai_state == 0 then
               self.destination = locations:random_offshore(self.transform, 10000, 20000)
               self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
+              self.ai_state = 1
+              server.setAIState(self.id, self.ai_state)
+              server.setAICharacterTargetTeam(self.id, 0, true)
             end
           elseif self.command == "attack" then
             if target_vehicle ~= nil then
@@ -1874,7 +1891,7 @@ function initialize_mission(_locations, report_timer, ...)
   table.insert(g_savedata.missions, mission)
   spawn_mission(mission)
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
-  
+
   console.notify(string.format("Mission #%d has initialized.", mission.id))
 end
 
@@ -2204,7 +2221,6 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
 end
 
 function clear_object(object)
-
   if object.tracker ~= nil then
     object:clear()
   end
@@ -2242,18 +2258,21 @@ function tick_object(object, tick)
     end
   end
 
-  if object.type == "character" and #object.paths > 0 then
+  if object.loaded and object.type == "character" and #object.paths > 0 and object.ai_state > 0 then
     if matrix.distance(object.transform, object.paths[1]) <= 100 then
       table.remove(object.paths, 1)
       object.enroute = false
+      console.notify(string.format("%s#%d arrived to destination.", object.tracker, object.id))
     end
 
     if not object.enroute then
+    -- if true then
       object.enroute = true
+      object.ai_state = 1
       server.setAITarget(object.id, object.paths[1])
       server.setAIState(object.id, object.ai_state)
       local x, y, z = matrix.position(object.paths[1])
-      console.notify(string.format("%s#%d destination to %.0f, %.0f, %.0f.", object.tracker, object.id, x, y, z))
+      console.notify(string.format("%s#%d set destination to %.0f, %.0f, %.0f.", object.tracker, object.id, x, y, z))
     end
   end
 
@@ -2273,7 +2292,7 @@ function tick_object(object, tick)
 
     if not object.failed and object:fail() then
       object.failed = true
-      server.notify(-1, object.text, "Objective has failed.", 2)
+      server.notify(-1, object.text, "Objective has lost.", 2)
     end
 
     if not object.failed and not object.completed and object:complete() then
