@@ -668,25 +668,25 @@ location_properties = { {
 } }
 
 facilty_properties = { {
-  facility = "base",
+  name = "base",
   mapped = true,
   icon = 11,
 }, {
-  facility = "hospital",
+  name = "hospital",
   mapped = true,
   icon = 8,
 }, {
-  facility = "police_station",
+  name = "police_station",
   mapped = true,
   icon = 11,
 }, {
-  facility = "scrap_yard",
+  name = "scrap_yard",
   mapped = true,
   icon = 3,
 }, {
-  facility = "first_spawn",
+  name = "first_spawn",
 }, {
-  facility = "respawn",
+  name = "respawn",
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
@@ -860,6 +860,7 @@ mission_trackers = {
             self.finish_timer = 28800
             self.search_radius = 7500
             self.locations[1].report = strings.notice.massive_meteor_impact
+            server.notify(-1, self:report(), self.locations[1].note, 1)
           end
 
           server.spawnMeteor(self.start_position, magnitude, tsunami)
@@ -916,7 +917,7 @@ object_trackers = {
 
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
       server.setCharacterTooltip(self.id,
-        string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
+        string.format("%s\n\nMission ID: %d\nObject ID: %d", self:label(), self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1174,7 +1175,7 @@ object_trackers = {
           server.setCharacterItem(self.id, self.weapon.slot, 0, false, 0, 0.0)
         end
 
-        console.log(string.format("%s#%d has neutralized.", self.tracker, self.id))
+        console.notify(string.format("%s#%d has neutralized.", self.tracker, self.id))
       end
 
       if self.loaded and not self.neutralized then
@@ -2221,12 +2222,12 @@ function tick_object(object, tick)
 
   if object.type == "character" and #object.commands > 0 and object.command == nil and players:is_in_range(object.transform, object.invocation_distance) then
     object.command = table.random(object.commands)
-    console.log(string.format("%s#%d has invoked %s command.", object.type, object.id, object.command))
+    console.notify(string.format("%s#%d has invoked %s command.", object.type, object.id, object.command))
 
     for i = 1, #g_savedata.objects do
       if g_savedata.objects[i].mission == object.mission and g_savedata.objects[i].type == object.type and g_savedata.objects[i].team == object.team and matrix.distance(g_savedata.objects[i].transform, object.transform) <= 50 then
         g_savedata.objects[i].command = object.command
-        console.log(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
+        console.notify(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
       end
     end
   end
@@ -2257,21 +2258,21 @@ function tick_object(object, tick)
       local x, y, z = matrix.position(object.transform)
       local r, g, b, a = 128, 128, 128, 255
       local label = string.format("%s #%d", object.tracker, object.id)
-      local popup = string.format("%s\n\nX: %.0f\nY: %.0f\nZ: %.0f", object.text, x, y, z)
+      local popup = string.format("%s\n\nX: %.0f\nY: %.0f\nZ: %.0f", object:label(), x, y, z)
 
       server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     end
 
     if not object.failed and object:fail() then
       object.failed = true
-      server.notify(-1, object.text, "Objective has lost.", 2)
+      server.notify(-1, object:label(), "Objective has lost.", 2)
     end
 
     if not object.failed and not object.completed and object:complete() then
       if not server.getGameSettings().infinite_money then
         reward_object(object)
       else
-        server.notify(-1, object.text, "Objective has achieved.", 4)
+        server.notify(-1, object:label(), "Objective has achieved.", 4)
       end
 
       object.completed = true
@@ -2976,8 +2977,8 @@ facilities = {
     local models = {}
 
     for i = 1, #facilty_properties do
-      if facilty_properties[i].facility ~= nil then
-        local raws = server.getZones(string.format("facility=%s", facilty_properties[i].facility))
+      if facilty_properties[i].name ~= nil then
+        local raws = server.getZones(string.format("facility=%s", facilty_properties[i].name))
 
         for i = 1, #raws do
           local z = self:init(raws[i])
@@ -2994,7 +2995,7 @@ facilities = {
   init = function(self, obj)
     local tags = string.parse_tags(obj.tags_full)
     local prop = table.find(facilty_properties, function(x)
-      return tags.facility == x.facility
+      return tags.facility == x.name
     end)
 
     if prop == nil then
@@ -3002,7 +3003,7 @@ facilities = {
     end
 
     obj.tags = tags
-    obj.facility = prop.facility
+    obj.name = prop.name
     obj.mapped = prop.mapped or false
     obj.icon = prop.icon or 0
 
@@ -3025,16 +3026,16 @@ facilities = {
       end
     end
   end,
-  is_in_facility = function(self, transform, facility)
+  is_in_facility = function(self, transform, name)
     local is = false
 
     for i = 1, #self.items do
-      is = is or self.items[i].facility == facility and self:is_in(transform, self.items[i])
+      is = is or self.items[i].name == name and self:is_in(transform, self.items[i])
     end
 
     return is
   end,
-  is_in = function(self, transform, zone)
+  is_in = function(self, transform, zone, name)
     return server.isInTransformArea(transform, zone.transform, zone.size.x, zone.size.y, zone.size.z)
   end,
   is_in_range = function(self, zone, center, min, max)
@@ -3118,7 +3119,7 @@ end
 function teleport_to_spawn_points(peer_id)
   local _zones = facilities:find_all(function(x)
     return facilities:is_in_range(x, get_start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
-        x.facility == "respawn"
+        x.name == "respawn"
   end)
 
   if #_zones == 0 then
@@ -3387,7 +3388,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       local transform, is_success = server.getPlayerPos(peer_id)
 
       for i = #g_savedata.objects, 1, -1 do
-        if g_savedata.objects[i].tracker == "rescuee" and g_savedata.objects[i].mission == mission_id then
+        if g_savedata.objects[i].type == "character" and g_savedata.objects[i].mission == mission_id then
           server.setObjectPos(g_savedata.objects[i].id, transform)
         end
       end
