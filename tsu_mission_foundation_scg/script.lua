@@ -823,7 +823,7 @@ mission_trackers = {
       local type = string.match(self.locations[1].name, "^mission:(%w+)_alert_%d+$")
       self.type = type
       self.started = false
-      self.start_timer = math.random(14400, 28800)
+      self.start_timer = math.random(7200, 14400)
 
       if self.type == "tornado" or self.type == "whirlpool" then
         self.finish_timer = self.start_timer + 21600
@@ -1235,13 +1235,15 @@ object_trackers = {
 
             if close_quarters_update and not self.close_quarters then
               server.setObjectPos(self.id, self.transform)
+              console.log(string.format("%s#%d has set close quarters.", self.type, self.id))
             elseif not close_quarters_update and self.close_quarters then
               local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
               local _d = matrix.distance(vehicle.transform, self.transform)
 
-              if _d <= 50 then
+              -- if _d <= 50 then
                 server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
-              end
+                console.log(string.format("%s#%d has set close quarters.", self.type, self.id))
+              -- end
             end
 
             self.close_quarters = close_quarters_update
@@ -1752,7 +1754,7 @@ object_trackers = {
       return false
     end,
     reward_base = 0,
-    text = "",
+    text = "HEADQUARTER",
     marker_type = 11,
     clear_timer = 0
   },
@@ -1804,7 +1806,7 @@ object_trackers = {
       return false
     end,
     reward_base = 0,
-    text = "",
+    text = "UNIT",
     marker_type = 12,
     clear_timer = 0
   }
