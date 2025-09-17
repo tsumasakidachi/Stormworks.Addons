@@ -56,21 +56,21 @@
 						<graph_links/>
 					</c>
 					<c component_type="3" id="51" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_51.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="-0.483195" 02="0.875513" 20="-0.875513" 22="-0.483195" 30="265.046722" 31="6.64562" 32="-433.259949"/>
+						<spawn_transform 00="-0.483195" 02="0.875513" 20="-0.875513" 22="-0.483195" 30="265.046722" 31="6.77168" 32="-433.259949"/>
 						<spawn_bounds>
-							<min x="-10.125" y="-0.125" z="-11.125"/>
-							<max x="10.125" y="0.375" z="14.125"/>
+							<min x="-9.875" y="-0.125" z="-10.875"/>
+							<max x="9.875" y="0.625" z="13.875"/>
 						</spawn_bounds>
-						<spawn_local_offset y="-0.125" z="-1.5"/>
+						<spawn_local_offset y="-0.25" z="-1.5"/>
 						<graph_links/>
 					</c>
 					<c component_type="3" id="52" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_52.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="-0.48578" 02="0.874081" 20="-0.874081" 22="-0.48578" 30="240.656342" 31="6.645108" 32="-389.546387"/>
+						<spawn_transform 00="-0.48578" 02="0.874081" 20="-0.874081" 22="-0.48578" 30="240.656342" 31="6.76972" 32="-389.546387"/>
 						<spawn_bounds>
-							<min x="-10.125" y="-0.125" z="-11.125"/>
-							<max x="10.125" y="0.375" z="14.125"/>
+							<min x="-9.875" y="-0.125" z="-10.875"/>
+							<max x="9.875" y="0.625" z="13.875"/>
 						</spawn_bounds>
-						<spawn_local_offset y="-0.125" z="-1.5"/>
+						<spawn_local_offset y="-0.25" z="-1.5"/>
 						<graph_links/>
 					</c>
 					<c component_type="3" id="54" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_54.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
