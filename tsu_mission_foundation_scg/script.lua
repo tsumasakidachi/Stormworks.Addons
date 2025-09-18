@@ -1235,15 +1235,15 @@ object_trackers = {
 
             if close_quarters_update and not self.close_quarters then
               server.setObjectPos(self.id, self.transform)
-              console.log(string.format("%s#%d has set close quarters.", self.type, self.id))
+              console.notify(string.format("%s#%d has set close quarters.", self.type, self.id))
             elseif not close_quarters_update and self.close_quarters then
               local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
               local _d = matrix.distance(vehicle.transform, self.transform)
 
-              -- if _d <= 50 then
+              if _d <= 50 then
                 server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
-                console.log(string.format("%s#%d has set close quarters.", self.type, self.id))
-              -- end
+                console.notify(string.format("%s#%d has set close quarters.", self.type, self.id))
+              end
             end
 
             self.close_quarters = close_quarters_update
@@ -1905,7 +1905,7 @@ function tick_mission(mission, tick)
 
     if mission.objectives.rescuee.count > 0 then
       server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
-      console.notify(string.format("Mission #%d is taking to long.", mission.id))
+      console.log(string.format("Mission #%d is taking to long.", mission.id))
     end
   end
 
