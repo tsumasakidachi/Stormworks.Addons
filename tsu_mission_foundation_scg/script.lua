@@ -624,6 +624,20 @@ location_properties = { {
   report_timer_max = 0,
   note = "哨戒機からの通報",
 }, {
+  pattern = "^mission:vessel_hijacked_%d+$",
+  tracker = "sar",
+  suitable_zones = { "offshore", "shallow" },
+  is_main_location = true,
+  sub_locations = {},
+  sub_location_min = 0,
+  sub_location_max = 0,
+  is_unique_sub_location = false,
+  search_radius = 1000,
+  report = "ハイジャック | この船は我々がハイジャックした. 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
+  report_timer_min = 0,
+  report_timer_max = 0,
+  note = "ハイジャッカーからの通報",
+}, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
@@ -916,8 +930,7 @@ object_trackers = {
       self.picked = false
 
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
-      server.setCharacterTooltip(self.id,
-        string.format("%s\n\nMission ID: %d\nObject ID: %d", self:label(), self.mission, self.id))
+      server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self:label(), self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1148,6 +1161,7 @@ object_trackers = {
       self.destination = nil
       self.close_quarters = false
       self.weapon = nil
+      self.ransom_paid = false
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
       server.setAICharacterTeam(self.id, self.team)
       server.setAICharacterTargetTeam(self.id, 0, false)
@@ -1180,17 +1194,27 @@ object_trackers = {
 
       if self.loaded and not self.neutralized then
         local vehicle_closest = nil
-        local player_nearby = players:is_in_range(self.transform, 100)
-        local distance = math.maxinteger
+        local vehicle_distance = math.maxinteger
+        local player_closest = nil
+        local player_distance = math.maxinteger
 
         for i = 1, #g_savedata.objects do
           if g_savedata.objects[i].tracker == "unit" then
             local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
 
-            if _d < 500 and _d < distance then
-              distance = _d
+            if _d < 500 and _d < vehicle_distance then
+              vehicle_distance = _d
               vehicle_closest = g_savedata.objects[i]
             end
+          end
+        end
+
+        for i = 1, #players.items do
+          local _d = matrix.distance(players.items[i].transform, self.transform)
+
+          if _d <= 500 and _d < player_distance then
+            player_distance = _d
+            player_closest = players.items[i]
           end
         end
 
@@ -1211,13 +1235,19 @@ object_trackers = {
               server.setAICharacterTargetTeam(self.id, 0, true)
             end
           end
-        elseif self.role == "gunner" then
+        elseif self.role == "gunner 1" or self.role == "gunner 2" then
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
             server.setAICharacterTargetTeam(self.id, 0, true)
           end
-        elseif self.role == "designator" then
+
+          if player_distance <= vehicle_distance and player_closest ~= nil then
+            server.setAITargetCharacter(self.id, player_closest.object_id)
+          elseif vehicle_closest ~= nil then
+            server.setAITargetVehicle(self.id, vehicle_closest.id)
+          end
+        elseif self.role == "designator 1" or self.role == "designator 2" then
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
@@ -1231,7 +1261,7 @@ object_trackers = {
           end
 
           if self.mount_vehicle ~= nil and self.mount_seat ~= nil then
-            local close_quarters_update = distance < 100 or player_nearby
+            local close_quarters_update = vehicle_distance < 100 or player_distance < 100
 
             if close_quarters_update and not self.close_quarters then
               server.setObjectPos(self.id, self.transform)
@@ -1264,7 +1294,7 @@ object_trackers = {
       return self.admitted_time > 120
     end,
     fail = function(self)
-      return not self.neutralized and self.command ~= nil and not players:is_in_range(self.transform, 2000) or self.vital.dead
+      return not self.neutralized and self.command == "escape" and not players:is_in_range(self.transform, 2000) or self.vital.dead or self.ransom_paid
     end,
     reward = function(self)
       return self.reward_base
@@ -1416,6 +1446,58 @@ object_trackers = {
     end,
     reward_base = 2,
     text = "残骸をスクラップヤードへ輸送",
+    marker_type = 2,
+    clear_timer = 3600
+  },
+  cargo = {
+    test_type = function(self, id, type, tags, component_id, mission_id)
+      return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
+    end,
+    init = function(self)
+      if self.tags.illigal == "true" then
+        self.illigal = true
+      end
+      -- if is_vehicle(self) then
+      --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
+      -- elseif is_object(self) then
+      --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
+      -- end
+    end,
+    clear = function(self)
+    end,
+    load = function(self)
+    end,
+    unload = function(self)
+    end,
+    tick = function(self, tick)
+    end,
+    dispensable = function(self)
+      return self.mission ~= nil
+    end,
+    complete = function(self)
+      return false
+    end,
+    fail = function(self)
+      return false
+    end,
+    reward = function(self)
+      return 0
+    end,
+    label = function(self)
+      return self.illigal and self.text_illigal or self.text
+    end,
+    count = function(self)
+      return 1
+    end,
+    reported = function(self)
+      return true
+    end,
+    mapped = function(self)
+      return false
+    end,
+    reward_base = 2,
+    text = "貨物を配送先へ輸送",
+    text_illigal = "違法貨物を回収して基地へ搬送",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -2400,13 +2482,17 @@ end
 
 function mount_vehicle(vehicle)
   local components = server.getVehicleComponents(vehicle.id)
-  local priority_seats = { "pilot", "driver", "designator", "gunner" }
+  local priority_seats = { "pilot", "driver", "designator 1", "designator 2", "gunner 1", "gunner 2" }
   local m = 1
   local m_end = #vehicle.mounts
   local data = server.getVehicleData(vehicle.id)
 
   for i = 1, #priority_seats do
     for j = 1, #components.components.seats do
+      if m > m_end then
+        goto priority_seat_mount_completed
+      end
+
       if string.lower(components.components.seats[j].name) == priority_seats[i] then
         server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[j].pos.x, components.components.seats[j].pos.y, components.components.seats[j].pos.z)
         components.components.seats[j].seated_id = vehicle.mounts[m]
@@ -2429,38 +2515,34 @@ function mount_vehicle(vehicle)
         end
 
         m = m + 1
-
-        if m > m_end then
-          goto priority_seat_mount_completed
-        end
       end
     end
   end
 
   ::priority_seat_mount_completed::
 
-  for i = 1, #components.components.seats do
-    if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
-      server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
-      components.components.seats[i].seated_id = vehicle.mounts[m]
+  -- for i = 1, #components.components.seats do
+  --   if m > m_end then
+  --     goto other_seat_mount_completed
+  --   end
 
-      for k = 1, #g_savedata.objects do
-        if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
-          g_savedata.objects[k].role = nil
-          g_savedata.objects[k].mount_vehicle = vehicle.id
-          g_savedata.objects[k].mount_seat = components.components.seats[i]
-        end
-      end
+  --   if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
+  --     server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
+  --     components.components.seats[i].seated_id = vehicle.mounts[m]
 
-      m = m + 1
+  --     for k = 1, #g_savedata.objects do
+  --       if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
+  --         g_savedata.objects[k].role = nil
+  --         g_savedata.objects[k].mount_vehicle = vehicle.id
+  --         g_savedata.objects[k].mount_seat = components.components.seats[i]
+  --       end
+  --     end
 
-      if m > m_end then
-        goto other_seat_mount_completed
-      end
-    end
-  end
+  --     m = m + 1
+  --   end
+  -- end
 
-  ::other_seat_mount_completed::
+  -- ::other_seat_mount_completed::
 end
 
 function wreck_players_vehicle(player)
@@ -3093,27 +3175,37 @@ end
 
 -- budgets
 
-function transact(amount, title)
-  if server.getGameSettings().infinite_money then
-    return
+function transact(amount, message)
+  local inf = server.getGameSettings().infinite_money
+  -- if server.getGameSettings().infinite_money then
+  --   return true
+  -- end
+
+  if amount == 0 then
+    return true
+  end
+
+  local money = server.getCurrency() + amount
+
+  if not inf and money < 0 then
+    server.notify(-1, "Payment failed.", "Your account balance is insufficient.", 2)
+    return false
   end
 
   local not_type = 4
   local text = "Accepted $%d"
 
-  if amount == 0 then
-    return
-  elseif amount < 0 then
+  if amount < 0 then
     not_type = 2
     text = "Paid out $%d"
   end
 
-  local money = server.getCurrency() + amount
-  local format = string.format(text, amount)
+  local title = string.format(text, amount)
 
   server.setCurrency(money)
-  server.notify(-1, format, title, not_type)
-  console.log(format)
+  server.notify(-1, title, message, not_type)
+
+  return true
 end
 
 -- spawn point
@@ -3422,6 +3514,33 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       end))
     elseif verb == "clear-disabled-components" and is_admin then
       g_savedata.disabled_components = {}
+    elseif verb == "ransom" and is_auth then
+      local mission, amount = ...
+      mission = tonumber(mission)
+      amount = tonumber(amount)
+      local is_suspect = false
+
+      if mission == nil or amount == nil or amount < 1000000 then
+        return
+      end
+
+      for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].tracker == "suspect" then
+          is_suspect = true
+        end
+      end
+
+      if not is_suspect then
+        return
+      end
+
+      if transact(amount * -1, string.format("Paid out the ransom for mission#$d.", mission)) then
+        for i = 1, #g_savedata.objects do
+          if g_savedata.objects[i].tracker == "suspect" then
+            g_savedata.objects[i].ransom_paid = true
+          end
+        end
+      end
     end
   elseif command == "?tp" then
     local target = tonumber(verb)
