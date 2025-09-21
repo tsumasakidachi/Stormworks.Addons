@@ -605,7 +605,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 1000,
-  report = "海賊\n武装した小型船を発見した. 問答無用で拿捕せよ.",
+  report = "海賊\n武装した小型船を発見した. 乗員を拘束せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "哨戒機からの通報",
@@ -619,7 +619,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 1000,
-  report = "密輸船\n違法貨物を運搬している疑いのある小型船を発見した. 乗り込んで調査せよ.",
+  report = "密輸船\n違法な貨物を運搬している疑いのある小型船を発見した. 乗り込んで調査せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "哨戒機からの通報",
@@ -633,7 +633,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 1000,
-  report = "ハイジャック | この船は我々がハイジャックした. 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
+  report = "ハイジャック\nこの船は我々が乗っ取った! 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "ハイジャッカーからの通報",
@@ -1265,14 +1265,14 @@ object_trackers = {
 
             if close_quarters_update and not self.close_quarters then
               server.setObjectPos(self.id, self.transform)
-              console.notify(string.format("%s#%d has set close quarters.", self.type, self.id))
+              console.notify(string.format("%s#%d has set close quarter combat.", self.type, self.id))
             elseif not close_quarters_update and self.close_quarters then
               local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
               local _d = matrix.distance(vehicle.transform, self.transform)
 
               if _d <= 50 then
                 server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
-                console.notify(string.format("%s#%d has set close quarters.", self.type, self.id))
+                console.notify(string.format("%s#%d has set seated.", self.type, self.id))
               end
             end
 
@@ -1449,58 +1449,58 @@ object_trackers = {
     marker_type = 2,
     clear_timer = 3600
   },
-  cargo = {
-    test_type = function(self, id, type, tags, component_id, mission_id)
-      return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
-    end,
-    init = function(self)
-      if self.tags.illigal == "true" then
-        self.illigal = true
-      end
-      -- if is_vehicle(self) then
-      --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
-      -- elseif is_object(self) then
-      --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
-      -- end
-    end,
-    clear = function(self)
-    end,
-    load = function(self)
-    end,
-    unload = function(self)
-    end,
-    tick = function(self, tick)
-    end,
-    dispensable = function(self)
-      return self.mission ~= nil
-    end,
-    complete = function(self)
-      return false
-    end,
-    fail = function(self)
-      return false
-    end,
-    reward = function(self)
-      return 0
-    end,
-    label = function(self)
-      return self.illigal and self.text_illigal or self.text
-    end,
-    count = function(self)
-      return 1
-    end,
-    reported = function(self)
-      return true
-    end,
-    mapped = function(self)
-      return false
-    end,
-    reward_base = 2,
-    text = "貨物を配送先へ輸送",
-    text_illigal = "違法貨物を回収して基地へ搬送",
-    marker_type = 2,
-    clear_timer = 3600
-  },
+  -- cargo = {
+  --   test_type = function(self, id, type, tags, component_id, mission_id)
+  --     return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
+  --   end,
+  --   init = function(self)
+  --     if self.tags.illigal == "true" then
+  --       self.illigal = true
+  --     end
+  --     -- if is_vehicle(self) then
+  --     --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
+  --     -- elseif is_object(self) then
+  --     --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
+  --     -- end
+  --   end,
+  --   clear = function(self)
+  --   end,
+  --   load = function(self)
+  --   end,
+  --   unload = function(self)
+  --   end,
+  --   tick = function(self, tick)
+  --   end,
+  --   dispensable = function(self)
+  --     return self.mission ~= nil
+  --   end,
+  --   complete = function(self)
+  --     return false
+  --   end,
+  --   fail = function(self)
+  --     return false
+  --   end,
+  --   reward = function(self)
+  --     return 0
+  --   end,
+  --   label = function(self)
+  --     return self.illigal and self.text_illigal or self.text
+  --   end,
+  --   count = function(self)
+  --     return 1
+  --   end,
+  --   reported = function(self)
+  --     return true
+  --   end,
+  --   mapped = function(self)
+  --     return false
+  --   end,
+  --   reward_base = 2,
+  --   text = "貨物を配送先へ輸送",
+  --   text_illigal = "違法貨物を回収して基地へ搬送",
+  --   marker_type = 2,
+  --   clear_timer = 3600
+  -- },
   hostile = {
     test_type = function(self, id, type, tags, component_id, mission_id)
       return (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
@@ -2521,28 +2521,28 @@ function mount_vehicle(vehicle)
 
   ::priority_seat_mount_completed::
 
-  -- for i = 1, #components.components.seats do
-  --   if m > m_end then
-  --     goto other_seat_mount_completed
-  --   end
+  for i = 1, #components.components.seats do
+    if m > m_end then
+      goto other_seat_mount_completed
+    end
 
-  --   if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
-  --     server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
-  --     components.components.seats[i].seated_id = vehicle.mounts[m]
+    if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
+      server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
+      components.components.seats[i].seated_id = vehicle.mounts[m]
 
-  --     for k = 1, #g_savedata.objects do
-  --       if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
-  --         g_savedata.objects[k].role = nil
-  --         g_savedata.objects[k].mount_vehicle = vehicle.id
-  --         g_savedata.objects[k].mount_seat = components.components.seats[i]
-  --       end
-  --     end
+      for k = 1, #g_savedata.objects do
+        if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
+          g_savedata.objects[k].role = nil
+          g_savedata.objects[k].mount_vehicle = vehicle.id
+          g_savedata.objects[k].mount_seat = components.components.seats[i]
+        end
+      end
 
-  --     m = m + 1
-  --   end
-  -- end
+      m = m + 1
+    end
+  end
 
-  -- ::other_seat_mount_completed::
+  ::other_seat_mount_completed::
 end
 
 function wreck_players_vehicle(player)
