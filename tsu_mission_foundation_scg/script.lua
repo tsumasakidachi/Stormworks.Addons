@@ -926,6 +926,7 @@ object_trackers = {
         ir = false
       }
       self.admitted_time = 0
+      self.hostage = self.tags.hostage == "true"
       self.activated = false
       self.picked = false
 
@@ -967,9 +968,10 @@ object_trackers = {
         vital_update.hp = math.max(vital_update.hp - (self.cpa_count / 2), 0)
       end
 
-      if g_savedata.subsystems.rescuee.has_strobe then
-        local opt = (self.strobe.opt or players:is_in_range(self.transform, 250)) and not picked
-        local ir = (self.strobe.ir or players:is_in_range(self.transform, 500)) and not picked
+      if g_savedata.subsystems.rescuee.has_strobe and not self.hostage then
+        local p = players:is_in_range(self.transform, 500)
+        local opt = (self.strobe.opt or p) and not picked
+        local ir = (self.strobe.ir or p) and not picked
         local dead = not self.vital.dead and vital_update.dead
 
         if opt ~= self.strobe.opt or dead then
@@ -1155,6 +1157,7 @@ object_trackers = {
     init = function(self)
       self.vital = server.getCharacterData(self.id)
       self.admitted_time = 0
+      self.picked = false
       self.team = 2
       self.neutralized = false
       self.ai_state = 0
@@ -1174,10 +1177,15 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
+      local character_vehicle = server.getCharacterVehicle(self.id)
       local vital_update = server.getCharacterData(self.id)
       local vehicle_id = server.getCharacterVehicle(self.id)
       local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
+
+      local picked = table.any(g_savedata.objects, function(x)
+        return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
+      end)
 
       if self.loaded and not self.neutralized and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
         self.neutralized = true
@@ -1285,6 +1293,7 @@ object_trackers = {
         self.admitted_time = self.admitted_time + tick
       end
 
+      self.picked = picked
       self.vital = vital_update
     end,
     dispensable = function(self)
@@ -1421,7 +1430,8 @@ object_trackers = {
       end
     end,
     dispensable = function(self)
-      return not self.indispensable and not players:is_in_range(self.transform, 500)
+      local x, y, z = matrix.position(self.transform)
+      return not self.indispensable and not players:is_in_range(self.transform, 500) or y <= 50
     end,
     complete = function(self)
       return self.completion_timer >= 300
@@ -1449,58 +1459,63 @@ object_trackers = {
     marker_type = 2,
     clear_timer = 3600
   },
-  -- cargo = {
-  --   test_type = function(self, id, type, tags, component_id, mission_id)
-  --     return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
-  --   end,
-  --   init = function(self)
-  --     if self.tags.illigal == "true" then
-  --       self.illigal = true
-  --     end
-  --     -- if is_vehicle(self) then
-  --     --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
-  --     -- elseif is_object(self) then
-  --     --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
-  --     -- end
-  --   end,
-  --   clear = function(self)
-  --   end,
-  --   load = function(self)
-  --   end,
-  --   unload = function(self)
-  --   end,
-  --   tick = function(self, tick)
-  --   end,
-  --   dispensable = function(self)
-  --     return self.mission ~= nil
-  --   end,
-  --   complete = function(self)
-  --     return false
-  --   end,
-  --   fail = function(self)
-  --     return false
-  --   end,
-  --   reward = function(self)
-  --     return 0
-  --   end,
-  --   label = function(self)
-  --     return self.illigal and self.text_illigal or self.text
-  --   end,
-  --   count = function(self)
-  --     return 1
-  --   end,
-  --   reported = function(self)
-  --     return true
-  --   end,
-  --   mapped = function(self)
-  --     return false
-  --   end,
-  --   reward_base = 2,
-  --   text = "貨物を配送先へ輸送",
-  --   text_illigal = "違法貨物を回収して基地へ搬送",
-  --   marker_type = 2,
-  --   clear_timer = 3600
-  -- },
+  cargo = {
+    test_type = function(self, id, type, tags, component_id, mission_id)
+      return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
+    end,
+    init = function(self)
+      if self.tags.illigal == "true" then
+        self.illigal = true
+        self.found = false
+      end
+      -- if is_vehicle(self) then
+      --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
+      -- elseif is_object(self) then
+      --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
+      -- end
+    end,
+    clear = function(self)
+    end,
+    load = function(self)
+    end,
+    unload = function(self)
+    end,
+    tick = function(self, tick)
+    end,
+    dispensable = function(self)
+      return self.mission ~= nil
+    end,
+    complete = function(self)
+      return false
+    end,
+    fail = function(self)
+      return false
+    end,
+    reward = function(self)
+      return 0
+    end,
+    label = function(self)
+      return self.illigal and self.text_illigal or self.text
+    end,
+    count = function(self)
+      if self.found then
+        return 1
+      else
+        return 0
+      end
+    end,
+    reported = function(self)
+      return true
+    end,
+    mapped = function(self)
+      return false
+    end,
+    reward_base = 2,
+    text = "貨物を配送先へ輸送",
+    text_illigal = "違法貨物を回収して基地へ搬送",
+    marker_type = 2,
+    clear_timer = 3600
+  },
   hostile = {
     test_type = function(self, id, type, tags, component_id, mission_id)
       return (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
@@ -2213,9 +2228,6 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
   object.id = id
   object.type = type
   object.name = name
-
-  console.notify(string.format("Initializing object %s#%d.", object.type, object.id))
-
   object.tags = tags
   object.marker_id = server.getMapID()
   object.component_id = component_id
@@ -2276,6 +2288,7 @@ function initialize_object(id, type, name, tags, mission_id, component_id, paren
   end
 
   table.insert(g_savedata.objects, object)
+  console.notify(string.format("%s#%d has initialized.", object.type, object.id))
 end
 
 function clear_object(object)
@@ -2286,7 +2299,7 @@ function clear_object(object)
   server.removeMapID(-1, object.marker_id)
 
   object.cleared = true
-  console.notify(string.format("Cleared %s#%d.", object.type, object.id))
+  console.notify(string.format("%s#%d has cleared.", object.type, object.id))
 end
 
 function despawn_object(object)
@@ -3518,25 +3531,27 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       local mission, amount = ...
       mission = tonumber(mission)
       amount = tonumber(amount)
-      local is_suspect = false
+      local has_hostage = false
 
       if mission == nil or amount == nil or amount < 1000000 then
         return
       end
 
       for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].tracker == "suspect" then
-          is_suspect = true
+        if g_savedata.objects[i].tracker == "rescuee" and g_savedata.objects[i].hostage then
+          has_hostage = true
         end
       end
 
-      if not is_suspect then
+      if not has_hostage then
         return
       end
 
       if transact(amount * -1, string.format("Paid out the ransom for mission#$d.", mission)) then
         for i = 1, #g_savedata.objects do
-          if g_savedata.objects[i].tracker == "suspect" then
+          if g_savedata.objects[i].tracker == "rescuee" and g_savedata.objects[i].hostage then
+            g_savedata.objects[i].hostage = false
+          elseif g_savedata.objects[i].tracker == "suspect" then
             g_savedata.objects[i].ransom_paid = true
           end
         end
