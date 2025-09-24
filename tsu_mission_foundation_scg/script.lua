@@ -23,6 +23,11 @@ g_savedata = {
       range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
       count_limited = true,
       count = 0,
+      geologic = {
+        waters = true,
+        mainlands = true,
+        islands = true,
+      },
       area_limited = false,
       area_x_min = -24000,
       area_x_max = 10000,
@@ -73,6 +78,7 @@ g_savedata = {
 location_properties = { {
   pattern = "^mission:climber_missing_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "forest", "mountain" },
   is_main_location = false,
   sub_locations = { "^mission:climber_missing_%d+$", "^mission:raft_%d+$" },
@@ -87,13 +93,14 @@ location_properties = { {
 }, {
   pattern = "^mission:em_call_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "house" },
   is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 250,
+  search_radius = 0,
   report = "緊急搬送\nタス...ケ......タ......",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -101,6 +108,7 @@ location_properties = { {
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "field", "mountain", "forest" },
   is_main_location = false,
   sub_locations = {},
@@ -115,6 +123,7 @@ location_properties = { {
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
@@ -129,6 +138,7 @@ location_properties = { {
 }, {
   pattern = "^mission:lifeboat_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
@@ -142,6 +152,7 @@ location_properties = { {
 }, {
   pattern = "^mission:raft_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "lake", "beach" },
   is_main_location = true,
   sub_locations = {},
@@ -156,6 +167,7 @@ location_properties = { {
 }, {
   pattern = "^mission:freighter_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -172,6 +184,7 @@ location_properties = { {
 }, {
   pattern = "^mission:ferry_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -188,6 +201,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tanker_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -204,7 +218,8 @@ location_properties = { {
 }, {
   pattern = "^mission:boat_sink_%d+$",
   tracker = "sar",
-  suitable_zones = { "lake", "channel" },
+  geologic = "mainlands",
+  suitable_zones = { "lake" },
   is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
@@ -220,6 +235,7 @@ location_properties = { {
 }, {
   pattern = "^mission:overboard_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel", "beach" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
@@ -234,6 +250,7 @@ location_properties = { {
 }, {
   pattern = "^mission:ferry_sink_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -250,6 +267,7 @@ location_properties = { {
 }, {
   pattern = "^mission:fishboat_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
@@ -266,6 +284,7 @@ location_properties = { {
 }, {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "wind_turbine" },
   is_main_location = true,
   sub_locations = {},
@@ -282,6 +301,7 @@ location_properties = { {
 }, {
   pattern = "^mission:diver_yacht_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "diving_spot" },
   is_main_location = true,
   sub_locations = { "^mission:diver_missing_%d+$" },
@@ -296,6 +316,7 @@ location_properties = { {
 }, {
   pattern = "^mission:diver_missing_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "underwater" },
   is_main_location = false,
   sub_locations = {},
@@ -310,6 +331,7 @@ location_properties = { {
 }, {
   pattern = "^mission:oil_platform_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -328,6 +350,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tunnel_fire_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:car_collision_%d+$", "^mission:car_stuck_%d+$" },
@@ -344,6 +367,7 @@ location_properties = { {
 }, {
   pattern = "^mission:car_collision_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "road", "tunnel" },
   is_main_location = true,
   sub_locations = {},
@@ -358,6 +382,7 @@ location_properties = { {
 }, {
   pattern = "^mission:car_stuck_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
   sub_locations = {},
@@ -372,6 +397,7 @@ location_properties = { {
 }, {
   pattern = "^mission:aircraft_down_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_land_%d+$" },
@@ -386,6 +412,7 @@ location_properties = { {
 }, {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -402,6 +429,7 @@ location_properties = { {
 }, {
   pattern = "^mission:campsite_fire_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -418,13 +446,14 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_forest_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "forest", "field", "mountain", "hill" },
   is_main_location = true,
   sub_locations = { "^mission:climber_missing_%d+$" },
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 250,
+  search_radius = 500,
   report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -432,6 +461,7 @@ location_properties = { {
 }, {
   pattern = "^mission:wind_turbine_fire_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -460,13 +490,14 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:boat_sink_%d+$" },
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 250,
+  search_radius = 500,
   report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -474,6 +505,7 @@ location_properties = { {
 }, {
   pattern = "^mission:naval_mine_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "channel", "diving_spot" },
   is_main_location = true,
   sub_locations = {},
@@ -488,6 +520,7 @@ location_properties = { {
 }, {
   pattern = "^mission:train_crash_head_on$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -504,6 +537,7 @@ location_properties = { {
 }, {
   pattern = "^mission:train_crash_log_trailer$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -520,6 +554,7 @@ location_properties = { {
 }, {
   pattern = "^mission:power_plant_fire_%d+$",
   tracker = "sar",
+  geologic = "islands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -536,6 +571,7 @@ location_properties = { {
 }, {
   pattern = "^mission:chemical_storage_fire_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -550,8 +586,26 @@ location_properties = { {
   rescuee_max = 75,
   note = "職員からの通報",
 }, {
+  pattern = "^mission:house_fire_%d+$",
+  tracker = "sar",
+  geologic = "mainlands",
+  suitable_zones = {},
+  is_main_location = true,
+  sub_locations = {},
+  sub_location_min = 0,
+  sub_location_max = 0,
+  is_unique_sub_location = false,
+  search_radius = 200,
+  report = "火災\n住宅が火事. この家の住民と連絡が取れておらず取り残されている可能性がある.",
+  report_timer_min = 0,
+  report_timer_max = 0,
+  rescuee_min = 100,
+  rescuee_max = 100,
+  note = "民間人からの通報",
+}, {
   pattern = "^mission:highway_car_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -568,6 +622,7 @@ location_properties = { {
 }, {
   pattern = "^mission:highway_oil_tanker_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -584,6 +639,7 @@ location_properties = { {
 }, {
   pattern = "^mission:air_medevac_%d+$",
   tracker = "sar",
+  geologic = "mainlands",
   suitable_zones = { "airfield", "heliport" },
   is_main_location = true,
   sub_locations = {},
@@ -598,6 +654,7 @@ location_properties = { {
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
@@ -612,6 +669,7 @@ location_properties = { {
 }, {
   pattern = "^mission:smuggler_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
@@ -626,6 +684,7 @@ location_properties = { {
 }, {
   pattern = "^mission:vessel_hijacked_%d+$",
   tracker = "sar",
+  geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
@@ -640,6 +699,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
+  geologic = "mainlands",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
   is_main_location = true,
   sub_locations = {},
@@ -654,6 +714,7 @@ location_properties = { {
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
+  geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
   sub_locations = {},
@@ -668,6 +729,7 @@ location_properties = { {
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
+  geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
   sub_locations = {},
@@ -1263,8 +1325,8 @@ object_trackers = {
           end
         else
           if self.weapon == nil then
-            self.weapon = table.random({ { id = 35, slot = 2 }, { id = 39, slot = 1 } })
-            server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, 0, 0.0)
+            self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
+            server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
             server.setAICharacterTargetTeam(self.id, 0, true)
           end
 
@@ -2625,6 +2687,7 @@ locations = {
     obj.location_index = location_index
     obj.pattern = prop.pattern or nil
     obj.tracker = prop.tracker or nil
+    obj.geologic = prop.geologic or nil
     obj.suitable_zones = prop.suitable_zones or {}
 
     if prop.is_main_location ~= nil then
@@ -2745,9 +2808,11 @@ locations = {
     end
 
     local _locations = table.find_all(self.items, function(x)
-      return (#patterns == 0 or self:is_match_multipattern(x, patterns)) and (not is_main or x.is_main_location) and
-          self:is_suitable(x, center, range_min, range_max) and
-          (not is_main or not is_unprecedented or self:is_unprecedented(x))
+      return (#patterns == 0 or self:is_match_multipattern(x, patterns))
+        and (not is_main or x.is_main_location)
+        and (g_savedata.subsystems.mission.geologic.waters and x.geologic == "waters" or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == "mainlands" or g_savedata.subsystems.mission.geologic.islands and x.geologic == "islands")
+        and self:is_suitable(x, center, range_min, range_max)
+        and (not is_main or not is_unprecedented or self:is_unprecedented(x))
     end)
 
     if #_locations == 0 then
@@ -3489,6 +3554,15 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       if value ~= nil then
         g_savedata.subsystems.mission.area_y_max = value
       end
+    elseif verb == "geologic" and is_admin then
+      local geo, value = ...
+      local keys = table.keys(g_savedata.subsystems.mission.geologic)
+
+      if geo == nil or not table.contains(keys, geo) then
+        return
+      end
+
+      g_savedata.subsystems.mission.geologic[geo] = set_or_not(g_savedata.subsystems.mission.geologic[geo], value)
     elseif verb == "gather" and is_admin then
       local mission_id = ...
       mission_id = tonumber(mission_id)
