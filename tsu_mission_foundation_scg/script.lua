@@ -3563,6 +3563,13 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       end
 
       g_savedata.subsystems.mission.geologic[geo] = set_or_not(g_savedata.subsystems.mission.geologic[geo], value)
+    elseif verb == "recurrent-cpa" and is_admin then
+      local value = ...
+      value = tonumber(value)
+
+      if value == nil then return end
+
+      g_savedata.subsystems.rescuee.cpa_recurrence_rate = value
     elseif verb == "gather" and is_admin then
       local mission_id = ...
       mission_id = tonumber(mission_id)
