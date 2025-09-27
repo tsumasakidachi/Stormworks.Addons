@@ -37,29 +37,42 @@ g_savedata = {
       taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) * 3600,
     },
     rescuee = {
+      tracker = true,
       dispensable = false,
       cpa_recurrence_rate = property.slider("CPA recurrence rate (%)", 0, 100, 1, 20),
       cpa_recurrence_threshold_players = property.slider("CPA recurrence occur when players are more than", 0, 32, 1, 8),
       has_strobe = property.checkbox("Rescuees has strobe", true),
     },
     fire = {
+      tracker = true,
       dispensable = false,
       rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
     },
     forest_fire = {
+      tracker = true,
       dispensable = false
     },
     suspect = {
+      tracker = true,
+      spawn = true,
       dispensable = false
     },
     spillage = {
+      tracker = true,
       dispensable = false
     },
     wreckage = {
+      tracker = false,
+      active = true,
       dispensable = true
     },
     hostile = {
+      tracker = true,
+      active = true,
       dispensable = true
+    },
+    cargo = {
+      tracker = false,
     },
     mapping = {
       mission = {},
@@ -596,7 +609,7 @@ location_properties = { {
   sub_location_max = 0,
   is_unique_sub_location = false,
   search_radius = 200,
-  report = "火災\n住宅が火事. この家の住民と連絡が取れておらず取り残されている可能性がある.",
+  report = "火災\n近所の家が燃えている. この家の住民と連絡が取れておらず取り残されている可能性がある.",
   report_timer_min = 0,
   report_timer_max = 0,
   rescuee_min = 100,
@@ -821,7 +834,7 @@ mission_trackers = {
 
       if reward > 0 then
         local distance = matrix.distance(self.start_position, self.locations[1].transform)
-        reward = reward + math.floor(distance / 1000) * 2000 * 2
+        reward = reward + math.ceil(distance / 1000) * 500 * 2
       end
 
       return reward
@@ -967,7 +980,7 @@ mission_trackers = {
 object_trackers = {
   rescuee = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "character" and tags.tracker == "rescuee"
+      return g_savedata.subsystems.rescuee.tracker and type == "character" and tags.tracker == "rescuee"
     end,
     init = function(self)
       local hp_min = -20
@@ -1096,14 +1109,14 @@ object_trackers = {
       end)
       return mission.taken_to_long
     end,
-    reward_base = 1000,
+    reward_base = 2000,
     text = "要救助者を医療機関か基地へ搬送",
     marker_type = 1,
     clear_timer = 300
   },
   fire = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "fire"
+      return g_savedata.subsystems.fire.tracker and type == "fire"
     end,
     init = function(self)
       self.is_lit = server.getFireData(self.id)
@@ -1162,14 +1175,14 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 100,
+    reward_base = 500,
     text = "炎を鎮火",
     marker_type = 5,
     clear_timer = 0
   },
   forest_fire = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "forest_fire"
+      return g_savedata.subsystems.forest_fire.tracker and type == "forest_fire"
     end,
     init = function(self, transform)
       self.transform = transform
@@ -1207,14 +1220,14 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 5000,
+    reward_base = 2500,
     text = "森林火災を鎮火",
     marker_type = 5,
     clear_timer = 0
   },
   suspect = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "character" and tags.tracker == "suspect"
+      return g_savedata.subsystems.suspect.tracker and type == "character" and tags.tracker == "suspect"
     end,
     init = function(self)
       self.vital = server.getCharacterData(self.id)
@@ -1382,14 +1395,14 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 1000,
+    reward_base = 2000,
     text = "被疑者を制圧して警察署か基地へ連行",
     marker_type = 1,
     clear_timer = 300
   },
   oil_spill = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "oil_spill"
+      return g_savedata.subsystems.spillage.tracker and type == "oil_spill"
     end,
     init = function(self, transform, tile_x, tile_y, amount)
       self.transform = transform
@@ -1446,7 +1459,7 @@ object_trackers = {
   },
   wreckage = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return type == "vehicle" and tags.tracker == "wreckage"
+      return g_savedata.subsystems.wreckage.tracker and type == "vehicle" and tags.tracker == "wreckage"
     end,
     init = function(self)
       self.components_checked = false
@@ -1502,7 +1515,7 @@ object_trackers = {
       return false
     end,
     reward = function(self)
-      return math.ceil(self.mass * self.reward_base / 100) * 100
+      return math.ceil(self.mass / 1000) * 1000 * self.reward_base
     end,
     label = function(self)
       return self.text
@@ -1516,14 +1529,14 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 2,
+    reward_base = 5,
     text = "残骸をスクラップヤードへ輸送",
     marker_type = 2,
     clear_timer = 3600
   },
   cargo = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return (type == "vehicle" or type == "object") and tags.tracker == "cargo"
+      return g_savedata.subsystems.cargo.tracker and (type == "vehicle" or type == "object") and tags.tracker == "cargo"
     end,
     init = function(self)
       if self.tags.illigal == "true" then
@@ -1572,7 +1585,7 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 2,
+    reward_base = 10,
     text = "貨物を配送先へ輸送",
     text_illigal = "違法貨物を回収して基地へ搬送",
     marker_type = 2,
@@ -1580,7 +1593,7 @@ object_trackers = {
   },
   hostile = {
     test_type = function(self, id, type, tags, component_id, mission_id)
-      return (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
+      return g_savedata.subsystems.hostile.tracker and (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
     end,
     init = function(self)
       local mission = table.find(g_savedata.missions, function(x)
@@ -1598,8 +1611,7 @@ object_trackers = {
         self.indispensable = false
       end
 
-      server.setCreatureTooltip(self.id,
-        string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
+      server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1643,7 +1655,7 @@ object_trackers = {
     mapped = function(self)
       return false
     end,
-    reward_base = 500,
+    reward_base = 1000,
     text = "危険生物を駆除",
     marker_type = 6,
     clear_timer = 300
@@ -2454,6 +2466,7 @@ function reward_object(object)
     for j = 1, #g_savedata.missions do
       if g_savedata.missions[j].id == object.mission then
         g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
+        server.notify(-1, object:label(), "Objective has achieved.", 4)
       end
     end
   else
@@ -3558,11 +3571,19 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       local geo, value = ...
       local keys = table.keys(g_savedata.subsystems.mission.geologic)
 
-      if geo == nil or not table.contains(keys, geo) then
-        return
+      if geo == nil then
+        console.log(string.format("subsystems.mission.geologic.waters: %s", g_savedata.subsystems.mission.geologic.waters))
+        console.log(string.format("subsystems.mission.geologic.islands: %s", g_savedata.subsystems.mission.geologic.islands))
+        console.log(string.format("subsystems.mission.geologic.mainlands: %s", g_savedata.subsystems.mission.geologic.mainlands))
+      elseif table.contains(keys, geo) then
+        g_savedata.subsystems.mission.geologic[geo] = set_or_not(g_savedata.subsystems.mission.geologic[geo], value)
       end
+    elseif verb == "tracker" and is_admin then
+      local obj, value = ...
 
-      g_savedata.subsystems.mission.geologic[geo] = set_or_not(g_savedata.subsystems.mission.geologic[geo], value)
+      if obj == nil or g_savedata.subsystems[obj] == nil then return end
+
+
     elseif verb == "recurrent-cpa" and is_admin then
       local value = ...
       value = tonumber(value)
