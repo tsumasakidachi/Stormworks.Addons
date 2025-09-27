@@ -826,15 +826,9 @@ mission_trackers = {
     reward = function(self)
       local reward = self.rewards
 
-      for k, object in pairs(g_savedata.objects) do
-        if object.mission == self.id and object.tracker ~= nil and object:complete() then
-          reward = reward + object:reward()
-        end
-      end
-
       if reward > 0 then
-        local distance = matrix.distance(self.start_position, self.locations[1].transform)
-        reward = reward + math.ceil(distance / 1000) * 500 * 2
+        local distance = matrix.distance(get_center_transform(), self.locations[1].transform)
+        reward = reward + math.ceil(distance / 1000) * 1000 * 2
       end
 
       return reward
