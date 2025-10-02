@@ -30,11 +30,11 @@ g_savedata = {
       },
       area_limited = false,
       area_x_min = -24000,
-      area_x_max = 10000,
+      area_x_max = 15000,
       area_y_min = -25000,
       area_y_max = -12000,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
-      taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 15) * 3600,
+      taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 10) * 3600,
     },
     rescuee = {
       tracker = true,
@@ -86,6 +86,11 @@ g_savedata = {
     },
   },
   disabled_components = {},
+  dlcs = {
+    weapon = false,
+    industry = false,
+    space = false,
+  },
 }
 
 location_properties = { {
@@ -1130,19 +1135,21 @@ object_trackers = {
         self.cooling_timer = math.max(self.cooling_timer - tick, 0)
       end
 
-      local is_explosive = false
+      if g_savedata.dlcs.weapon then
+        local is_explosive = false
 
-      for i = 1, #g_savedata.missions do
-        is_explosive = is_explosive or
-            g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and
-            math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
-      end
+        for i = 1, #g_savedata.missions do
+          is_explosive = is_explosive or
+              g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and
+              math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+        end
 
-      if is_explosive and not self.is_explosive then
-        self.is_explosive = is_explosive
-        server.setFireData(self.id, true, false)
-        server.spawnExplosion(self.transform, math.random() ^ 2)
-        console.notify(string.format("Fire#%d exploded.", self.id))
+        if is_explosive and not self.is_explosive then
+          self.is_explosive = is_explosive
+          server.setFireData(self.id, true, false)
+          server.spawnExplosion(self.transform, math.random() ^ 2)
+          console.notify(string.format("Fire#%d exploded.", self.id))
+        end
       end
     end,
     dispensable = function(self)
@@ -1312,7 +1319,7 @@ object_trackers = {
               server.setAICharacterTargetTeam(self.id, 0, true)
             end
           end
-        elseif self.role == "gunner 1" or self.role == "gunner 2" then
+        elseif self.role ~= nil and string.match(self.role, "^gunner%s-%d-$") ~= nil then
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
@@ -1324,7 +1331,7 @@ object_trackers = {
           elseif vehicle_closest ~= nil then
             server.setAITargetVehicle(self.id, vehicle_closest.id)
           end
-        elseif self.role == "designator 1" or self.role == "designator 2" then
+        elseif self.role ~= nil and string.match(self.role, "^designator%s-%d-$") ~= nil then
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
@@ -2816,10 +2823,10 @@ locations = {
 
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns))
-        and (not is_main or x.is_main_location)
-        and (g_savedata.subsystems.mission.geologic.waters and x.geologic == "waters" or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == "mainlands" or g_savedata.subsystems.mission.geologic.islands and x.geologic == "islands")
-        and self:is_suitable(x, center, range_min, range_max)
-        and (not is_main or not is_unprecedented or self:is_unprecedented(x))
+          and (not is_main or x.is_main_location)
+          and (g_savedata.subsystems.mission.geologic.waters and x.geologic == "waters" or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == "mainlands" or g_savedata.subsystems.mission.geologic.islands and x.geologic == "islands")
+          and self:is_suitable(x, center, range_min, range_max)
+          and (not is_main or not is_unprecedented or self:is_unprecedented(x))
     end)
 
     if #_locations == 0 then
@@ -3374,7 +3381,7 @@ players = {
           g_savedata.players_alert[self.items[i].steam_id] = alert
 
           if alert then
-            console.notify(string.format("%s has issued alert.", self.items[i].name))
+            console.notify(string.format("%s has issued an alert.", self.items[i].name))
           end
         end
       end
@@ -3576,8 +3583,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       local obj, value = ...
 
       if obj == nil or g_savedata.subsystems[obj] == nil then return end
-
-
     elseif verb == "recurrent-cpa" and is_admin then
       local value = ...
       value = tonumber(value)
@@ -3895,6 +3900,9 @@ function onCreate(is_world_create)
   if is_world_create then
     g_savedata.subsystems.mapping.landscape.markar_id = server.getMapID()
     g_savedata.subsystems.mapping.facility.markar_id = server.getMapID()
+    g_savedata.dlcs.weapon = server.dlcWeapons()
+    g_savedata.dlcs.industry = server.dlcArid()
+    g_savedata.dlcs.space = server.dlcSpace()
   end
 
   landscapes:refresh()
