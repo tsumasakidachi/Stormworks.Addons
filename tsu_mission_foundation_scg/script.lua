@@ -20,7 +20,7 @@ g_savedata = {
       interval_min = property.slider("Minimum interval at which new missions occur (minutes)", 0, 30, 1, 10) * 3600,
       interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 20) * 3600,
       range_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
-      range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
+      range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 8) * 1000,
       count_limited = true,
       count = 0,
       geologic = {
@@ -93,9 +93,41 @@ g_savedata = {
   },
 }
 
+cases = {
+  fire = {
+    id = 1,
+    text = "火災",
+  },
+  ems = {
+    id = 2,
+    text = "救急搬送",
+  },
+  sar = {
+    id = 3,
+    text = "捜索救難",
+  },
+  wat = {
+    id = 4,
+    text = "水難",
+  },
+  sec = {
+    id = 5,
+    text = "警備行動",
+  },
+  acc = {
+    id = 6,
+    text = "事故",
+  },
+  md = {
+    id = 7,
+    text = "メーデー",
+  },
+}
+
 location_properties = { {
   pattern = "^mission:climber_missing_%d+$",
   tracker = "sar",
+  case = cases.sar,
   geologic = "mainlands",
   suitable_zones = { "forest", "mountain" },
   is_main_location = false,
@@ -103,14 +135,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "捜索救難\n悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
+  dispersal_area = 500,
+  report = "悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "警察署からの通報",
 }, {
   pattern = "^mission:em_call_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = { "house" },
   is_main_location = true,
@@ -118,14 +151,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 0,
-  report = "救急搬送\nタス...ケ......タ......",
+  dispersal_area = 0,
+  report = "タス...ケ......タ......",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
   tracker = "sar",
+  case = cases.wat,
   geologic = "waters",
   suitable_zones = { "field", "mountain", "forest" },
   is_main_location = false,
@@ -133,7 +167,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
+  dispersal_area = 500,
   report = "落水者",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -141,6 +175,7 @@ location_properties = { {
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
   tracker = "sar",
+  case = cases.wat,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
@@ -148,7 +183,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
+  dispersal_area = 500,
   report = "落水者",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -156,6 +191,7 @@ location_properties = { {
 }, {
   pattern = "^mission:lifeboat_%d+$",
   tracker = "sar",
+  case = cases.wat,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
@@ -163,7 +199,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
+  dispersal_area = 500,
   report = "救命ボート",
   report_timer = 0,
   note = "",
@@ -171,20 +207,22 @@ location_properties = { {
   pattern = "^mission:raft_%d+$",
   tracker = "sar",
   geologic = "mainlands",
+  case = cases.wat,
   suitable_zones = { "lake", "beach" },
   is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "水難事故\nいかだを作ってあそんでいたら転覆した!",
+  dispersal_area = 500,
+  report = "いかだを作ってあそんでいたら転覆した!",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:freighter_fire_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -192,8 +230,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
+  dispersal_area = 1000,
+  report = "船内で突然何かが爆発した! もう助からないぞ!",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -202,6 +240,7 @@ location_properties = { {
 }, {
   pattern = "^mission:ferry_fire_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -209,8 +248,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "メーデー\n本船客室より出火し, 船全体に火の手が回りつつあり非常に危険な状況である. 迅速な救援を求む.",
+  dispersal_area = 1000,
+  report = "本船客室より出火し, 船全体に火の手が回りつつあり非常に危険な状況である. 迅速な救援を求む.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -219,6 +258,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tanker_fire_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -226,8 +266,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "メーデー\n積荷の石油に火がアアア......",
+  dispersal_area = 1000,
+  report = "積荷の石油に火がアアア......",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -236,6 +276,7 @@ location_properties = { {
 }, {
   pattern = "^mission:boat_sink_%d+$",
   tracker = "sar",
+  case = cases.wat,
   geologic = "mainlands",
   suitable_zones = { "lake" },
   is_main_location = true,
@@ -243,8 +284,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "水難事故\nボートが壊れて沈没しそう!",
+  dispersal_area = 500,
+  report = "ボートが壊れて沈没しそう!",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -253,6 +294,7 @@ location_properties = { {
 }, {
   pattern = "^mission:overboard_%d+$",
   tracker = "sar",
+  case = cases.wat,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "beach" },
   is_main_location = true,
@@ -260,14 +302,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 1,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "水難事故\n船から人が落ちた!",
+  dispersal_area = 1000,
+  report = "船から人が落ちた!",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "職員からの通報",
 }, {
   pattern = "^mission:ferry_sink_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -275,8 +318,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 2000,
-  report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
+  dispersal_area = 2000,
+  report = "本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -285,6 +328,7 @@ location_properties = { {
 }, {
   pattern = "^mission:fishboat_fire_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -292,8 +336,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "メーデー\n漁船のエンジンが爆発し炎上中! どうやら浸水も起きているようだ. 終わった.",
+  dispersal_area = 1000,
+  report = "漁船のエンジンが爆発し炎上中! どうやら浸水も起きているようだ. 終わった.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -302,6 +346,7 @@ location_properties = { {
 }, {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "mainlands",
   suitable_zones = { "wind_turbine" },
   is_main_location = true,
@@ -309,8 +354,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "メーデー\nヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
+  dispersal_area = 500,
+  report = "ヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 100,
@@ -319,6 +364,7 @@ location_properties = { {
 }, {
   pattern = "^mission:diver_yacht_%d+$",
   tracker = "sar",
+  case = cases.sar,
   geologic = "waters",
   suitable_zones = { "diving_spot" },
   is_main_location = true,
@@ -326,14 +372,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "捜索救難\nダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
+  dispersal_area = 500,
+  report = "ダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:diver_missing_%d+$",
   tracker = "sar",
+  case = cases.sar,
   geologic = "waters",
   suitable_zones = { "underwater" },
   is_main_location = false,
@@ -341,7 +388,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
+  dispersal_area = 500,
   report = "行方不明のダイバー",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -349,6 +396,7 @@ location_properties = { {
 }, {
   pattern = "^mission:oil_platform_fire_%d+$",
   tracker = "sar",
+  case = cases.acc,
   geologic = "waters",
   suitable_zones = {},
   is_main_location = true,
@@ -356,8 +404,8 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 5,
   is_unique_sub_location = false,
-  search_radius = 2000,
-  report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
+  dispersal_area = 2000,
+  report = "操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -368,6 +416,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tunnel_fire_%d+$",
   tracker = "sar",
+  case = cases.acc,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -375,8 +424,8 @@ location_properties = { {
   sub_location_min = 3,
   sub_location_max = 5,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "火災\nトンネルの中が全部燃えていてこのままでは全員焼け死んでしまう!",
+  dispersal_area = 500,
+  report = "大型トラックの事故で大火災が発生. トンネルの中が全部燃えていてこのままでは全員焼け死んでしまう!",
   report_timer_min = 0,
   report_timer_max = 0,
   fire_min = 100,
@@ -385,6 +434,7 @@ location_properties = { {
 }, {
   pattern = "^mission:car_collision_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = { "road", "tunnel" },
   is_main_location = true,
@@ -392,14 +442,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = true,
-  search_radius = 200,
-  report = "交通事故\n自動車が正面衝突しけが人がいる.",
+  dispersal_area = 200,
+  report = "自動車が正面衝突しけが人がいる.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:car_stuck_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
@@ -407,7 +458,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 200,
+  dispersal_area = 200,
   report = "スタックした自動車",
   report_timer_min = 0,
   report_timer_max = 0,
@@ -415,6 +466,7 @@ location_properties = { {
 }, {
   pattern = "^mission:aircraft_down_%d+$",
   tracker = "sar",
+  case = cases.md,
   geologic = "mainlands",
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
@@ -422,14 +474,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = true,
-  search_radius = 1000,
-  report = "捜索救難\nバラバラになって落ちていく飛行機が見えた!",
+  dispersal_area = 1000,
+  report = "バラバラになって落ちていく飛行機が見えた!",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
+  case = cases.acc,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -437,8 +490,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
+  dispersal_area = 100,
+  report = "マリーナに係留されているボートから出火して周りの船にも燃え移っている.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 100,
@@ -447,6 +500,7 @@ location_properties = { {
 }, {
   pattern = "^mission:campsite_fire_%d+$",
   tracker = "sar",
+  case = cases.fire,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -454,8 +508,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "火災\nキャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
+  dispersal_area = 500,
+  report = "キャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -464,6 +518,7 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_forest_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "mainlands",
   suitable_zones = { "forest", "field", "mountain", "hill" },
   is_main_location = true,
@@ -471,14 +526,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "安全確保\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
+  dispersal_area = 500,
+  report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "パトロールからの通報",
 }, {
   pattern = "^mission:wind_turbine_fire_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "waters",
   suitable_zones = {},
   is_main_location = true,
@@ -486,8 +542,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "火災\n洋上風力発電機のエレベーターが故障, 落下し火災が発生. タービン室から降りられず閉じこめられている.",
+  dispersal_area = 100,
+  report = "洋上風力発電機のエレベーターが故障, タービン室から降りられず閉じこめられている.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "パトロールからの通報",
@@ -500,7 +556,7 @@ location_properties = { {
   --     sub_location_min = 1,
   --     sub_location_max = 1,
   --     is_unique_sub_location = false,
-  --     search_radius = 250,
+  --     dispersal_area = 250,
   --     --     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   --     report_timer_min = 0,
   --     report_timer_max = 0,
@@ -508,6 +564,7 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "waters",
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
@@ -515,14 +572,15 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 3,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "安全確保\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
+  dispersal_area = 500,
+  report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "パトロールからの通報",
 }, {
   pattern = "^mission:naval_mine_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "diving_spot" },
   is_main_location = true,
@@ -530,14 +588,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 500,
-  report = "落下物\n付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊(報酬なし)またはスクラップヤードへ輸送(報酬あり)せよ.",
+  dispersal_area = 500,
+  report = "付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊(報酬なし)またはスクラップヤードへ輸送(報酬あり)せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "パトロールからの通報",
 }, {
   pattern = "^mission:train_crash_head_on$",
   tracker = "sar",
+  case = cases.acc,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -545,8 +604,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "鉄道事故\n旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
+  dispersal_area = 100,
+  report = "旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -555,6 +614,7 @@ location_properties = { {
 }, {
   pattern = "^mission:train_crash_log_trailer$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -562,8 +622,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "鉄道事故\n旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
+  dispersal_area = 100,
+  report = "旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -572,6 +632,7 @@ location_properties = { {
 }, {
   pattern = "^mission:power_plant_fire_%d+$",
   tracker = "sar",
+  case = cases.acc,
   geologic = "islands",
   suitable_zones = {},
   is_main_location = true,
@@ -579,8 +640,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
+  dispersal_area = 100,
+  report = "発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -589,6 +650,7 @@ location_properties = { {
 }, {
   pattern = "^mission:chemical_storage_fire_%d+$",
   tracker = "sar",
+  case = cases.fire,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -596,8 +658,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "火災\n化学物質が保管されている倉庫が炎上している. 不意の爆発に注意せよ.",
+  dispersal_area = 100,
+  report = "化学物質が保管されている倉庫が炎上している. 不意の爆発に注意せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 25,
@@ -606,6 +668,7 @@ location_properties = { {
 }, {
   pattern = "^mission:house_fire_%d+$",
   tracker = "sar",
+  case = cases.fire,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -613,8 +676,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 200,
-  report = "火災\n近所の家が燃えている. この家の住民と連絡が取れておらず取り残されている可能性がある.",
+  dispersal_area = 200,
+  report = "近所の家が燃えている. この家の住民と連絡が取れておらず取り残されている可能性がある.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 100,
@@ -623,6 +686,7 @@ location_properties = { {
 }, {
   pattern = "^mission:highway_car_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -630,8 +694,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "交通事故\n高速道路で乗用車が衝突し横転, 本線を塞いでいる.",
+  dispersal_area = 100,
+  report = "高速道路で乗用車が衝突し横転, 本線を塞いでいる.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 100,
@@ -640,6 +704,7 @@ location_properties = { {
 }, {
   pattern = "^mission:highway_oil_tanker_%d+$",
   tracker = "sar",
+  case = cases.fire,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -647,8 +712,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "交通事故\n高速道路でタンクローリーが横転, 炎上中. 運転手は無事だがインターチェンジを完全に塞いでいる.",
+  dispersal_area = 100,
+  report = "高速道路でタンクローリーが横転, 炎上中. 運転手は無事だがインターチェンジを完全に塞いでいる.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 100,
@@ -657,6 +722,7 @@ location_properties = { {
 }, {
   pattern = "^mission:air_medevac_%d+$",
   tracker = "sar",
+  case = cases.ems,
   geologic = "mainlands",
   suitable_zones = { "airfield", "heliport" },
   is_main_location = true,
@@ -664,14 +730,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 100,
-  report = "救急搬送\n近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
+  dispersal_area = 100,
+  report = "近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "職員からの通報",
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
@@ -679,8 +746,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "国境警備\n武装した小型船を発見した. 乗員を拘束せよ.",
+  dispersal_area = 1000,
+  report = "武装した小型船を発見した. 乗員を拘束せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 50,
@@ -689,6 +756,7 @@ location_properties = { {
 }, {
   pattern = "^mission:smuggling_boat_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -696,8 +764,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 10000,
-  report = "国境警備\nソーヤー島に違法な貨物を運び込むという情報を掴んだ. 不審な船舶を捜索し, 乗り込んで調査せよ.",
+  dispersal_area = 10000,
+  report = "ソーヤー島に違法な貨物を運び込むという情報を掴んだ. 不審な船舶を捜索し, 乗り込んで調査せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 50,
@@ -706,6 +774,7 @@ location_properties = { {
 }, {
   pattern = "^mission:vessel_hijacked_%d+$",
   tracker = "sar",
+  case = cases.sec,
   geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
@@ -713,8 +782,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "ハイジャック\nこの船は我々が乗っ取った! 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
+  dispersal_area = 1000,
+  report = "この船は我々が乗っ取った! 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
   report_timer_min = 0,
   report_timer_max = 0,
   character_min = 50,
@@ -723,6 +792,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
+  case = cases.nd,
   geologic = "mainlands",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
   is_main_location = true,
@@ -730,14 +800,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "竜巻警報\nこのエリアで竜巻が発生する可能性が高まっている...",
+  dispersal_area = 1000,
+  report = "このエリアで竜巻が発生する可能性が高まっている...",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "気象当局からの通報",
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
+  case = cases.nd,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -745,14 +816,15 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "大渦警報\nこのエリアで大渦が発生する可能性が高まっている...",
+  dispersal_area = 1000,
+  report = "このエリアで大渦が発生する可能性が高まっている...",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "気象当局からの通報",
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
+  case = cases.nd,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -760,8 +832,8 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   is_unique_sub_location = false,
-  search_radius = 1000,
-  report = "隕石警報\nこのエリアに隕石の落下が予測されている...",
+  dispersal_area = 1000,
+  report = "このエリアに隕石の落下が予測されている...",
   report_timer_min = 0,
   report_timer_max = 0,
   note = "気象当局からの通報",
@@ -845,7 +917,7 @@ mission_trackers = {
       return reward
     end,
     report = function(self)
-      return string.format("#%d %s", self.id, self.locations[1].report)
+      return string.format("#%d %s\n%s", self.id, self.case.text, self.locations[1].report)
     end,
     status = function(self)
       local text = self.locations[1].note
@@ -892,23 +964,6 @@ mission_trackers = {
       text = text .. "\n\n[捜索半径]"
       text = text .. string.format("\n%dm", self.search_radius)
 
-      text = text .. "\n\n[出動区分]"
-      text = text .. "\nカテゴリ:"
-
-      if self.category ~= nil then
-        text = text .. string.format(" %d", self.category)
-      else
-        text = text .. " 不明"
-      end
-
-      text = text .. "\nユニット: "
-
-      for name, available in pairs(self.units) do
-        if available then
-          text = text .. " " .. string.upper(name)
-        end
-      end
-
       return text
     end
   },
@@ -935,11 +990,11 @@ mission_trackers = {
 
       if not self.started and self.start_timer <= 0 then
         if self.type == "tornado" then
-          server.spawnTornado(self.start_position)
+          server.spawnTornado(self.transform)
           console.notify(string.format("Tornado has occurred."))
         elseif self.type == "whirlpool" then
           local magnitude = math.max(math.random() ^ 2, 0.5)
-          local s = server.spawnWhirlpool(self.start_position, magnitude)
+          local s = server.spawnWhirlpool(self.transform, magnitude)
 
           if s then
             console.notify(string.format("Whirlpool of magnitude %.3f has occurred.", magnitude))
@@ -957,7 +1012,7 @@ mission_trackers = {
             server.notify(-1, self:report(), self.locations[1].note, 1)
           end
 
-          server.spawnMeteor(self.start_position, magnitude, tsunami)
+          server.spawnMeteor(self.transform, magnitude, tsunami)
           console.notify(string.format("Meteor of magnitude %.3f has occurred.", magnitude))
         end
 
@@ -971,7 +1026,7 @@ mission_trackers = {
       return 0
     end,
     report = function(self)
-      return string.format("#%d %s", self.id, self.locations[1].report)
+      return string.format("#%d %s\n%s", self.id, self.case.text, self.locations[1].report)
     end,
     status = function(self)
       local text = self.locations[1].note
@@ -1514,7 +1569,7 @@ object_trackers = {
     end,
     dispensable = function(self)
       local x, y, z = matrix.position(self.transform)
-      return not self.indispensable and not players:is_in_range(self.transform, 500) or y <= 50
+      return not self.indispensable and not players:is_in_range(self.transform, 500) or y <= -25
     end,
     complete = function(self)
       return self.completion_timer >= 300
@@ -2018,14 +2073,15 @@ function initialize_mission(_locations, report_timer, ...)
   mission.cleared = false
   mission.id = g_savedata.subsystems.mission.count + 1
   mission.locations = _locations
-  mission.start_position = mission.locations[1].transform
+  mission.transform = mission.locations[1].transform
+  mission.dispersal_area = mission.locations[1].dispersal_area
   mission.tracker = mission.locations[1].tracker
-  mission.search_center = mission.locations[1].transform
-  mission.search_radius = mission.locations[1].search_radius
+  mission.case = mission.locations[1].case
+  mission.search_center = mission.transform
+  mission.search_radius = mission.dispersal_area
   mission.category = 0
   mission.reported = false
-  mission.report_timer = report_timer or
-      math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
+  mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
   mission.spawned = false
   mission.terminated = false
   mission.elapsed = 0
@@ -2038,7 +2094,6 @@ function initialize_mission(_locations, report_timer, ...)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.category = aggregate_mission_category(mission)
-  mission.units = aggregate_mission_units(mission)
   mission:init({ ... })
 
   record_location_history(mission.locations[1])
@@ -2076,7 +2131,6 @@ function tick_mission(mission, tick)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.category = aggregate_mission_category(mission)
-  mission.units = aggregate_mission_units(mission)
 
   if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
     mission.taken_to_long = true
@@ -2104,8 +2158,7 @@ function tick_mission(mission, tick)
     for i = 1, #players.items do
       if players.items[i].map_opened then
         server.removeMapID(players.items[i].id, mission.marker_id)
-        server.addMapObject(players.items[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label,
-          mission.search_radius, label_hover, color[1], color[2], color[3], color[4])
+        server.addMapObject(players.items[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.search_radius, label_hover, color[1], color[2], color[3], color[4])
       end
     end
   end
@@ -2137,52 +2190,73 @@ function tick_mission(mission, tick)
 end
 
 function spawn_mission(mission)
-  local cl = #mission.locations
+  local x, y, z, object_count, location_count, distance_max = 0, 0, 0, 0, #mission.locations, 0
 
-  for i = 1, cl do
+  for i = 1, location_count do
     spawn_location(mission.locations[i], mission.id)
   end
 
-  local co, x, y, z = 0, 0, 0, 0
-
   for i = 1, #g_savedata.objects do
     if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+      local distance = matrix.distance(mission.transform, g_savedata.objects[i].transform)
       local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-      co = co + 1
+      distance_max = math.max(distance_max, distance)
+      object_count = object_count + 1
       x = x + ox
       y = y + oy
       z = z + oz
     end
   end
 
-  if co >= 2 then
-    x = x / co
-    y = y / co
-    z = z / co
+  if object_count > 0 then
+    x = x / object_count
+    y = y / object_count
+    z = z / object_count
 
-    mission.search_center = matrix.translation(x, y, z)
-  end
-
-  if cl == 1 then
-    local r = math.random() * 0.75 * mission.search_radius
-    local t = math.random() * 2 * math.pi
-
-    x = r * math.cos(t)
-    z = r * math.sin(t)
-
-    mission.search_center = matrix.multiply(mission.search_center, matrix.translation(x, y, z))
+    mission.transform = matrix.translation(x, y, z)
   end
 
   local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
   for i = 1, sub_location_count do
-    local sub_locations = locations:random(mission.search_center, 0, mission.search_radius, false, false,
-      mission.locations[1].sub_locations, {}, mission.locations)
+    local sub_locations = locations:random(mission.transform, 0, mission.dispersal_area, false, false, mission.locations[1].sub_locations, {}, mission.locations)
 
     for j = 1, #sub_locations do
-      spawn_location(sub_locations[j], mission.id)
       table.insert(mission.locations, sub_locations[j])
+      spawn_location(sub_locations[j], mission.id)
     end
+  end
+
+  local x, y, z, object_count, location_count, distance_max = 0, 0, 0, 0, #mission.locations, 0
+
+  if location_count >= 2 then
+    for i = 1, #g_savedata.objects do
+      if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+        local distance = matrix.distance(mission.transform, g_savedata.objects[i].transform)
+        local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
+        distance_max = math.max(distance_max, distance)
+        object_count = object_count + 1
+        x = x + ox
+        y = y + oy
+        z = z + oz
+      end
+    end
+
+    x = x / object_count
+    y = y / object_count
+    z = z / object_count
+
+    mission.search_center = matrix.translation(x, y, z)
+    mission.search_radius = math.ceil(distance_max / 500) * 500
+  elseif location_count >= 1 then
+    local r = math.random() * 0.5 * mission.dispersal_area
+    local t = math.random() * 2 * math.pi
+
+    x = r * math.cos(t)
+    z = r * math.sin(t)
+
+    mission.search_center = matrix.multiply(mission.transform, matrix.translation(x, y, z))
+    mission.search_radius = mission.dispersal_area
   end
 
   mission.spawned = true
@@ -2285,7 +2359,7 @@ end
 
 function aggregate_mission_units(mission)
   return {
-    sar = mission.units ~= nil and mission.units.sar or mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
+    sar = mission.units ~= nil and mission.units.sar or mission.search_radius >= 500 and #mission.locations >= 2,
     fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or mission.objectives.fire.count >= 1,
     med = mission.units ~= nil and mission.units.med or mission.objectives.rescuee.count >= 1,
     spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
@@ -2340,7 +2414,7 @@ function initialize_object(id, type, name, tags, mission_id, addon_id, location_
   object.invocation_distance = tonumber(object.tags.invocation_distance) or 100
 
   for k, v in pairs(object_trackers) do
-    if v.test_type(object, id, type, tags, component_id, mission_id, table.unpack(params)) then
+    if v.test_type(object, id, type, tags, mission_id, addon_id, location_id, component_id, table.unpack(params)) then
       object.tracker = k
       break
     end
@@ -2745,6 +2819,7 @@ locations = {
     obj.location_index = location_index
     obj.pattern = prop.pattern or nil
     obj.tracker = prop.tracker or nil
+    obj.case = prop.case or nil
     obj.geologic = prop.geologic or nil
     obj.suitable_zones = prop.suitable_zones or {}
 
@@ -2758,7 +2833,7 @@ locations = {
     obj.sub_location_min = prop.sub_location_min or 0
     obj.sub_location_max = prop.sub_location_max or 0
     obj.is_unique_sub_location = prop.is_unique_sub_location or false
-    obj.search_radius = prop.search_radius or 0
+    obj.dispersal_area = prop.dispersal_area or 0
     obj.category = prop.category or nil
     obj.report = prop.report or ""
     obj.report_timer_min = prop.report_timer_min or 0
@@ -2904,7 +2979,7 @@ locations = {
       if _locations[i].tile == "" then
         local _zones = landscapes:find_all(function(x)
           return landscapes:is_suitable(x, _locations[i], center, range_min, range_max) and
-              (not is_main or not landscapes:is_in_another_mission(x, _locations[i].search_radius)) and
+              (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area)) and
               not landscapes:is_occupied(x, result) and not landscapes:is_occupied(x, sibling_locations)
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
@@ -2953,7 +3028,7 @@ locations = {
         if is_main then
           center = transform
           range_min = 0
-          range_max = _locations[i].search_radius
+          range_max = _locations[i].dispersal_area
         end
       else
         console.error(string.format(
@@ -3150,7 +3225,7 @@ landscapes = {
     for i = 1, #g_savedata.missions do
       is = is or
           matrix.distance(g_savedata.missions[i].search_center, zone.transform) <=
-          g_savedata.missions[i].search_radius + clearance
+          g_savedata.missions[i].dispersal_area + clearance
     end
 
     return is
@@ -3801,7 +3876,7 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
   local test = false
 
   for k, v in pairs(object_trackers) do
-    test = test or v:test_type(vehicle_ids[1], "vehicle", tags, nil, nil, owner, cost)
+    test = test or v.test_type(nil, vehicle_ids[1], "vehicle", tags, nil, nil, nil, nil, owner, cost)
   end
 
   if test then
