@@ -29,10 +29,10 @@ g_savedata = {
         islands = true,
       },
       area_limited = false,
-      area_x_min = -24000,
-      area_x_max = 15000,
-      area_y_min = -25000,
-      area_y_max = -12000,
+      area_x_min = -30000,
+      area_x_max = 20000,
+      area_y_min = -26000,
+      area_y_max = -10000,
       player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
       taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 10) * 3600,
     },
@@ -196,8 +196,8 @@ location_properties = { {
   report = "メーデー\n船内で突然何かが爆発した! もう助からないぞ!",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:ferry_fire_%d+$",
@@ -213,8 +213,8 @@ location_properties = { {
   report = "メーデー\n本船客室より出火し, 船全体に火の手が回りつつあり非常に危険な状況である. 迅速な救援を求む.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:tanker_fire_%d+$",
@@ -230,8 +230,8 @@ location_properties = { {
   report = "メーデー\n積荷の石油に火がアアア......",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:boat_sink_%d+$",
@@ -247,8 +247,8 @@ location_properties = { {
   report = "水難事故\nボートが壊れて沈没しそう!",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 100,
+  character_min = 25,
+  character_max = 100,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:overboard_%d+$",
@@ -279,8 +279,8 @@ location_properties = { {
   report = "メーデー\n本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:fishboat_fire_%d+$",
@@ -296,8 +296,8 @@ location_properties = { {
   report = "メーデー\n漁船のエンジンが爆発し炎上中! どうやら浸水も起きているようだ. 終わった.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
@@ -313,8 +313,8 @@ location_properties = { {
   report = "メーデー\nヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 100,
-  rescuee_max = 100,
+  character_min = 100,
+  character_max = 100,
   note = "乗員からの通報",
 }, {
   pattern = "^mission:diver_yacht_%d+$",
@@ -360,8 +360,8 @@ location_properties = { {
   report = "火災\n操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   fire_min = 50,
   fire_max = 100,
   note = "職員からの通報",
@@ -441,8 +441,8 @@ location_properties = { {
   report = "火災\nマリーナに係留されているボートから出火して周りの船にも燃え移っている.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 100,
-  rescuee_max = 100,
+  character_min = 100,
+  character_max = 100,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:campsite_fire_%d+$",
@@ -458,8 +458,8 @@ location_properties = { {
   report = "火災\nキャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "キャンプ場からの通報",
 }, {
   pattern = "^mission:hostile_forest_%d+$",
@@ -549,8 +549,8 @@ location_properties = { {
   report = "鉄道事故\n旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "運転士からの通報",
 }, {
   pattern = "^mission:train_crash_log_trailer$",
@@ -566,8 +566,8 @@ location_properties = { {
   report = "鉄道事故\n旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "運転士からの通報",
 }, {
   pattern = "^mission:power_plant_fire_%d+$",
@@ -583,8 +583,8 @@ location_properties = { {
   report = "火災\n発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "職員からの通報",
 }, {
   pattern = "^mission:chemical_storage_fire_%d+$",
@@ -600,8 +600,8 @@ location_properties = { {
   report = "火災\n化学物質が保管されている倉庫が炎上している. 不意の爆発に注意せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 25,
-  rescuee_max = 75,
+  character_min = 25,
+  character_max = 75,
   note = "職員からの通報",
 }, {
   pattern = "^mission:house_fire_%d+$",
@@ -617,8 +617,8 @@ location_properties = { {
   report = "火災\n近所の家が燃えている. この家の住民と連絡が取れておらず取り残されている可能性がある.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 100,
-  rescuee_max = 100,
+  character_min = 100,
+  character_max = 100,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:highway_car_%d+$",
@@ -634,8 +634,8 @@ location_properties = { {
   report = "交通事故\n高速道路で乗用車が衝突し横転, 本線を塞いでいる.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 100,
-  rescuee_max = 100,
+  character_min = 100,
+  character_max = 100,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:highway_oil_tanker_%d+$",
@@ -651,8 +651,8 @@ location_properties = { {
   report = "交通事故\n高速道路でタンクローリーが横転, 炎上中. 運転手は無事だがインターチェンジを完全に塞いでいる.",
   report_timer_min = 0,
   report_timer_max = 0,
-  rescuee_min = 100,
-  rescuee_max = 100,
+  character_min = 100,
+  character_max = 100,
   note = "民間人からの通報",
 }, {
   pattern = "^mission:air_medevac_%d+$",
@@ -683,6 +683,8 @@ location_properties = { {
   report = "国境警備\n武装した小型船を発見した. 乗員を拘束せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
+  character_min = 50,
+  character_max = 100,
   note = "哨戒機からの通報",
 }, {
   pattern = "^mission:smuggling_boat_%d+$",
@@ -698,6 +700,8 @@ location_properties = { {
   report = "国境警備\nソーヤー島に違法な貨物を運び込むという情報を掴んだ. 不審な船舶を捜索し, 乗り込んで調査せよ.",
   report_timer_min = 0,
   report_timer_max = 0,
+  character_min = 50,
+  character_max = 100,
   note = "情報局からの通報",
 }, {
   pattern = "^mission:vessel_hijacked_%d+$",
@@ -713,6 +717,8 @@ location_properties = { {
   report = "ハイジャック\nこの船は我々が乗っ取った! 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
   report_timer_min = 0,
   report_timer_max = 0,
+  character_min = 50,
+  character_max = 100,
   note = "ハイジャッカーからの通報",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
@@ -1148,7 +1154,7 @@ object_trackers = {
           self.is_explosive = is_explosive
           server.setFireData(self.id, true, false)
           server.spawnExplosion(self.transform, math.random() ^ 2)
-          console.notify(string.format("Fire#%d exploded.", self.id))
+          console.notify(string.format("fire#%d exploded.", self.id))
         end
       end
     end,
@@ -1235,13 +1241,13 @@ object_trackers = {
       self.admitted_time = 0
       self.picked = false
       self.team = 2
+      self.activated = false
       self.neutralized = false
       self.ai_state = 0
       self.destination = nil
       self.close_quarters = false
       self.weapon = nil
       self.ransom_paid = false
-      server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
       server.setAICharacterTeam(self.id, self.team)
       server.setAICharacterTargetTeam(self.id, 0, false)
     end,
@@ -1262,7 +1268,7 @@ object_trackers = {
         return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
       end)
 
-      if self.command ~= nil and not self.neutralized and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
+      if not self.neutralized and self.command ~= nil and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
         self.neutralized = true
         self.ai_state = 0
         server.setAIState(self.id, self.ai_state)
@@ -2040,7 +2046,7 @@ function initialize_mission(_locations, report_timer, ...)
   spawn_mission(mission)
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
-  console.notify(string.format("Mission #%d has initialized.", mission.id))
+  console.notify(string.format("mission#%d has initialized.", mission.id))
 end
 
 function clear_mission(mission)
@@ -2054,7 +2060,7 @@ function clear_mission(mission)
   mission:clear()
   mission.cleared = true
 
-  console.notify(string.format("Mission #%d has cleared.", mission.id))
+  console.notify(string.format("mission#%d has cleared.", mission.id))
 end
 
 function tick_mission(mission, tick)
@@ -2077,7 +2083,7 @@ function tick_mission(mission, tick)
 
     if mission.objectives.rescuee.count > 0 then
       server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
-      console.notify(string.format("Mission #%d is taking to long.", mission.id))
+      console.notify(string.format("mission#%d is taking to long.", mission.id))
     end
   end
 
@@ -2123,7 +2129,7 @@ function tick_mission(mission, tick)
     if not server.getGameSettings().infinite_money then
       reward_mission(mission)
     else
-      server.notify(-1, string.format("Mission #%d has cleared.", mission.id), nil, 4)
+      server.notify(-1, string.format("mission#%d has cleared.", mission.id), nil, 4)
     end
 
     clear_mission(mission)
@@ -2181,13 +2187,13 @@ function spawn_mission(mission)
 
   mission.spawned = true
 
-  console.notify(string.format("Mission #%d has spawned.", mission.id))
+  console.notify(string.format("mission#%d has spawned.", mission.id))
 end
 
 function reward_mission(mission)
   local reward = mission:reward()
 
-  transact(reward, string.format("Mission #%d has cleared.", mission.id))
+  transact(reward, string.format("mission#%d has cleared.", mission.id))
 end
 
 function terminate_mission(mission)
@@ -2279,19 +2285,15 @@ end
 
 function aggregate_mission_units(mission)
   return {
-    sar = mission.units ~= nil and mission.units.sar or
-        mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
-    fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or
-        mission.objectives.fire.count >= 1,
+    sar = mission.units ~= nil and mission.units.sar or mission.locations[1].search_radius >= 500 and #mission.locations >= 2,
+    fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or mission.objectives.fire.count >= 1,
     med = mission.units ~= nil and mission.units.med or mission.objectives.rescuee.count >= 1,
-    spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or
-        mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
+    spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
   }
 end
 
 function has_explosive_event(mission)
-  return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or
-      table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
+  return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
 end
 
 -- objects
@@ -2345,19 +2347,15 @@ function initialize_object(id, type, name, tags, mission_id, addon_id, location_
   end
 
   if object.type == "character" and object.tags.mount ~= nil then
+    local cid = tonumber(object.tags.mount)
     local v = table.find(g_savedata.objects, function(x)
-      return x.type == "vehicle" and x.addon_id == object.addon_id and x.location_id == object.location_id and x.mission == mission_id and string.lower(x.name) == string.lower(object.tags.mount)
+      return x.type == "vehicle" and x.addon_id == object.addon_id and x.location_id == object.location_id and x.component_id == cid and x.mission == mission_id
     end)
 
     if v ~= nil then
       object.mount_vehicle = v.id
+      -- console.error(string.format("%s#%d is mounting to %s#%d.", object.type, object.id, v.type, v.id))
     end
-
-    -- for i = 1, #g_savedata.objects do
-    --   if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].mission == mission_id and string.lower(g_savedata.objects[i].name) == string.lower(object.tags.mount) then
-    --     table.insert(g_savedata.objects[i].mounts, object.id)
-    --   end
-    -- end
   end
 
   if object.type == "vehicle" and object.tags.keep_active == "true" then
@@ -2413,18 +2411,21 @@ function tick_object(object, tick)
     object.simulated = server.getVehicleSimulating(object.id)
   end
 
-  if object.simulated and object.type == "character" and object.mount_vehicle ~= nil and not object.mounted and players:is_in_range(object.transform, 2000) then
-    object.mounted = mount_vehicle(object)
-  end
+  if object.simulated and object.type == "character" then
+    if object.mount_vehicle ~= nil and not object.mounted then
+      object.mounted = mount_vehicle(object)
+    end
 
-  if object.simulated and object.type == "character" and #object.commands > 0 and object.command == nil and players:is_in_range(object.transform, math.min(object.invocation_distance, 2000)) then
-    object.command = table.random(object.commands)
-    console.notify(string.format("%s#%d has invoked %s command.", object.type, object.id, object.command))
+    if object.simulated and object.type == "character" and #object.commands > 0 and object.command == nil and players:is_in_range(object.transform, object.invocation_distance) then
+      local command = table.random(object.commands)
 
-    for i = 1, #g_savedata.objects do
-      if g_savedata.objects[i].mission == object.mission and g_savedata.objects[i].type == object.type and g_savedata.objects[i].team == object.team and matrix.distance(g_savedata.objects[i].transform, object.transform) <= 50 then
-        g_savedata.objects[i].command = object.command
-        console.notify(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
+      for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == object.mission and g_savedata.objects[i].type == object.type and g_savedata.objects[i].team == object.team and matrix.distance(g_savedata.objects[i].transform, object.transform) <= 50 then
+          local data = server.getObjectData(g_savedata.objects[i].id)
+          server.setCharacterData(g_savedata.objects[i].id, data.hp, data.interactable, true)
+          g_savedata.objects[i].command = command
+          console.notify(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
+        end
       end
     end
   end
@@ -2625,7 +2626,6 @@ function mount_vehicle(object)
   for i = 1, i_end do
     for j = 1, #vehicle.components.seats do
       local seat_name = string.lower(vehicle.components.seats[j].name)
-      local roled = i >= i_end or string.match(seat_name, priority_seats[i]) ~= nil
 
       if vehicle.components.seats[j].seated_id == 4294967295 and (i == i_end or string.match(seat_name, priority_seats[i])) then
         server.setSeated(object.id, vehicle.id, vehicle.components.seats[j].pos.x, vehicle.components.seats[j].pos.y, vehicle.components.seats[j].pos.z)
@@ -2763,8 +2763,8 @@ locations = {
     obj.report = prop.report or ""
     obj.report_timer_min = prop.report_timer_min or 0
     obj.report_timer_max = prop.report_timer_max or 0
-    obj.rescuee_min = prop.rescuee_min or 100
-    obj.rescuee_max = prop.rescuee_max or 100
+    obj.character_min = prop.character_min or 100
+    obj.character_max = prop.character_max or 100
     obj.fire_min = prop.fire_min or 100
     obj.fire_max = prop.fire_max or 100
     obj.hostile_min = prop.hostile_min or 100
@@ -2975,7 +2975,7 @@ locations = {
 
 function spawn_location(location, mission_id)
   local vehicles = {}
-  local rescuees = {}
+  local characters = {}
   local fires = {}
   local others = {}
 
@@ -2996,8 +2996,8 @@ function spawn_location(location, mission_id)
 
       if data.type == "vehicle" then
         table.insert(vehicles, data)
-      elseif data.type == "character" and data.tags.tracker == "rescuee" then
-        table.insert(rescuees, data)
+      elseif data.type == "character" then
+        table.insert(characters, data)
       elseif data.type == "fire" then
         table.insert(fires, data)
       else
@@ -3010,11 +3010,11 @@ function spawn_location(location, mission_id)
     spawn_component(vehicles[i], location.transform, mission_id)
   end
 
-  local rescuees_limit = math.ceil(#rescuees * math.random(location.rescuee_min, location.rescuee_max) / 100)
-  table.shuffle(rescuees)
+  local characters_limit = math.ceil(#characters * math.random(location.character_min, location.character_max) / 100)
+  table.shuffle(characters)
 
-  for i = 1, rescuees_limit do
-    spawn_component(rescuees[i], location.transform, mission_id)
+  for i = 1, characters_limit do
+    spawn_component(characters[i], location.transform, mission_id)
   end
 
   local fires_limit = math.ceil(#fires * math.random(location.fire_min, location.fire_max) / 100)
@@ -3044,16 +3044,14 @@ function spawn_component(component, transform, mission_id)
   end
 
   spawn_by_foundation = true
-  local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index,
-    component.component_index, parent_object_id)
+  local object, is_success = server.spawnAddonComponent(transform, component.addon_index, component.location_index, component.component_index, parent_object_id)
   spawn_by_foundation = false
 
   local tags = string.parse_tags(object.tags_full)
 
   if is_vehicle(object) then
     for i = 1, #object.vehicle_ids do
-      initialize_object(object.vehicle_ids[i], object.type, object.display_name, tags, mission_id, component.addon_index, component.location_index, component.id,
-        parent_object_id)
+      initialize_object(object.vehicle_ids[i], object.type, object.display_name, tags, mission_id, component.addon_index, component.location_index, component.id, parent_object_id)
     end
   else
     initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.addon_index, component.location_index, component.id, parent_object_id)
