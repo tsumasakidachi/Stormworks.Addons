@@ -30,12 +30,12 @@
 						<graph_links/>
 					</c>
 					<c component_type="3" id="11" name="tracker=headquarter" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_11.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.4854" 02="-0.874292" 20="0.874292" 22="0.4854" 30="152.016052" 31="11.244499" 32="-404.878052"/>
+						<spawn_transform 00="0.4854" 02="-0.874292" 20="0.874292" 22="0.4854" 30="152.016052" 31="10.759548" 32="-404.878052"/>
 						<spawn_bounds>
 							<min x="-5.875" y="-5.875" z="-17.875"/>
-							<max x="5.875" y="4.875" z="12.125"/>
+							<max x="5.875" y="3.875" z="12.125"/>
 						</spawn_bounds>
-						<spawn_local_offset y="0.5" z="2.875"/>
+						<spawn_local_offset y="1" z="2.875"/>
 						<graph_links/>
 					</c>
 					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,facility=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
@@ -92,12 +92,12 @@
 						<graph_links/>
 					</c>
 					<c component_type="3" id="58" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_58.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="0.485536" 02="-0.874217" 20="0.874217" 22="0.485536" 30="126.123764" 31="6.647426" 32="-419.301117"/>
+						<spawn_transform 00="0.485536" 02="-0.874217" 20="0.874217" 22="0.485536" 30="126.123764" 31="6.773816" 32="-419.301117"/>
 						<spawn_bounds>
 							<min x="-9.875" y="-0.125" z="-10.875"/>
-							<max x="9.875" y="0.375" z="13.875"/>
+							<max x="9.875" y="0.625" z="13.875"/>
 						</spawn_bounds>
-						<spawn_local_offset y="-0.125" z="-1.5"/>
+						<spawn_local_offset y="-0.25" z="-1.5"/>
 						<graph_links/>
 					</c>
 					<c component_type="10" id="60" cargo_zone_import_cargo_type="facility=scrap_yard" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">

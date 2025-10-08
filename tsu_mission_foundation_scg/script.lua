@@ -46,7 +46,7 @@ g_savedata = {
     fire = {
       tracker = true,
       dispensable = false,
-      rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 1, 0.1, 0.5),
+      rate_explode = property.slider("Explosion rate per second due to spillage (%)", 0, 10, 0.1, 0.5),
     },
     forest_fire = {
       tracker = true,
@@ -100,19 +100,19 @@ cases = {
   },
   ems = {
     id = 2,
-    text = "救急搬送",
-  },
-  sar = {
-    id = 3,
-    text = "捜索救難",
+    text = "救急",
   },
   wat = {
-    id = 4,
+    id = 3,
     text = "水難",
+  },
+  sar = {
+    id = 4,
+    text = "捜索救難",
   },
   sec = {
     id = 5,
-    text = "警備行動",
+    text = "安全保障",
   },
   acc = {
     id = 6,
@@ -122,6 +122,10 @@ cases = {
     id = 7,
     text = "メーデー",
   },
+  nat = {
+    id = 8,
+    text = "気象警報"
+  }
 }
 
 location_properties = { {
@@ -792,7 +796,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
-  case = cases.nd,
+  case = cases.nat,
   geologic = "mainlands",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
   is_main_location = true,
@@ -808,7 +812,7 @@ location_properties = { {
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
-  case = cases.nd,
+  case = cases.nat,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -824,7 +828,7 @@ location_properties = { {
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
-  case = cases.nd,
+  case = cases.nat,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -1129,7 +1133,7 @@ object_trackers = {
       self.vital = vital_update
       self.activated = activated
 
-      if is_in_hospital or not self.is_cpa_recurrent and is_in_base then
+      if is_in_hospital or is_in_base then
         self.admitted_time = self.admitted_time + tick
       end
 
@@ -1207,9 +1211,10 @@ object_trackers = {
 
         if is_explosive and not self.is_explosive then
           self.is_explosive = is_explosive
+          local magnitude = (math.random() * 1.414) ^ 2
           server.setFireData(self.id, true, false)
-          server.spawnExplosion(self.transform, math.random() ^ 2)
-          console.notify(string.format("fire#%d exploded.", self.id))
+          server.spawnExplosion(self.transform, magnitude)
+          console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, magnitude))
         end
       end
     end,
@@ -1779,60 +1784,24 @@ object_trackers = {
     clear = function(self)
     end,
     load = function(self)
-      if not self.components_checked then
-        local d, s = server.getVehicleComponents(self.id)
-
-        if not s then
-          return
-        end
-
-        self.alert = table.find(d.components.buttons, function(t)
+      if self.components ~= nil and not self.components_checked then
+        self.alert = table.find(self.components.buttons, function(t)
           return string.lower(t.name) == "alert"
         end)
 
         for i = 1, 6 do
           self.missions[i] = {}
-          self.missions[i].id = table.find(d.components.buttons, function(d)
+          self.missions[i].id = table.find(self.components.buttons, function(d)
             return string.lower(d.name) == string.format("mission_%d_id", i)
           end)
-          self.missions[i].x = table.find(d.components.buttons, function(d)
+          self.missions[i].x = table.find(self.components.buttons, function(d)
             return string.lower(d.name) == string.format("mission_%d_x", i)
           end)
-          self.missions[i].y = table.find(d.components.buttons, function(d)
+          self.missions[i].y = table.find(self.components.buttons, function(d)
             return string.lower(d.name) == string.format("mission_%d_y", i)
           end)
-          self.missions[i].r = table.find(d.components.buttons, function(d)
+          self.missions[i].r = table.find(self.components.buttons, function(d)
             return string.lower(d.name) == string.format("mission_%d_r", i)
-          end)
-          self.missions[i].category = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_category", i)
-          end)
-          self.missions[i].rescuees = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_rescuees", i)
-          end)
-          self.missions[i].fires = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_fires", i)
-          end)
-          self.missions[i].suspects = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_suspects", i)
-          end)
-          self.missions[i].wreckages = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_wreckages", i)
-          end)
-          self.missions[i].hostiles = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_hostiles", i)
-          end)
-          self.missions[i].sar = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_sar", i)
-          end)
-          self.missions[i].med = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_med", i)
-          end)
-          self.missions[i].fire = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_fire", i)
-          end)
-          self.missions[i].spc = table.find(d.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_spc", i)
           end)
         end
 
@@ -2077,8 +2046,8 @@ function initialize_mission(_locations, report_timer, ...)
   mission.dispersal_area = mission.locations[1].dispersal_area
   mission.tracker = mission.locations[1].tracker
   mission.case = mission.locations[1].case
-  mission.search_center = mission.transform
-  mission.search_radius = mission.dispersal_area
+  mission.search_center = matrix.identity()
+  mission.search_radius = 0
   mission.category = 0
   mission.reported = false
   mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
@@ -2143,7 +2112,7 @@ function tick_mission(mission, tick)
 
   mission:tick(tick)
 
-  if g_savedata.mode == "debug" or mission.search_center ~= nil then
+  if g_savedata.mode == "debug" or mission.search_center ~= nil and mission.search_radius ~= nil then
     local label = mission:report()
     local label_hover = mission:status()
     local x, y, z = matrix.position(mission.search_center)
@@ -2190,7 +2159,7 @@ function tick_mission(mission, tick)
 end
 
 function spawn_mission(mission)
-  local x, y, z, object_count, location_count, distance_max = 0, 0, 0, 0, #mission.locations, 0
+  local x, y, z, object_count, location_count = 0, 0, 0, 0, #mission.locations
 
   for i = 1, location_count do
     spawn_location(mission.locations[i], mission.id)
@@ -2198,9 +2167,7 @@ function spawn_mission(mission)
 
   for i = 1, #g_savedata.objects do
     if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
-      local distance = matrix.distance(mission.transform, g_savedata.objects[i].transform)
       local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-      distance_max = math.max(distance_max, distance)
       object_count = object_count + 1
       x = x + ox
       y = y + oy
@@ -2227,38 +2194,23 @@ function spawn_mission(mission)
     end
   end
 
-  local x, y, z, object_count, location_count, distance_max = 0, 0, 0, 0, #mission.locations, 0
+  local r = math.random() * mission.dispersal_area
+  local t = math.random() * 2 * math.pi
+  local cx = r * math.cos(t)
+  local cy = 0
+  local cz = r * math.sin(t)
 
-  if location_count >= 2 then
-    for i = 1, #g_savedata.objects do
-      if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
-        local distance = matrix.distance(mission.transform, g_savedata.objects[i].transform)
-        local ox, oy, oz = matrix.position(g_savedata.objects[i].transform)
-        distance_max = math.max(distance_max, distance)
-        object_count = object_count + 1
-        x = x + ox
-        y = y + oy
-        z = z + oz
-      end
+  mission.search_center = matrix.multiply(mission.transform, matrix.translation(cx, cy, cz))
+
+  local distance_max = 0
+
+  for i = 1, #g_savedata.objects do
+    if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+      distance_max = math.max(distance_max, matrix.distance(mission.search_center, g_savedata.objects[i].transform))
     end
-
-    x = x / object_count
-    y = y / object_count
-    z = z / object_count
-
-    mission.search_center = matrix.translation(x, y, z)
-    mission.search_radius = math.ceil(distance_max / 500) * 500
-  elseif location_count >= 1 then
-    local r = math.random() * 0.5 * mission.dispersal_area
-    local t = math.random() * 2 * math.pi
-
-    x = r * math.cos(t)
-    z = r * math.sin(t)
-
-    mission.search_center = matrix.multiply(mission.transform, matrix.translation(x, y, z))
-    mission.search_radius = mission.dispersal_area
   end
 
+  mission.search_radius = math.max(math.ceil(distance_max / 500) * 500, mission.dispersal_area)
   mission.spawned = true
 
   console.notify(string.format("mission#%d has spawned.", mission.id))
