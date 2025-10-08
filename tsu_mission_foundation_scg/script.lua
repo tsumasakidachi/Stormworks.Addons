@@ -11,6 +11,7 @@ g_savedata = {
   players = {},
   players_map = {},
   players_alert = {},
+  players_enroute = {},
   locations_history = {},
   location_comparer = "pattern",
   subsystems = {
@@ -20,7 +21,7 @@ g_savedata = {
       interval_min = property.slider("Minimum interval at which new missions occur (minutes)", 0, 30, 1, 10) * 3600,
       interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 20) * 3600,
       range_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
-      range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 8) * 1000,
+      range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
       count_limited = true,
       count = 0,
       geologic = {
@@ -122,7 +123,7 @@ cases = {
     id = 7,
     text = "メーデー",
   },
-  nat = {
+  wthr = {
     id = 8,
     text = "気象警報"
   }
@@ -796,7 +797,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
-  case = cases.nat,
+  case = cases.wthr,
   geologic = "mainlands",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
   is_main_location = true,
@@ -812,7 +813,7 @@ location_properties = { {
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
-  case = cases.nat,
+  case = cases.wthr,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -828,7 +829,7 @@ location_properties = { {
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
-  case = cases.nat,
+  case = cases.wthr,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -954,19 +955,31 @@ mission_trackers = {
 
       if #self.events > 0 then
         text = text .. "\n\n[事象]"
-        text = text .. "\n"
 
         for i = 1, #self.events do
-          if i > 1 then
-            text = text .. ", "
-          end
-
-          text = text .. strings.events[self.events[i]]
+          text = text .. "\n" .. strings.events[self.events[i]]
         end
       end
 
       text = text .. "\n\n[捜索半径]"
       text = text .. string.format("\n%dm", self.search_radius)
+
+      text = text .. "\n\n[対応中]"
+
+      local count = 0
+
+      for i = 1, #players.items do
+        if g_savedata.players_enroute[players.items[i].steam_id] ~= nil and g_savedata.players_enroute[players.items[i].steam_id] == self.id then
+          text = text .. string.format("\n%s", players.items[i].name)
+          count = count + 1
+        end
+      end
+
+      if count == 0 then
+        text = text .. "\n-"
+      end
+
+      text = text .. "\n\n?go [mission id] (小文字) でチェックイン"
 
       return text
     end
@@ -1174,7 +1187,7 @@ object_trackers = {
       return mission.taken_to_long
     end,
     reward_base = 2000,
-    text = "要救助者を医療機関か基地へ搬送",
+    text = "要救助者を基地か病院へ搬送",
     marker_type = 1,
     clear_timer = 300
   },
@@ -1464,7 +1477,7 @@ object_trackers = {
       return false
     end,
     reward_base = 2000,
-    text = "被疑者を制圧して警察署か基地へ連行",
+    text = "被疑者を制圧して基地か警察署へ連行",
     marker_type = 1,
     clear_timer = 300
   },
@@ -2996,7 +3009,7 @@ locations = {
       server.announce("[Mission Foundation]", self.items[i].name, peer_id)
     end
 
-    server.announce("[Mission Foundation]", string.format("%d all locations", #self.items), peer_id)
+    server.announce("[Mission Foundation]", string.format("%d locations", #self.items), peer_id)
   end
 }
 
@@ -3436,10 +3449,12 @@ players = {
     for i = 1, #self.items do
       local alert = self.items[i].vital.incapacitated
 
+      for j = 1, #g_savedata.missions do
+        alert = alert or g_savedata.missions[j].type == "disaster" and matrix.distance(g_savedata.missions[j].search_center, self.items[i].transform) <= g_savedata.missions[j].search_radius
+      end
+
       for j = 1, #g_savedata.objects do
-        alert = alert or
-            g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].is_explosive and
-            matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
+        alert = alert or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].is_explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
       end
 
       for j = 1, 10 do
@@ -3597,14 +3612,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       value = tonumber(value)
 
       if value ~= nil then
-        g_savedata.subsystems.mission.range_min = value * 1000
+        g_savedata.subsystems.mission.range_min = value
       end
     elseif verb == "range-max" and is_admin then
       local value = ...
       value = tonumber(value)
 
       if value ~= nil then
-        g_savedata.subsystems.mission.range_max = value * 1000
+        g_savedata.subsystems.mission.range_max = value
       end
     elseif verb == "limit-area" and is_admin then
       local value = ...
@@ -3772,6 +3787,16 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     wreck_players_vehicle(player)
     server.killCharacter(object_id)
     transact(-10000, string.format("%s has bought a new life.", player.name))
+  elseif command == "?go" then
+    local mission_id = tonumber(verb)
+
+    if mission_id == nil then
+      return
+    end
+
+    local player = players:find(function(x) return x.id == peer_id end)
+
+    g_savedata.players_enroute[player.steam_id] = mission_id
   end
 end
 
