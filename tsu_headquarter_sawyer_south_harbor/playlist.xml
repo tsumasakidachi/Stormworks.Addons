@@ -29,7 +29,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="3" id="11" name="tracker=headquarter" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_11.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
+					<c component_type="3" id="11" name="headquarter=true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_11.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
 						<spawn_transform 00="0.4854" 02="-0.874292" 20="0.874292" 22="0.4854" 30="152.016052" 31="10.759548" 32="-404.878052"/>
 						<spawn_bounds>
 							<min x="-5.875" y="-5.875" z="-17.875"/>
@@ -105,76 +105,6 @@
 						<spawn_bounds>
 							<min x="-80.572774" y="-15.225325" z="-97.617398"/>
 							<max x="80.572774" y="15.225325" z="97.617398"/>
-						</spawn_bounds>
-						<graph_links/>
-					</c>
-				</components>
-			</l>
-			<l id="2" tile="data/tiles/mega_island_15_2.xml" env_mod_spawn_num="1">
-				<components>
-					<c component_type="3" id="42" name="id_42" display_name="runway 4" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_42.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.875885" 02="0.48252" 20="-0.48252" 22="0.875885" 30="257.146729" 31="5.897579" 32="-346.758087"/>
-						<spawn_bounds>
-							<min x="-25.125" y="-1.625" z="-39.375"/>
-							<max x="25.125" y="0.375" z="39.375"/>
-						</spawn_bounds>
-						<spawn_local_offset y="0.625"/>
-						<graph_links/>
-					</c>
-					<c component_type="3" id="43" name="id_43" display_name="runway 3" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_43.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.876203" 02="0.481943" 20="-0.481943" 22="0.876203" 30="219.185303" 31="1.77339" 32="-277.815826"/>
-						<spawn_bounds>
-							<min x="-25.125" y="-10.125" z="-39.375"/>
-							<max x="25.125" y="0.625" z="39.375"/>
-						</spawn_bounds>
-						<spawn_local_offset y="4.75"/>
-						<graph_links/>
-					</c>
-					<c component_type="3" id="44" name="id_44" display_name="runway 5" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_44.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.875725" 02="0.482809" 20="-0.482809" 22="0.875725" 30="292.343842" 31="6.024512" 32="-410.642029"/>
-						<spawn_bounds>
-							<min x="-25.125" y="-1.625" z="-27.875"/>
-							<max x="25.125" y="0.625" z="39.375"/>
-						</spawn_bounds>
-						<spawn_local_offset y="0.5" z="-5.75"/>
-						<graph_links/>
-					</c>
-					<c component_type="3" id="45" name="id_45" display_name="runway 2" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_45.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.876622" 02="0.48118" 20="-0.48118" 22="0.876622" 30="181.296692" 31="1.766712" 32="-208.851013"/>
-						<spawn_bounds>
-							<min x="-18.875" y="-10.125" z="-39.375"/>
-							<max x="18.875" y="0.625" z="39.375"/>
-						</spawn_bounds>
-						<spawn_local_offset y="4.75"/>
-						<graph_links/>
-					</c>
-					<c component_type="3" id="46" name="id_46" display_name="runway 1" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_46.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_transponder_active="true">
-						<spawn_transform 00="0.87641" 02="0.481565" 20="-0.481565" 22="0.87641" 30="143.423416" 31="1.77101" 32="-139.858643"/>
-						<spawn_bounds>
-							<min x="-18.125" y="-10.125" z="-39.375"/>
-							<max x="18.125" y="0.625" z="39.375"/>
-						</spawn_bounds>
-						<spawn_local_offset y="4.75"/>
-						<graph_links/>
-					</c>
-				</components>
-			</l>
-			<l id="3" tile="data/tiles/mega_island_15_2.xml" name="SAWYER 15_2" is_env_mod="true" env_mod_spawn_num="1">
-				<components>
-					<c component_type="3" id="61" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_61.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="-0.334277" 02="-0.942475" 20="0.942475" 22="-0.334277" 30="40.26022" 31="6.705401" 32="278.825928"/>
-						<spawn_bounds>
-							<min x="-9.875" y="-0.125" z="-10.875"/>
-							<max x="9.875" y="0.625" z="13.875"/>
-						</spawn_bounds>
-						<spawn_local_offset y="-0.25" z="-1.5"/>
-						<graph_links/>
-					</c>
-					<c component_type="10" id="62" cargo_zone_import_cargo_type="facility=hospital" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="0.34113" 02="0.940016" 20="-0.940016" 22="0.34113" 30="87.89621" 31="7.995754" 32="283.10553"/>
-						<spawn_bounds>
-							<min x="-9.147828" y="-1.59651" z="-4.148024"/>
-							<max x="9.147828" y="1.59651" z="4.148024"/>
 						</spawn_bounds>
 						<graph_links/>
 					</c>

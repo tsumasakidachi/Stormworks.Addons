@@ -998,7 +998,7 @@ object_trackers = {
     tick = function(self, tick)
       local character_vehicle = server.getCharacterVehicle(self.id)
       local picked = table.any(g_savedata.objects, function(x)
-        return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
+        return character_vehicle > 0 and x.tracker == "unit" and x.player_owned and x.id == character_vehicle
       end)
       local vital_update = server.getCharacterData(self.id)
       local is_in_hospital = facilities:is_in_facility(self.transform, "hospital")
@@ -1242,7 +1242,7 @@ object_trackers = {
       local is_in_base = facilities:is_in_facility(self.transform, "base")
 
       local picked = table.any(g_savedata.objects, function(x)
-        return character_vehicle > 0 and x.tracker == "unit" and x.id == character_vehicle
+        return character_vehicle > 0 and x.tracker == "unit" and x.player_owned and x.id == character_vehicle
       end)
 
       if not self.neutralized and self.command ~= nil and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
@@ -1266,7 +1266,7 @@ object_trackers = {
         local player_distance = math.maxinteger
 
         for i = 1, #g_savedata.objects do
-          if g_savedata.objects[i].tracker == "unit" then
+          if g_savedata.objects[i].tracker == "unit" and g_savedata.objects[i].player_owned then
             local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
 
             if _d < 500 and _d < vehicle_distance then
@@ -1509,10 +1509,8 @@ object_trackers = {
       return g_savedata.subsystems.wreckage.tracker and type == "vehicle" and tags.tracker == "wreckage"
     end,
     init = function(self)
-      self.components_checked = false
       self.completion_timer = 0
       self.initial_transform = server.getVehiclePos(self.id)
-      self.mass = 0
 
       if self.tags.indispensable == "true" then
         self.indispensable = true
@@ -1520,29 +1518,11 @@ object_trackers = {
         self.indispensable = false
       end
 
-      server.setVehicleTooltip(self.id,
-        string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
+      server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
     end,
     clear = function(self)
     end,
     load = function(self)
-      if not self.components_checked then
-        local d, s = server.getVehicleComponents(self.id)
-        self.mass = d.mass
-
-        for i = 1, #d.components.signs do
-          local tags = string.parse_tags(d.components.signs[i].name)
-
-          if tags.damage ~= nil and tags.radius ~= nil then
-            local damage = tonumber(tags.damage)
-            local radius = tonumber(tags.radius)
-            server.addDamage(self.id, damage, d.components.signs[i].pos.x, d.components.signs[i].pos.y,
-              d.components.signs[i].pos.z, radius)
-          end
-        end
-
-        self.components_checked = true
-      end
     end,
     unload = function(self)
     end,
@@ -1682,217 +1662,70 @@ object_trackers = {
     marker_type = 9,
     clear_timer = 0
   },
-  headquarter = {
-    test_type = function(self, id, type, name, tags)
-      return type == "vehicle" and tags.tracker == "headquarter"
+  unit = {
+    test_type = function(self, id, type, name, tags, owner, cost)
+      return type == "vehicle"
     end,
-    init = function(self)
+    init = function(self, owner, cost)
+      self.owner_steam_id = owner
+      self.player_owned = self.owner_steam_id ~= nil
+      self.cost = cost
+
+      if self.tags.headquarter == "true" then
+        self.headquarter = true
+      else
+        self.headquarter = false
+      end
+
       self.components_checked = false
-      self.alert = nil
-      self.em_beacon = nil
+      self.attention = nil
       self.missions = {}
     end,
     clear = function(self)
     end,
     load = function(self)
-      -- if self.components ~= nil and not self.components_checked then
-      --   self.alert = table.find(self.components.buttons, function(t)
-      --     return string.lower(t.name) == "alert"
-      --   end)
+      if self.components ~= nil and not self.components_checked then
+        self.attention = find_component(self.components.buttons, "attention")
 
-      --   for i = 1, 6 do
-      --     self.missions[i] = {}
-      --     self.missions[i].id = table.find(self.components.buttons, function(d)
-      --       return string.lower(d.name) == string.format("mission_%d_id", i)
-      --     end)
-      --     self.missions[i].x = table.find(self.components.buttons, function(d)
-      --       return string.lower(d.name) == string.format("mission_%d_x", i)
-      --     end)
-      --     self.missions[i].y = table.find(self.components.buttons, function(d)
-      --       return string.lower(d.name) == string.format("mission_%d_y", i)
-      --     end)
-      --     self.missions[i].r = table.find(self.components.buttons, function(d)
-      --       return string.lower(d.name) == string.format("mission_%d_r", i)
-      --     end)
-      --   end
+        for i = 1, 6 do
+          self.missions[i] = {}
+          self.missions[i].id = find_component(self.components.buttons, string.format("mission_%d_id", i))
+          self.missions[i].x = find_component(self.components.buttons, string.format("mission_%d_x", i))
+          self.missions[i].y = find_component(self.components.buttons, string.format("mission_%d_y", i))
+          self.missions[i].r = find_component(self.components.buttons, string.format("mission_%d_r", i))
+          self.missions[i].c = find_component(self.components.buttons, string.format("mission_%d_c", i))
+        end
 
-      --   self.components_checked = true
-      -- end
-    end,
-    unload = function(self)
-    end,
-    tick = function(self, tick)
-      -- if self.components_checked then
-      --     for index = 1, math.max(#g_savedata.missions, 6) do
-      --         if g_savedata.missions[index] ~= nil then
-      --             local x, y, z = matrix.position(g_savedata.missions[index].locations[1].transform)
-
-      --             if self.missions[index].id ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].id, g_savedata.missions[index].id)
-      --             end
-
-      --             if self.missions[index].x ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].x, x)
-      --             end
-
-      --             if self.missions[index].y ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].y, z)
-      --             end
-
-      --             if self.missions[index].r ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].r, g_savedata.missions[index].search_radius)
-      --             end
-
-      --             if self.missions[index].category ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].category, g_savedata.missions[index].category)
-      --             end
-
-      --             if self.missions[index].rescuees ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].rescuees, g_savedata.missions[index].objectives.rescuees)
-      --             end
-
-      --             if self.missions[index].fires ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].fires, g_savedata.missions[index].objectives.fires)
-      --             end
-
-      --             if self.missions[index].suspects ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].suspects, g_savedata.missions[index].objectives.suspects)
-      --             end
-
-      --             if self.missions[index].wreckages ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].wreckages, g_savedata.missions[index].objectives.wreckages)
-      --             end
-
-      --             if self.missions[index].hostiles ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].hostiles, g_savedata.missions[index].objectives.hostiles)
-      --             end
-
-      --             if self.missions[index].sar ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].sar, g_savedata.missions[index].units.sar)
-      --             end
-
-      --             if self.missions[index].med ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].med, g_savedata.missions[index].units.med)
-      --             end
-
-      --             if self.missions[index].fire ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].fire, g_savedata.missions[index].units.fire)
-      --             end
-
-      --             if self.missions[index].spc ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].spc, g_savedata.missions[index].units.spc)
-      --             end
-      --         else
-      --             if self.missions[index].id ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].id, 0)
-      --             end
-
-      --             if self.missions[index].x ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].x, 0)
-      --             end
-
-      --             if self.missions[index].y ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].y, 0)
-      --             end
-
-      --             if self.missions[index].r ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].r, 0)
-      --             end
-
-      --             if self.missions[index].category ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].category, 0)
-      --             end
-
-      --             if self.missions[index].rescuees ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].rescuees, 0)
-      --             end
-
-      --             if self.missions[index].fires ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].fires, 0)
-      --             end
-
-      --             if self.missions[index].suspects ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].suspects, 0)
-      --             end
-
-      --             if self.missions[index].wreckages ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].wreckages, 0)
-      --             end
-
-      --             if self.missions[index].hostiles ~= nil then
-      --                 set_vehicle_keypad(self.id, self.missions[index].hostiles, 0)
-      --             end
-
-      --             if self.missions[index].sar ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].sar, false)
-      --             end
-
-      --             if self.missions[index].med ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].med, false)
-      --             end
-
-      --             if self.missions[index].fire ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].fire, false)
-      --             end
-
-      --             if self.missions[index].spc ~= nil then
-      --                 set_vehicle_button(self.id, self.missions[index].spc, false)
-      --             end
-      --         end
-      --     end
-      -- end
-    end,
-    dispensable = function(self)
-      return false
-    end,
-    complete = function(self)
-      return false
-    end,
-    fail = function(self)
-      return false
-    end,
-    reward = function(self)
-      return self.reward_base
-    end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
-    reported = function(self)
-      return true
-    end,
-    mapped = function(self)
-      return false
-    end,
-    reward_base = 0,
-    text = "HEADQUARTER",
-    marker_type = 11,
-    clear_timer = 0
-  },
-  unit = {
-    test_type = function(self, id, type, name, tags, owner, cost)
-      return type == "vehicle" and owner ~= nil and cost ~= nil
-    end,
-    init = function(self, owner, cost)
-      self.components_checked = false
-      self.owner_steam_id = owner
-      self.cost = cost
-      self.mass = 0
-    end,
-    clear = function(self)
-    end,
-    load = function(self)
-      if not self.components_checked then
-        local d, s = server.getVehicleComponents(self.id)
-        self.mass = d.mass
         self.components_checked = true
       end
     end,
     unload = function(self)
     end,
     tick = function(self, tick)
+      if self.headquarter then
+        for i = 1, 6 do
+          local id = 0
+          local x = 0
+          local y = 0
+          local r = 0
+          local c = 0
+
+          if g_savedata.missions[i] ~= nil then
+            local _x, _y, _z = matrix.position(g_savedata.missions[i].search_center)
+            id = g_savedata.missions[i].id
+            x = _x
+            y = _z
+            r = g_savedata.missions[i].search_radius
+            c = g_savedata.missions[i].case.id
+          end
+
+          if self.missions[i].id ~= nil then set_vehicle_keypad(self.id, self.missions[i].id, id) end
+          if self.missions[i].x ~= nil then set_vehicle_keypad(self.id, self.missions[i].x, x) end
+          if self.missions[i].y ~= nil then set_vehicle_keypad(self.id, self.missions[i].y, y) end
+          if self.missions[i].r ~= nil then set_vehicle_keypad(self.id, self.missions[i].r, r) end
+          if self.missions[i].c ~= nil then set_vehicle_keypad(self.id, self.missions[i].c, c) end
+        end
+      end
     end,
     dispensable = function(self)
       return false
@@ -2267,9 +2100,11 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
   object.command = nil
   object.invocation_distance = tonumber(object.tags.invocation_distance) or 100
 
+  local tracker = nil
+
   for k, v in pairs(object_trackers) do
     if v.test_type(nil, id, type, name, tags, table.unpack(params)) then
-      object.tracker = k
+      tracker = k
       break
     end
   end
@@ -2290,9 +2125,8 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
     server.setVehicleTransponder(object.id, true)
   end
 
-  if object.tracker ~= nil then
-    based(object, object_trackers[object.tracker])
-    object:init(table.unpack(params))
+  if tracker ~= nil then
+    track_object(object, tracker, params)
   end
 
   if object.tags.oil_spill ~= nil then
@@ -2305,6 +2139,12 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
 
   table.insert(g_savedata.objects, object)
   console.notify(string.format("%s#%d has initialized.", object.type, object.id))
+end
+
+function track_object(object, tracker, params)
+  object.tracker = tracker
+  based(object, object_trackers[tracker])
+  object:init(table.unpack(params))
 end
 
 function clear_object(object)
@@ -2475,6 +2315,17 @@ function loaded_object(object)
     object.voxels = data.voxels
     object.mass = data.mass
     object.components = data.components
+
+    for i = 1, #object.components.signs do
+      local tags = string.parse_tags(object.components.signs[i].name)
+
+      if tags.damage ~= nil and tags.radius ~= nil then
+        local damage = tonumber(tags.damage)
+        local radius = tonumber(tags.radius)
+        server.addDamage(object.id, damage, object.components.signs[i].pos.x, object.components.signs[i].pos.y,
+          object.components.signs[i].pos.z, radius)
+      end
+    end
   end
 
   if object.tracker ~= nil then
@@ -2517,14 +2368,16 @@ function position(object)
   end
 end
 
+function is_headquarter(object)
+  return object.tracker == "unit" and object.type == "vehicle" and object.headquarter
+end
+
 function is_vehicle(object)
   return object.type == "vehicle"
 end
 
 function is_object(object)
-  return object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or
-      object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or
-      object.type == "ice"
+  return object.type == "object" or object.type == "character" or object.type == "flare" or object.type == "fire" or object.type == "loot" or object.type == "button" or object.type == "animal" or object.type == "creature" or object.type == "ice"
 end
 
 function is_tile(object)
@@ -2536,8 +2389,7 @@ function is_zone(object)
 end
 
 function is_disaster(object)
-  return object.type == "tornado" or object.type == "tsunami" or object.type == "whirlpool" or object.type == "meteor" or
-      object.type == "eruption"
+  return object.type == "tornado" or object.type == "tsunami" or object.type == "whirlpool" or object.type == "meteor" or object.type == "eruption"
 end
 
 function mount_vehicle(object)
@@ -2581,29 +2433,6 @@ function mount_vehicle(object)
   end
 
   return false
-
-  -- for i = 1, #components.components.seats do
-  --   if m > m_end then
-  --     goto other_seat_mount_completed
-  --   end
-
-  --   if not table.contains(priority_seats, string.lower(components.components.seats[i].name)) and components.components.seats[i].seated_id == 4294967295 then
-  --     server.setSeated(vehicle.mounts[m], vehicle.id, components.components.seats[i].pos.x, components.components.seats[i].pos.y, components.components.seats[i].pos.z)
-  --     components.components.seats[i].seated_id = vehicle.mounts[m]
-
-  --     for k = 1, #g_savedata.objects do
-  --       if g_savedata.objects[k].type == "character" and g_savedata.objects[k].id == vehicle.mounts[m] then
-  --         g_savedata.objects[k].role = nil
-  --         g_savedata.objects[k].mount_vehicle = vehicle.id
-  --         g_savedata.objects[k].mount_seat = components.components.seats[i]
-  --       end
-  --     end
-
-  --     m = m + 1
-  --   end
-  -- end
-
-  -- ::other_seat_mount_completed::
 end
 
 function wreck_players_vehicle(player)
@@ -2618,6 +2447,12 @@ function wreck_players_vehicle(player)
   end
 
   transact(cost, string.format("%s's vehicles has wrecked.", player.name))
+end
+
+function find_component(components, name)
+  return table.find(components, function(t)
+    return string.lower(t.name) == name
+  end)
 end
 
 -- locations
@@ -3222,8 +3057,9 @@ facilities = {
 
 function alert_headquarter()
   for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].tracker == "headquarter" and g_savedata.objects[i].alert ~= nil then
-      press_vehicle_button(g_savedata.objects[i].id, g_savedata.objects[i].alert)
+    if is_headquarter(g_savedata.objects[i]) and g_savedata.objects[i].attention ~= nil then
+      press_vehicle_button(g_savedata.objects[i].id, g_savedata.objects[i].attention)
+      console.notify(string.format("%s#%d has received an attention.", g_savedata.objects[i].type, g_savedata.objects[i].id))
     end
   end
 end
@@ -3638,6 +3474,32 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         end
       end
     end
+  elseif command == "?hq" and is_admin then
+    if verb == "register" then
+      local vehicle_id = ...
+      vehicle_id = tonumber(vehicle_id)
+
+      if vehicle_id == nil then return end
+
+      local vehicle = table.find(g_savedata.objects, function(v) return v.type == "vehicle" and v.id == vehicle_id end)
+
+      if vehicle == nil then return end
+
+      vehicle.headquarter = true
+      console.notify(string.format("%s#%d has registered as headquarter.", vehicle.type, vehicle.id))
+    elseif verb == "delete" then
+      local vehicle_id = ...
+      vehicle_id = tonumber(vehicle_id)
+
+      if vehicle_id == nil then return end
+
+      local vehicle = table.find(g_savedata.objects, function(v) return v.type == "vehicle" and v.id == vehicle_id end)
+
+      if vehicle == nil then return end
+
+      vehicle.headquarter = false
+      console.notify(string.format("%s#%d has deleted from headquarter.", vehicle.type, vehicle.id))
+    end
   elseif command == "?tp" then
     local target = tonumber(verb)
 
@@ -3719,7 +3581,7 @@ end
 
 spawn_by_foundation = false
 
-function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
+function onGroupSpawn(group_id, peer_id, x, y, z, cost)
   if spawn_by_foundation then
     return
   end
@@ -3727,7 +3589,6 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
   local vehicle_ids = server.getVehicleGroup(group_id)
   local data = server.getVehicleData(vehicle_ids[1])
   local owner = nil
-  local cost = nil
 
   if peer_id >= 0 then
     local player = players:find(function(x)
@@ -3739,8 +3600,6 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
     else
       owner = nil
     end
-
-    cost = group_cost
   end
 
   local tags = string.parse_tags(data.tags_full)
@@ -3980,7 +3839,7 @@ function despawn_vehicle_group(group_id, is_instant)
 end
 
 function get_center_transform()
-  local hq = table.find(g_savedata.objects, function(x) return x.tracker == "headquarter" end)
+  local hq = table.find(g_savedata.objects, function(x) return is_headquarter(x) end)
 
   if g_savedata.subsystems.mission.area_limited then
     local x = math.random(0, g_savedata.subsystems.mission.area_x_max - g_savedata.subsystems.mission.area_x_min) + g_savedata.subsystems.mission.area_x_min
