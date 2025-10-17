@@ -67,7 +67,7 @@ g_savedata = {
       active = true,
       dispensable = true
     },
-    hostile = {
+    enemy = {
       tracker = true,
       active = true,
       dispensable = true
@@ -95,37 +95,37 @@ g_savedata = {
 }
 
 cases = {
-  fire = {
-    id = 1,
-    text = "火災",
-  },
   ems = {
-    id = 2,
+    id = 1,
     text = "救急",
   },
-  wat = {
-    id = 3,
-    text = "水難",
+  far = {
+    id = 2,
+    text = "火災",
   },
   sar = {
-    id = 4,
+    id = 3,
     text = "捜索救難",
   },
-  sec = {
-    id = 5,
-    text = "安全保障",
+  water = {
+    id = 4,
+    text = "水難",
   },
-  acc = {
+  securite = {
+    id = 5,
+    text = "警備行動",
+  },
+  accident = {
     id = 6,
     text = "事故",
   },
-  md = {
+  mayday = {
     id = 7,
     text = "メーデー",
   },
-  haz = {
+  alert = {
     id = 8,
-    text = "気象警報"
+    text = "警報"
   }
 }
 
@@ -158,45 +158,41 @@ location_properties = { {
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
   tracker = "sar",
-  case = cases.wat,
+  case = cases.water,
   geologic = "waters",
   suitable_zones = { "field", "mountain", "forest" },
   is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 500,
   report = "落水者",
   note = "",
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
   tracker = "sar",
-  case = cases.wat,
+  case = cases.water,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 500,
   report = "落水者",
   note = "",
 }, {
   pattern = "^mission:lifeboat_%d+$",
   tracker = "sar",
-  case = cases.wat,
+  case = cases.water,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 500,
   report = "救命ボート",
-  report_timer = 0,
   note = "",
 }, {
   pattern = "^mission:raft_%d+$",
   tracker = "sar",
   geologic = "mainlands",
-  case = cases.wat,
+  case = cases.water,
   suitable_zones = { "lake", "beach" },
   is_main_location = true,
   sub_locations = {},
@@ -207,7 +203,7 @@ location_properties = { {
 }, {
   pattern = "^mission:freighter_fire_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -223,7 +219,7 @@ location_properties = { {
 }, {
   pattern = "^mission:ferry_fire_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -239,7 +235,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tanker_fire_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -255,7 +251,7 @@ location_properties = { {
 }, {
   pattern = "^mission:boat_sink_%d+$",
   tracker = "sar",
-  case = cases.wat,
+  case = cases.water,
   geologic = "mainlands",
   suitable_zones = { "lake" },
   is_main_location = true,
@@ -269,7 +265,7 @@ location_properties = { {
 }, {
   pattern = "^mission:overboard_%d+$",
   tracker = "sar",
-  case = cases.wat,
+  case = cases.water,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "beach" },
   is_main_location = true,
@@ -283,7 +279,7 @@ location_properties = { {
 }, {
   pattern = "^mission:ferry_sink_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -299,7 +295,7 @@ location_properties = { {
 }, {
   pattern = "^mission:fishboat_fire_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "waters",
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
@@ -315,7 +311,7 @@ location_properties = { {
 }, {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "mainlands",
   suitable_zones = { "wind_turbine" },
   is_main_location = true,
@@ -349,13 +345,12 @@ location_properties = { {
   is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 500,
   report = "行方不明のダイバー",
   note = "",
 }, {
   pattern = "^mission:oil_platform_fire_%d+$",
   tracker = "sar",
-  case = cases.acc,
+  case = cases.accident,
   geologic = "waters",
   suitable_zones = {},
   is_main_location = true,
@@ -373,7 +368,7 @@ location_properties = { {
 }, {
   pattern = "^mission:tunnel_fire_%d+$",
   tracker = "sar",
-  case = cases.acc,
+  case = cases.accident,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -392,12 +387,11 @@ location_properties = { {
   case = cases.ems,
   geologic = "mainlands",
   suitable_zones = { "road", "tunnel" },
-  is_main_location = true,
+  is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = true,
-  dispersal_area = 200,
-  report = "自動車が正面衝突しけが人がいる.",
-  note = "民間人からの通報",
+  report = "スタックした自動車",
+  note = "",
 }, {
   pattern = "^mission:car_stuck_%d+$",
   tracker = "sar",
@@ -407,13 +401,12 @@ location_properties = { {
   is_main_location = false,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 200,
   report = "スタックした自動車",
   note = "",
 }, {
   pattern = "^mission:aircraft_down_%d+$",
   tracker = "sar",
-  case = cases.md,
+  case = cases.mayday,
   geologic = "mainlands",
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
@@ -427,7 +420,7 @@ location_properties = { {
 }, {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
-  case = cases.acc,
+  case = cases.accident,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -441,7 +434,7 @@ location_properties = { {
 }, {
   pattern = "^mission:campsite_fire_%d+$",
   tracker = "sar",
-  case = cases.fire,
+  case = cases.far,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -455,7 +448,7 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_forest_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "mainlands",
   suitable_zones = { "forest", "field", "mountain", "hill" },
   is_main_location = true,
@@ -495,7 +488,7 @@ location_properties = { {
 }, {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "waters",
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
@@ -509,7 +502,7 @@ location_properties = { {
 }, {
   pattern = "^mission:naval_mine_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "waters",
   suitable_zones = { "offshore", "channel", "diving_spot" },
   is_main_location = true,
@@ -521,7 +514,7 @@ location_properties = { {
 }, {
   pattern = "^mission:train_crash_head_on$",
   tracker = "sar",
-  case = cases.acc,
+  case = cases.accident,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -549,7 +542,7 @@ location_properties = { {
 }, {
   pattern = "^mission:power_plant_fire_%d+$",
   tracker = "sar",
-  case = cases.acc,
+  case = cases.accident,
   geologic = "islands",
   suitable_zones = {},
   is_main_location = true,
@@ -563,7 +556,7 @@ location_properties = { {
 }, {
   pattern = "^mission:chemical_storage_fire_%d+$",
   tracker = "sar",
-  case = cases.fire,
+  case = cases.far,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -577,7 +570,7 @@ location_properties = { {
 }, {
   pattern = "^mission:house_fire_%d+$",
   tracker = "sar",
-  case = cases.fire,
+  case = cases.far,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -605,7 +598,7 @@ location_properties = { {
 }, {
   pattern = "^mission:highway_oil_tanker_%d+$",
   tracker = "sar",
-  case = cases.fire,
+  case = cases.far,
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
@@ -631,7 +624,7 @@ location_properties = { {
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
@@ -645,13 +638,13 @@ location_properties = { {
 }, {
   pattern = "^mission:smuggling_boat_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
   sub_locations = {},
   is_unique_sub_location = false,
-  dispersal_area = 10000,
+  dispersal_area = 2000,
   report = "ソーヤー島に違法な貨物を運び込むという情報を掴んだ. 不審な船舶を捜索し, 乗り込んで調査せよ.",
   character_min = 50,
   character_max = 100,
@@ -659,7 +652,7 @@ location_properties = { {
 }, {
   pattern = "^mission:vessel_hijacked_%d+$",
   tracker = "sar",
-  case = cases.sec,
+  case = cases.securite,
   geologic = "waters",
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
@@ -671,9 +664,56 @@ location_properties = { {
   character_max = 100,
   note = "ハイジャッカーからの通報",
 }, {
+  pattern = "^mission:piracy_infantry_%d+$",
+  tracker = "sar",
+  case = cases.securite,
+  geologic = "mainlands",
+  suitable_zones = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine" },
+  is_main_location = false,
+  sub_locations = { "bunker" },
+  is_unique_sub_location = false,
+  report = "海賊の歩兵",
+  note = "",
+}, {
+  pattern = "^mission:piracy_technical_%d+$",
+  tracker = "sar",
+  case = cases.securite,
+  geologic = "mainlands",
+  suitable_zones = { "bunker" },
+  is_main_location = false,
+  sub_locations = {},
+  is_unique_sub_location = false,
+  report = "海賊のテクニカル",
+  note = "",
+}, {
+  pattern = "^mission:piracy_static_%d+$",
+  tracker = "sar",
+  case = cases.securite,
+  geologic = "mainlands",
+  suitable_zones = { "bunker" },
+  is_main_location = false,
+  sub_locations = {},
+  is_unique_sub_location = false,
+  report = "海賊の固定機銃",
+  note = "",
+}, {
+  pattern = "^mission:port_occupied_%d+$",
+  tracker = "sar",
+  case = cases.securite,
+  geologic = "mainlands",
+  suitable_zones = {},
+  is_main_location = true,
+  dispersal_area = 1000,
+  sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$" },
+  sub_location_min = 6,
+  sub_location_max = 12,
+  is_unique_sub_location = false,
+  report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり経済への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ.",
+  note = "警察署からの通報",
+}, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
-  case = cases.haz,
+  case = cases.alert,
   geologic = "mainlands",
   suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
   is_main_location = true,
@@ -685,7 +725,7 @@ location_properties = { {
 }, {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
-  case = cases.haz,
+  case = cases.alert,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -697,7 +737,7 @@ location_properties = { {
 }, {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
-  case = cases.haz,
+  case = cases.alert,
   geologic = "waters",
   suitable_zones = { "offshore" },
   is_main_location = true,
@@ -731,7 +771,7 @@ facilty_properties = { {
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
-  "bridge", "house", "building", "wind_turbine", "plant", "mine" }
+  "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine", "bunker" }
 
 strings = {
   statuses = {
@@ -920,7 +960,7 @@ mission_trackers = {
 
 object_trackers = {
   rescuee = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.rescuee.tracker and type == "character" and tags.tracker == "rescuee"
     end,
     init = function(self)
@@ -1056,7 +1096,7 @@ object_trackers = {
     clear_timer = 300
   },
   fire = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.fire.tracker and type == "fire"
     end,
     init = function(self)
@@ -1125,7 +1165,7 @@ object_trackers = {
     clear_timer = 0
   },
   forest_fire = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.forest_fire.tracker and type == "forest_fire"
     end,
     init = function(self, transform)
@@ -1170,7 +1210,7 @@ object_trackers = {
     clear_timer = 0
   },
   suspect = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.suspect.tracker and type == "character" and tags.tracker == "suspect"
     end,
     init = function(self)
@@ -1345,8 +1385,70 @@ object_trackers = {
     marker_type = 1,
     clear_timer = 300
   },
+  enemy = {
+    test_type = function(self, id, type, name, tags)
+      return g_savedata.subsystems.enemy.tracker and (type == "character" or type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "enemy"
+    end,
+    init = function(self)
+      local mission = table.find(g_savedata.missions, function(x)
+        return x.id == self.mission
+      end)
+      self.target = table.random(table.find_all(mission.locations, function(x)
+        local d = matrix.distance(x.transform, self.transform)
+        return d >= 10 and d < 500
+      end))
+      self.vital = server.getCharacterData(self.id)
+
+      server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
+    end,
+    clear = function(self)
+    end,
+    load = function(self)
+    end,
+    unload = function(self)
+    end,
+    tick = function(self, tick)
+      if g_savedata.dlcs.industry and self.simulated and self.target ~= nil then
+        local s = server.setCreatureMoveTarget(self.id, self.target.transform)
+
+        if s then
+          self.target = nil
+        end
+      end
+
+      self.vital = server.getCharacterData(self.id)
+    end,
+    dispensable = function(self)
+      return g_savedata.subsystems.enemy.dispensable and not self.indispensable
+    end,
+    complete = function(self)
+      return self.vital.incapacitated or self.vital.dead
+    end,
+    fail = function(self)
+      return false
+    end,
+    reward = function(self)
+      return self.reward_base
+    end,
+    label = function(self)
+      return self.text
+    end,
+    count = function(self)
+      return 1
+    end,
+    reported = function(self)
+      return true
+    end,
+    mapped = function(self)
+      return false
+    end,
+    reward_base = 1000,
+    text = "敵を排除",
+    marker_type = 6,
+    clear_timer = 300
+  },
   oil_spill = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.spillage.tracker and type == "oil_spill"
     end,
     init = function(self, transform, tile_x, tile_y, amount)
@@ -1403,7 +1505,7 @@ object_trackers = {
     clear_timer = 0
   },
   wreckage = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.wreckage.tracker and type == "vehicle" and tags.tracker == "wreckage"
     end,
     init = function(self)
@@ -1480,7 +1582,7 @@ object_trackers = {
     clear_timer = 3600
   },
   cargo = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.cargo.tracker and (type == "vehicle" or type == "object") and tags.tracker == "cargo"
     end,
     init = function(self)
@@ -1536,76 +1638,8 @@ object_trackers = {
     marker_type = 2,
     clear_timer = 3600
   },
-  hostile = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
-      return g_savedata.subsystems.hostile.tracker and (type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
-    end,
-    init = function(self)
-      local mission = table.find(g_savedata.missions, function(x)
-        return x.id == self.mission
-      end)
-      self.target = table.random(table.find_all(mission.locations, function(x)
-        local d = matrix.distance(x.transform, self.transform)
-        return d >= 10 and d < 500
-      end))
-      self.vital = server.getCharacterData(self.id)
-
-      if self.tags.indispensable ~= nil and self.tags.indispensable == "true" then
-        self.indispensable = true
-      else
-        self.indispensable = false
-      end
-
-      server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
-    end,
-    clear = function(self)
-    end,
-    load = function(self)
-    end,
-    unload = function(self)
-    end,
-    tick = function(self, tick)
-      if g_savedata.dlcs.industry and self.simulated and self.target ~= nil then
-        local s = server.setCreatureMoveTarget(self.id, self.target.transform)
-
-        if s then
-          self.target = nil
-        end
-      end
-
-      self.vital = server.getCharacterData(self.id)
-    end,
-    dispensable = function(self)
-      return g_savedata.subsystems.hostile.dispensable and not self.indispensable
-    end,
-    complete = function(self)
-      return self.vital.incapacitated or self.vital.dead
-    end,
-    fail = function(self)
-      return false
-    end,
-    reward = function(self)
-      return self.reward_base
-    end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
-    reported = function(self)
-      return true
-    end,
-    mapped = function(self)
-      return false
-    end,
-    reward_base = 1000,
-    text = "危険生物を駆除",
-    marker_type = 6,
-    clear_timer = 300
-  },
   sniffer = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return type == "creature" and tags.tracker == "sniffer"
     end,
     init = function(self)
@@ -1649,7 +1683,7 @@ object_trackers = {
     clear_timer = 0
   },
   headquarter = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id)
+    test_type = function(self, id, type, name, tags)
       return type == "vehicle" and tags.tracker == "headquarter"
     end,
     init = function(self)
@@ -1661,29 +1695,29 @@ object_trackers = {
     clear = function(self)
     end,
     load = function(self)
-      if self.components ~= nil and not self.components_checked then
-        self.alert = table.find(self.components.buttons, function(t)
-          return string.lower(t.name) == "alert"
-        end)
+      -- if self.components ~= nil and not self.components_checked then
+      --   self.alert = table.find(self.components.buttons, function(t)
+      --     return string.lower(t.name) == "alert"
+      --   end)
 
-        for i = 1, 6 do
-          self.missions[i] = {}
-          self.missions[i].id = table.find(self.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_id", i)
-          end)
-          self.missions[i].x = table.find(self.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_x", i)
-          end)
-          self.missions[i].y = table.find(self.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_y", i)
-          end)
-          self.missions[i].r = table.find(self.components.buttons, function(d)
-            return string.lower(d.name) == string.format("mission_%d_r", i)
-          end)
-        end
+      --   for i = 1, 6 do
+      --     self.missions[i] = {}
+      --     self.missions[i].id = table.find(self.components.buttons, function(d)
+      --       return string.lower(d.name) == string.format("mission_%d_id", i)
+      --     end)
+      --     self.missions[i].x = table.find(self.components.buttons, function(d)
+      --       return string.lower(d.name) == string.format("mission_%d_x", i)
+      --     end)
+      --     self.missions[i].y = table.find(self.components.buttons, function(d)
+      --       return string.lower(d.name) == string.format("mission_%d_y", i)
+      --     end)
+      --     self.missions[i].r = table.find(self.components.buttons, function(d)
+      --       return string.lower(d.name) == string.format("mission_%d_r", i)
+      --     end)
+      --   end
 
-        self.components_checked = true
-      end
+      --   self.components_checked = true
+      -- end
     end,
     unload = function(self)
     end,
@@ -1838,7 +1872,7 @@ object_trackers = {
     clear_timer = 0
   },
   unit = {
-    test_type = function(self, id, type, tags, addon_id, location_id, component_id, mission_id, owner, cost)
+    test_type = function(self, id, type, name, tags, owner, cost)
       return type == "vehicle" and owner ~= nil and cost ~= nil
     end,
     init = function(self, owner, cost)
@@ -2039,7 +2073,7 @@ function spawn_mission(mission)
   local x, y, z, object_count, location_count = 0, 0, 0, 0, #mission.locations
 
   for i = 1, location_count do
-    spawn_location(mission.locations[i], mission.id)
+    spawn_location(mission.locations[i], mission.id, i)
   end
 
   for i = 1, #g_savedata.objects do
@@ -2067,7 +2101,7 @@ function spawn_mission(mission)
 
     for j = 1, #sub_locations do
       table.insert(mission.locations, sub_locations[j])
-      spawn_location(sub_locations[j], mission.id)
+      spawn_location(sub_locations[j], mission.id, #mission.locations)
     end
   end
 
@@ -2090,7 +2124,8 @@ function spawn_mission(mission)
   mission.search_radius = math.max(math.ceil(distance_max / 500) * 500, mission.dispersal_area)
   mission.spawned = true
 
-  console.notify(string.format("mission#%d has spawned.", mission.id))
+  local tx, ty, tz = matrix.position(mission.transform)
+  console.notify(string.format("mission#%d has spawned at %.0f, %.0f, %.0f.", mission.id, tx, ty, tz))
 end
 
 function reward_mission(mission)
@@ -2186,22 +2221,13 @@ function aggregate_mission_category(mission)
   return category
 end
 
-function aggregate_mission_units(mission)
-  return {
-    sar = mission.units ~= nil and mission.units.sar or mission.search_radius >= 500 and #mission.locations >= 2,
-    fire = mission.units ~= nil and mission.units.fire or mission.objectives.fire.count >= 5 or mission.objectives.fire.count >= 1,
-    med = mission.units ~= nil and mission.units.med or mission.objectives.rescuee.count >= 1,
-    spc = mission.units ~= nil and mission.units.spc or mission.objectives.suspect.count >= 1 or mission.objectives.wreckage.count >= 1 or mission.objectives.hostile.count >= 1
-  }
-end
-
 function has_explosive_event(mission)
   return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
 end
 
 -- objects
 
-function initialize_object(id, type, name, tags, mission_id, addon_id, location_id, component_id, parent_id, ...)
+function initialize_object(id, type, name, tags, mission_id, location_id, component_id, parent_id, ...)
   local params = { ... }
   local object = {}
 
@@ -2210,7 +2236,6 @@ function initialize_object(id, type, name, tags, mission_id, addon_id, location_
   object.name = name
   object.tags = tags
   object.marker_id = server.getMapID()
-  object.addon_id = addon_id
   object.location_id = location_id
   object.component_id = component_id
   object.parent_id = parent_id
@@ -2243,7 +2268,7 @@ function initialize_object(id, type, name, tags, mission_id, addon_id, location_
   object.invocation_distance = tonumber(object.tags.invocation_distance) or 100
 
   for k, v in pairs(object_trackers) do
-    if v.test_type(object, id, type, tags, mission_id, addon_id, location_id, component_id, table.unpack(params)) then
+    if v.test_type(nil, id, type, name, tags, table.unpack(params)) then
       object.tracker = k
       break
     end
@@ -2252,7 +2277,7 @@ function initialize_object(id, type, name, tags, mission_id, addon_id, location_
   if object.type == "character" and object.tags.mount ~= nil then
     local cid = tonumber(object.tags.mount)
     local v = table.find(g_savedata.objects, function(x)
-      return x.type == "vehicle" and x.addon_id == object.addon_id and x.location_id == object.location_id and x.component_id == cid and x.mission == mission_id
+      return x.type == "vehicle" and x.mission == mission_id and x.location_id == location_id and x.component_id == cid
     end)
 
     if v ~= nil then
@@ -2778,7 +2803,8 @@ locations = {
     end)
 
     if #_locations == 0 then
-      local text = "No locations matching your requirements were found: "
+      local text = "No locations has matchd your requirements were found: "
+
       for i = 1, #patterns do
         if i > 1 then
           text = text .. ", "
@@ -2877,7 +2903,7 @@ locations = {
   end
 }
 
-function spawn_location(location, mission_id)
+function spawn_location(location, mission_id, location_id)
   local vehicles = {}
   local characters = {}
   local fires = {}
@@ -2911,29 +2937,29 @@ function spawn_location(location, mission_id)
   end
 
   for i = 1, #vehicles do
-    spawn_component(vehicles[i], location.transform, mission_id)
+    spawn_component(vehicles[i], location.transform, mission_id, location_id)
   end
 
   local characters_limit = math.ceil(#characters * math.random(location.character_min, location.character_max) / 100)
   table.shuffle(characters)
 
   for i = 1, characters_limit do
-    spawn_component(characters[i], location.transform, mission_id)
+    spawn_component(characters[i], location.transform, mission_id, location_id)
   end
 
   local fires_limit = math.ceil(#fires * math.random(location.fire_min, location.fire_max) / 100)
   table.shuffle(fires)
 
   for i = 1, fires_limit do
-    spawn_component(fires[i], location.transform, mission_id)
+    spawn_component(fires[i], location.transform, mission_id, location_id)
   end
 
   for i = 1, #others do
-    spawn_component(others[i], location.transform, mission_id)
+    spawn_component(others[i], location.transform, mission_id, location_id)
   end
 end
 
-function spawn_component(component, transform, mission_id)
+function spawn_component(component, transform, mission_id, location_id)
   if table.has(g_savedata.disabled_components, component.type) then
     return
   end
@@ -2955,10 +2981,10 @@ function spawn_component(component, transform, mission_id)
 
   if is_vehicle(object) then
     for i = 1, #object.vehicle_ids do
-      initialize_object(object.vehicle_ids[i], object.type, object.display_name, tags, mission_id, component.addon_index, component.location_index, component.id, parent_object_id)
+      initialize_object(object.vehicle_ids[i], object.type, object.display_name, tags, mission_id, location_id, component.id, parent_object_id)
     end
   else
-    initialize_object(object.id, object.type, object.display_name, tags, mission_id, component.addon_index, component.location_index, component.id, parent_object_id)
+    initialize_object(object.id, object.type, object.display_name, tags, mission_id, location_id, component.id, parent_object_id)
   end
 end
 
@@ -3477,6 +3503,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
       if value ~= nil then
         g_savedata.subsystems.mission.range_min = value
+      else
+        console.log(g_savedata.subsystems.mission.range_min, peer_id)
       end
     elseif verb == "range-max" and is_admin then
       local value = ...
@@ -3484,6 +3512,8 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 
       if value ~= nil then
         g_savedata.subsystems.mission.range_max = value
+      else
+        console.log(g_savedata.subsystems.mission.range_max, peer_id)
       end
     elseif verb == "limit-area" and is_admin then
       local value = ...
@@ -3717,11 +3747,11 @@ function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
   local test = false
 
   for k, v in pairs(object_trackers) do
-    test = test or v.test_type(nil, vehicle_ids[1], "vehicle", tags, nil, nil, nil, nil, owner, cost)
+    test = test or v.test_type(nil, vehicle_ids[1], "vehicle", data.name, tags, owner, cost)
   end
 
   if test then
-    initialize_object(vehicle_ids[1], "vehicle", data.name, tags, nil, nil, nil, nil, nil, owner, cost)
+    initialize_object(vehicle_ids[1], "vehicle", data.name, tags, nil, nil, nil, nil, owner, cost)
   end
 end
 
@@ -3780,7 +3810,7 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
   end
 
   if mission_id ~= nil then
-    initialize_object(fire_objective_id, "forest_fire", nil, {}, mission_id, nil, nil, nil, nil, transform)
+    initialize_object(fire_objective_id, "forest_fire", nil, {}, mission_id, nil, nil, nil, transform)
   end
 end
 
@@ -3831,7 +3861,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
     end
 
     if mission_id ~= nil then
-      initialize_object(id, "oil_spill", nil, {}, mission_id, nil, nil, nil, nil, transform, x, z, total)
+      initialize_object(id, "oil_spill", nil, {}, mission_id, nil, nil, nil, transform, x, z, total)
     end
   end
 
