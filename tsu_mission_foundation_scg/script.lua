@@ -2014,7 +2014,7 @@ function aggregate_mission_objectives(mission)
       -- end
 
       if g_savedata.objects[i].picked then
-        data.count_picked = data.count_picked + g_savedata.objects[i]:count()
+        data.count_picked = data.count_picked + amount
       end
 
       if not string.nil_or_empty(g_savedata.objects[i].name) then
