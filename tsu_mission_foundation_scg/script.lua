@@ -749,25 +749,25 @@ location_properties = { {
 } }
 
 facilty_properties = { {
-  name = "base",
+  type = "base",
   mapped = true,
   icon = 11,
 }, {
-  name = "hospital",
+  type = "hospital",
   mapped = true,
   icon = 8,
 }, {
-  name = "police_station",
+  type = "police_station",
   mapped = true,
   icon = 11,
 }, {
-  name = "scrap_yard",
+  type = "scrap_yard",
   mapped = true,
   icon = 3,
 }, {
-  name = "first_spawn",
+  type = "first_spawn",
 }, {
-  name = "respawn",
+  type = "respawn",
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
@@ -879,11 +879,7 @@ mission_trackers = {
         end
       end
 
-      if count == 0 then
-        text = text .. "\n-"
-      end
-
-      text = text .. "\n\n?go [mission id] (小文字) でチェックイン"
+      text = text .. string.format("\n(?go %d でチェックイン)", self.id)
 
       return text
     end
@@ -1664,7 +1660,7 @@ object_trackers = {
   },
   unit = {
     test_type = function(self, id, type, name, tags, owner, cost)
-      return type == "vehicle"
+      return type == "vehicle" and tags.tracker == "unit"
     end,
     init = function(self, owner, cost)
       self.owner_steam_id = owner
@@ -2960,8 +2956,8 @@ facilities = {
     local models = {}
 
     for i = 1, #facilty_properties do
-      if facilty_properties[i].name ~= nil then
-        local raws = server.getZones(string.format("facility=%s", facilty_properties[i].name))
+      if facilty_properties[i].type ~= nil then
+        local raws = server.getZones(string.format("facility=%s", facilty_properties[i].type))
 
         for i = 1, #raws do
           local z = self:init(raws[i])
@@ -2978,7 +2974,7 @@ facilities = {
   init = function(self, obj)
     local tags = string.parse_tags(obj.tags_full)
     local prop = table.find(facilty_properties, function(x)
-      return tags.facility == x.name
+      return x.type == tags.facility
     end)
 
     if prop == nil then
@@ -2986,7 +2982,7 @@ facilities = {
     end
 
     obj.tags = tags
-    obj.name = prop.name
+    obj.type = prop.type
     obj.mapped = prop.mapped or false
     obj.icon = prop.icon or 0
 
@@ -3009,11 +3005,11 @@ facilities = {
       end
     end
   end,
-  is_in_facility = function(self, transform, name)
+  is_in_facility = function(self, transform, type)
     local is = false
 
     for i = 1, #self.items do
-      is = is or self.items[i].name == name and self:is_in(transform, self.items[i])
+      is = is or self.items[i].type == type and self:is_in(transform, self.items[i])
     end
 
     return is
@@ -3034,17 +3030,11 @@ facilities = {
   map = function(self, zone, peer_id)
     local peer_id = peer_id or -1
 
-    if (g_savedata.mode == "debug") or zone.mapped then
+    if g_savedata.mode == "debug" or zone.mapped and zone.parent_vehicle_id == 0 then
       local x, y, z = matrix.position(zone.transform)
       local color = zone.icon == 8 and 255 or 0
-      local name = zone.name
 
-      if name == "" then
-        name = zone.landscape
-      end
-
-      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.facility.markar_id, zone.icon, name, x, z, color, color,
-        color, 255)
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.facility.markar_id, zone.icon, zone.name, x, z, color, color, color, 255)
     end
   end,
   clear_all_map = function(self, peer_id)
@@ -3113,7 +3103,7 @@ end
 function teleport_to_spawn_points(peer_id)
   local _zones = facilities:find_all(function(x)
     return facilities:is_in_range(x, get_start_tile_transform(), 0, g_savedata.subsystems.mission.range_max) and
-        x.name == "respawn"
+        x.type == "respawn"
   end)
 
   if #_zones == 0 then
@@ -3270,6 +3260,8 @@ function onTick(tick)
 end
 
 function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb, ...)
+  command = string.lower(command)
+
   if command == "?mission" or command == "?m" then
     if verb == "list" and is_admin then
       locations:list(peer_id)

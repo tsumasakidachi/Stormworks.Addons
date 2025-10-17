@@ -4,14 +4,6 @@
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_12_6.xml" name="SAWYER 12_6" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="10" id="4" cargo_zone_import_cargo_type="facility=base" display_name="Sawyer Coastguard Oneil Airbase" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="-0.710337" 02="0.703862" 20="-0.703862" 22="-0.710337" 30="105.77964" 31="13.404817" 32="100.336334"/>
-						<spawn_bounds>
-							<min x="-29.067294" y="-5" z="-30.161984"/>
-							<max x="29.067294" y="5" z="30.161984"/>
-						</spawn_bounds>
-						<graph_links/>
-					</c>
 					<c component_type="3" id="5" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_5.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
 						<spawn_transform 00="0.705047" 02="-0.709161" 20="0.709161" 22="0.705047" 30="121.435287" 31="10.171816" 32="81.196846"/>
 						<spawn_bounds>
@@ -21,7 +13,7 @@
 						<spawn_local_offset y="-0.375" z="0.125"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="6" vehicle_parent_id="5" cargo_zone_import_cargo_type="facility=hospital" display_name="Mobile Trauma Centre" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="6" vehicle_parent_id="5" cargo_zone_import_cargo_type="facility=base" display_name="Sawyer Coastguard Oneil Airbase" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.707762" 02="0.706451" 20="-0.706451" 22="0.707762" 30="121.545311" 31="10.039754" 32="81.253967"/>
 						<spawn_bounds>
 							<min x="-3.577707" y="-1.436969" z="-2.676117"/>
