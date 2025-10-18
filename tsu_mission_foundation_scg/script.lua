@@ -703,12 +703,12 @@ location_properties = { {
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
-  dispersal_area = 1000,
+  dispersal_area = 250,
   sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$" },
   sub_location_min = 6,
   sub_location_max = 12,
   is_unique_sub_location = false,
-  report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり経済への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ.",
+  report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ.",
   note = "警察署からの通報",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
@@ -1097,8 +1097,10 @@ object_trackers = {
     end,
     init = function(self)
       self.is_lit = server.getFireData(self.id)
-      self.is_explosive = false
-      self.cooling_timer = math.random(1800, 7200)
+      self.activated = self.is_lit
+      self.explosive = false
+      self.magnitude = 0
+      self.cooling_timer = math.random(900, 1800)
     end,
     clear = function(self)
     end,
@@ -1108,31 +1110,29 @@ object_trackers = {
     end,
     tick = function(self, tick)
       self.is_lit = server.getFireData(self.id)
+      self.activated = self.activated or self.is_lit
 
-      if not self.is_lit then
+      if self.activated and not self.is_lit then
         self.cooling_timer = math.max(self.cooling_timer - tick, 0)
       end
 
       if g_savedata.dlcs.weapon then
-        local is_explosive = false
+        local explosive = false
 
         for i = 1, #g_savedata.missions do
-          is_explosive = is_explosive or
-              g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and
-              math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+          explosive = explosive or self.is_lit and g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+          self.magnitude = math.random() ^ 2
         end
 
-        if is_explosive and not self.is_explosive then
-          self.is_explosive = is_explosive
-          local magnitude = (math.random() * 1.414) ^ 2
-          server.setFireData(self.id, true, false)
-          server.spawnExplosion(self.transform, magnitude)
-          console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, magnitude))
+        if explosive and not self.explosive then
+          self.explosive = explosive
+          server.spawnExplosion(self.transform, self.magnitude)
+          console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, self.magnitude))
         end
       end
     end,
     dispensable = function(self)
-      return g_savedata.subsystems.fire.dispensable
+      return g_savedata.subsystems.fire.dispensable or not self.activated
     end,
     complete = function(self)
       return self.cooling_timer <= 0
@@ -1147,7 +1147,11 @@ object_trackers = {
       return self.text
     end,
     count = function(self)
-      return 1
+      if self.activated then
+        return 1
+      else
+        return 0
+      end
     end,
     reported = function(self)
       return true
@@ -1222,7 +1226,7 @@ object_trackers = {
       self.weapon = nil
       self.ransom_paid = false
       server.setAICharacterTeam(self.id, self.team)
-      server.setAICharacterTargetTeam(self.id, 0, false)
+      server.setAICharacterTargetTeam(self.id, 1, false)
     end,
     clear = function(self)
     end,
@@ -1245,7 +1249,7 @@ object_trackers = {
         self.neutralized = true
         self.ai_state = 0
         server.setAIState(self.id, self.ai_state)
-        server.setAICharacterTargetTeam(self.id, 0, false)
+        server.setAICharacterTargetTeam(self.id, 1, false)
         server.setCharacterItem(self.id, 9, 23, false, 1, 100)
 
         if self.weapon ~= nil then
@@ -1288,21 +1292,21 @@ object_trackers = {
               self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
               self.ai_state = 1
               server.setAIState(self.id, self.ai_state)
-              server.setAICharacterTargetTeam(self.id, 0, true)
+              server.setAICharacterTargetTeam(self.id, 1, true)
             end
           elseif self.command == "attack" then
             if vehicle_closest ~= nil then
               self.ai_state = 1
               server.setAITarget(self.id, vehicle_closest.transform)
               server.setAIState(self.id, self.ai_state)
-              server.setAICharacterTargetTeam(self.id, 0, true)
+              server.setAICharacterTargetTeam(self.id, 1, true)
             end
           end
         elseif self.role ~= nil and string.match(self.role, "^gunner%s-%d-$") ~= nil then
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
-            server.setAICharacterTargetTeam(self.id, 0, true)
+            server.setAICharacterTargetTeam(self.id, 1, true)
           end
 
           if player_distance <= vehicle_distance and player_closest ~= nil then
@@ -1314,13 +1318,13 @@ object_trackers = {
           if self.ai_state == 0 then
             self.ai_state = 1
             server.setAIState(self.id, self.ai_state)
-            server.setAICharacterTargetTeam(self.id, 0, true)
+            server.setAICharacterTargetTeam(self.id, 1, true)
           end
         else
           if self.weapon == nil then
             self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
             server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
-            server.setAICharacterTargetTeam(self.id, 0, true)
+            server.setAICharacterTargetTeam(self.id, 1, true)
           end
 
           if self.mount_vehicle ~= nil and self.mount_seat ~= nil then
@@ -1507,12 +1511,7 @@ object_trackers = {
     init = function(self)
       self.completion_timer = 0
       self.initial_transform = server.getVehiclePos(self.id)
-
-      if self.tags.indispensable == "true" then
-        self.indispensable = true
-      else
-        self.indispensable = false
-      end
+      self.indispensable = self.tags.indispensable == "true"
 
       server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
     end,
@@ -1666,16 +1665,11 @@ object_trackers = {
       self.owner_steam_id = owner
       self.player_owned = self.owner_steam_id ~= nil
       self.cost = cost
-
-      if self.tags.headquarter == "true" then
-        self.headquarter = true
-      else
-        self.headquarter = false
-      end
-
+      self.headquarter = self.tags.headquarter == "true"
       self.components_checked = false
       self.attention = nil
       self.missions = {}
+      server.setAIVehicleTeam(self.id, 1)
     end,
     clear = function(self)
     end,
@@ -2088,12 +2082,13 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
   object.voxels = nil
   object.mass = nil
   object.components = nil
+  object.damages = {}
+  object.explosive = object.tags.explosive == "true"
 
   if object.tags.commands ~= nil then
     object.commands = string.split(object.tags.commands, ";")
   end
 
-  object.command = nil
   object.invocation_distance = tonumber(object.tags.invocation_distance) or 100
 
   local tracker = nil
@@ -2209,6 +2204,51 @@ function tick_object(object, tick)
       local x, y, z = matrix.position(object.paths[1])
       console.notify(string.format("%s#%d set destination to %.0f, %.0f, %.0f.", object.tracker, object.id, x, y, z))
     end
+  end
+
+  if object.simulated and is_vehicle(object) and object.explosive then
+    local damages_density = {}
+
+    for i = 1, #object.damages do
+      local x, y, z = matrix.position(object.damages[i].transform)
+      x = math.round(x / 20) * 20
+      y = math.round(y / 20) * 20
+      z = math.round(z / 20) * 20
+      local key = string.format("%+.0f%+.0f%+.0f", x, y, z)
+      
+      if damages_density[key] == nil then
+        local tl = matrix.translation(x, y, z)
+        damages_density[key] = {
+          transform = matrix.multiply(object.transform, tl),
+          transform_local = tl,
+          amount = 0
+        }
+      end
+
+      damages_density[key].amount = damages_density[key].amount + object.damages[i].amount
+    end
+
+    for key, damage in pairs(damages_density) do
+      if damage.amount >= 25 then
+        for i = 1, #g_savedata.objects do
+          if g_savedata.objects[i].tracker == "fire" and not g_savedata.objects[i].activated and matrix.distance(g_savedata.objects[i].transform, damage.transform) <= 10 then
+            g_savedata.objects[i].explosive = true
+            g_savedata.objects[i].magnitude = 1
+            server.setFireData(g_savedata.objects[i].id, true, false)
+            console.notify(string.format("%s#%d has ignited by %d damage", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
+          end
+        end
+      elseif damage.amount >= 10 then
+        for i = 1, #g_savedata.objects do
+          if g_savedata.objects[i].tracker == "fire" and not g_savedata.objects[i].activated and matrix.distance(g_savedata.objects[i].transform, damage.transform) <= 10 then
+            server.setFireData(g_savedata.objects[i].id, true, false)
+            console.notify(string.format("%s#%d has ignited by %d damage", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
+          end
+        end
+      end
+    end
+
+    object.damages = {}
   end
 
   if object.tracker ~= nil then
@@ -2341,6 +2381,14 @@ function unloaded_object(object)
   console.notify(string.format("%s#%d has unloaded.", object.type, object.id))
 end
 
+function damaged_vehicle(vehicle, amount, x, y, z, body_index)
+  table.insert(vehicle.damages, {
+    amount = amount,
+    transform = matrix.translation(x, y, z),
+    body_index = body_index
+  })
+end
+
 function is_doctor_nearby(transform)
   local is = false
 
@@ -2410,15 +2458,6 @@ function mount_vehicle(object)
 
         if i < i_end then
           object.role = seat_name
-        end
-
-        if vehicle.team ~= object.team then
-          vehicle.team = object.team
-          local vehicle_ids = server.getVehicleGroup(data.group_id)
-
-          for l = 1, #vehicle_ids do
-            server.setAIVehicleTeam(vehicle_ids[l], vehicle.team)
-          end
         end
 
         console.notify(string.format("%s#%d has mounted to %s#%d.", object.type, object.id, vehicle.type, vehicle.id))
@@ -3170,7 +3209,7 @@ players = {
       end
 
       for j = 1, #g_savedata.objects do
-        alert = alert or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].is_explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
+        alert = alert or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
       end
 
       for j = 1, 10 do
@@ -3553,7 +3592,10 @@ function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
     return
   end
 
+  local character_id = server.getPlayerCharacterID(peer_id)
   local transform = server.getPlayerPos(peer_id)
+
+  server.setAICharacterTeam(character_id, 1)
 
   if facilities:is_in_facility(transform, "first_spawn") then
     teleport_to_spawn_points(peer_id)
@@ -3608,7 +3650,7 @@ end
 
 function onVehicleLoad(vehicle_id)
   for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
+    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects[i].id == vehicle_id then
       loaded_object(g_savedata.objects[i])
     end
   end
@@ -3616,23 +3658,7 @@ end
 
 function onVehicleUnload(vehicle_id)
   for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].type == "vehicle" and g_savedata.objects[i].id == vehicle_id then
-      unloaded_object(g_savedata.objects[i])
-    end
-  end
-end
-
-function onObjectLoad(object_id)
-  for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].type ~= "vehicle" and g_savedata.objects[i].id == object_id then
-      loaded_object(g_savedata.objects[i])
-    end
-  end
-end
-
-function onObjectUnload(object_id)
-  for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].type ~= "vehicle" and g_savedata.objects[i].id == object_id then
+    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects[i].id == vehicle_id then
       unloaded_object(g_savedata.objects[i])
     end
   end
@@ -3640,8 +3666,32 @@ end
 
 function onVehicleDespawn(vehicle_id, peer_id)
   for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].type == "vehicle" and (g_savedata.objects[i].id == vehicle_id or g_savedata.objects[i].parent_id == vehicle_id) then
+    if is_vehicle(g_savedata.objects[i]) and (g_savedata.objects[i].id == vehicle_id or g_savedata.objects[i].parent_id == vehicle_id) then
       clear_object(g_savedata.objects[i])
+    end
+  end
+end
+
+function onVehicleDamaged(vehicle_id, damage_amount, voxel_x, voxel_y, voxel_z, body_index)
+  for i = 1, #g_savedata.objects do
+    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects[i].id == vehicle_id then
+      damaged_vehicle(g_savedata.objects[i], damage_amount, voxel_x, voxel_y, voxel_z, body_index)
+    end
+  end
+end
+
+function onObjectLoad(object_id)
+  for i = 1, #g_savedata.objects do
+    if is_object(g_savedata.objects[i]) and g_savedata.objects[i].id == object_id then
+      loaded_object(g_savedata.objects[i])
+    end
+  end
+end
+
+function onObjectUnload(object_id)
+  for i = 1, #g_savedata.objects do
+    if is_object(g_savedata.objects[i]) and g_savedata.objects[i].id == object_id then
+      unloaded_object(g_savedata.objects[i])
     end
   end
 end
