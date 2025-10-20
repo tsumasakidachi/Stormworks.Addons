@@ -1124,10 +1124,10 @@ object_trackers = {
           self.magnitude = math.random() ^ 2
         end
 
-        if explosive and not self.explosive then
-          self.explosive = explosive
+        if self.explosive then
           server.spawnExplosion(self.transform, self.magnitude)
           console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, self.magnitude))
+          self.explosive = false
         end
       end
     end,
@@ -1659,7 +1659,7 @@ object_trackers = {
   },
   unit = {
     test_type = function(self, id, type, name, tags, owner, cost)
-      return type == "vehicle" and tags.tracker == "unit"
+      return type == "vehicle" and (tags.tracker == "unit" or owner ~= nil)
     end,
     init = function(self, owner, cost)
       self.owner_steam_id = owner
