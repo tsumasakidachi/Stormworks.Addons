@@ -703,9 +703,9 @@ location_properties = { {
   geologic = "mainlands",
   suitable_zones = {},
   is_main_location = true,
-  dispersal_area = 250,
-  sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$" },
-  sub_location_min = 6,
+  dispersal_area = 500,
+  sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$", "^mission:piracy_technical_%d+$" },
+  sub_location_min = 10,
   sub_location_max = 12,
   is_unique_sub_location = false,
   report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ.",
@@ -1121,11 +1121,11 @@ object_trackers = {
 
         for i = 1, #g_savedata.missions do
           explosive = explosive or self.is_lit and g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
-          self.magnitude = math.random() ^ 2
+          self.magnitude = (math.random() * 1.414) ^ 2
         end
 
         if self.explosive then
-          server.spawnExplosion(self.transform, self.magnitude)
+          explode(self.transform, self.magnitude)
           console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, self.magnitude))
           self.explosive = false
         end
@@ -1218,7 +1218,6 @@ object_trackers = {
       self.admitted_time = 0
       self.picked = false
       self.team = 2
-      self.activated = false
       self.neutralized = false
       self.ai_state = 0
       self.destination = nil
@@ -1240,12 +1239,11 @@ object_trackers = {
       local vehicle_id = server.getCharacterVehicle(self.id)
       local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
-
       local picked = table.any(g_savedata.objects, function(x)
         return character_vehicle > 0 and x.tracker == "unit" and x.player_owned and x.id == character_vehicle
       end)
 
-      if not self.neutralized and self.command ~= nil and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and vehicle_id == 0) then
+      if not self.neutralized and self.command ~= nil and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and self.mounted and vehicle_id == 0) then
         self.neutralized = true
         self.ai_state = 0
         server.setAIState(self.id, self.ai_state)
@@ -2084,6 +2082,7 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
   object.components = nil
   object.damages = {}
   object.explosive = object.tags.explosive == "true"
+  object.invulnerability_timer = 0
 
   if object.tags.commands ~= nil then
     object.commands = string.split(object.tags.commands, ";")
@@ -2162,7 +2161,7 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
-  object.transform = position(object)
+ object.transform = position(object)
 
   if is_object(object) then
     object.simulated = server.getObjectSimulating(object.id)
@@ -2233,22 +2232,31 @@ function tick_object(object, tick)
         for i = 1, #g_savedata.objects do
           if g_savedata.objects[i].tracker == "fire" and not g_savedata.objects[i].activated and matrix.distance(g_savedata.objects[i].transform, damage.transform) <= 10 then
             g_savedata.objects[i].explosive = true
-            g_savedata.objects[i].magnitude = 1
+            g_savedata.objects[i].magnitude = math.random() ^ 2 + 1
             server.setFireData(g_savedata.objects[i].id, true, false)
-            console.notify(string.format("%s#%d has ignited by %d damage", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
+            console.notify(string.format("%s#%d has ignited by %d damage.", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
           end
         end
       elseif damage.amount >= 10 then
         for i = 1, #g_savedata.objects do
-          if g_savedata.objects[i].tracker == "fire" and not g_savedata.objects[i].activated and matrix.distance(g_savedata.objects[i].transform, damage.transform) <= 10 then
+          if g_savedata.objects[i].tracker == "fire" and not g_savedata.objects[i].activated and matrix.distance(g_savedata.objects[i].transform, damage.transform) <= 2 then
             server.setFireData(g_savedata.objects[i].id, true, false)
-            console.notify(string.format("%s#%d has ignited by %d damage", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
+            console.notify(string.format("%s#%d has ignited by %d damage.", g_savedata.objects[i].type, g_savedata.objects[i].id, damage.amount))
           end
         end
       end
     end
 
     object.damages = {}
+  end
+
+  if object.simulated and is_vehicle(object) and object.invulnerability_timer > 0 then
+    object.invulnerability_timer = math.max(object.invulnerability_timer - tick, 0)
+
+    if object.invulnerability_timer == 0 then
+      server.setVehicleInvulnerable(object.id, false)
+      console.notify(string.format("%s#%d invulnerability has released.", object.type, object.id))
+    end
   end
 
   if object.tracker ~= nil then
@@ -2387,6 +2395,21 @@ function damaged_vehicle(vehicle, amount, x, y, z, body_index)
     transform = matrix.translation(x, y, z),
     body_index = body_index
   })
+end
+
+function explode(transform, magnitude)
+  for i = 1, #g_savedata.objects do
+    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects.tracker ~= "unit" and matrix.distance(g_savedata.objects[i].transform, transform) <= 10 then
+      server.setVehicleInvulnerable(g_savedata.objects[i].id, true)
+      g_savedata.objects[i].invulnerability_timer = 120
+    end
+  end
+
+  server.spawnExplosion(transform, magnitude)
+  
+  -- for i = 1, #vehicles do
+  --   server.setVehicleInvulnerable(vehicles[i], false)
+  -- end
 end
 
 function is_doctor_nearby(transform)
