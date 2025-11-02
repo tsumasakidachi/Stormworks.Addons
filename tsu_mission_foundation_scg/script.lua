@@ -708,14 +708,14 @@ location_properties = { {
   sub_location_min = 10,
   sub_location_max = 12,
   is_unique_sub_location = false,
-  report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ.",
+  report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ. 民間人の退避は完了している.",
   note = "警察署からの通報",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
   case = cases.alert,
   geologic = "mainlands",
-  suitable_zones = { "channel", "late", "ait", "forest", "field", "beach" },
+  suitable_zones = { "channel", "lake", "ait", "forest", "field", "beach" },
   is_main_location = true,
   sub_locations = {},
   is_unique_sub_location = false,
@@ -1100,6 +1100,7 @@ object_trackers = {
       self.activated = self.is_lit
       self.explosive = false
       self.magnitude = 0
+      self.explosive_timer = 0
       self.cooling_timer = math.random(900, 1800)
     end,
     clear = function(self)
@@ -1120,14 +1121,23 @@ object_trackers = {
         local explosive = false
 
         for i = 1, #g_savedata.missions do
-          explosive = explosive or self.is_lit and g_savedata.missions[i].id == self.mission and has_explosive_event(g_savedata.missions[i]) and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
-          self.magnitude = (math.random() * 1.414) ^ 2
+          explosive = explosive or self.is_lit and g_savedata.missions[i].id == self.mission and g_savedata.missions[i].explosive and math.random() < g_savedata.subsystems.fire.rate_explode * 0.001
+        end
+
+        if not self.explosive and explosive then
+          self.explosive = true
+          self.magnitude = math.max(0.5, math.random() * 1.414) ^ 2
+          self.explosive_timer = math.random(240, 720)
         end
 
         if self.explosive then
-          explode(self.transform, self.magnitude)
-          console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, self.magnitude))
-          self.explosive = false
+          self.explosive_timer = math.max(0, self.explosive_timer - tick)
+
+          if self.explosive_timer == 0 then
+            explode(self.transform, self.magnitude)
+            console.notify(string.format("fire#%d has caused a magnitude %.3f explosion.", self.id, self.magnitude))
+            self.explosive = false
+          end
         end
       end
     end,
@@ -1795,6 +1805,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.category = aggregate_mission_category(mission)
+  mission.explosive = false
   mission:init({ ... })
 
   record_location_history(mission.locations[1])
@@ -1832,6 +1843,7 @@ function tick_mission(mission, tick)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.category = aggregate_mission_category(mission)
+  mission.explosive = has_explosive_event(mission)
 
   if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
     mission.taken_to_long = true
@@ -2161,7 +2173,7 @@ function despawn_object(object)
 end
 
 function tick_object(object, tick)
- object.transform = position(object)
+  object.transform = position(object)
 
   if is_object(object) then
     object.simulated = server.getObjectSimulating(object.id)
@@ -2214,7 +2226,7 @@ function tick_object(object, tick)
       y = math.round(y / 20) * 20
       z = math.round(z / 20) * 20
       local key = string.format("%+.0f%+.0f%+.0f", x, y, z)
-      
+
       if damages_density[key] == nil then
         local tl = matrix.translation(x, y, z)
         damages_density[key] = {
@@ -2399,17 +2411,21 @@ end
 
 function explode(transform, magnitude)
   for i = 1, #g_savedata.objects do
-    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects.tracker ~= "unit" and matrix.distance(g_savedata.objects[i].transform, transform) <= 10 then
-      server.setVehicleInvulnerable(g_savedata.objects[i].id, true)
-      g_savedata.objects[i].invulnerability_timer = 120
+    if is_vehicle(g_savedata.objects[i]) and g_savedata.objects.tracker ~= "unit" and matrix.distance(g_savedata.objects[i].transform, transform) <= 25 then
+      set_invulnerable(g_savedata.objects[i], 120)
     end
   end
 
   server.spawnExplosion(transform, magnitude)
-  
+
   -- for i = 1, #vehicles do
   --   server.setVehicleInvulnerable(vehicles[i], false)
   -- end
+end
+
+function set_invulnerable(object, timer)
+  server.setVehicleInvulnerable(object.id, true)
+  object.invulnerability_timer = timer
 end
 
 function is_doctor_nearby(transform)
@@ -3225,25 +3241,38 @@ players = {
     self.items = self:load()
 
     for i = 1, #self.items do
-      local alert = self.items[i].vital.incapacitated
+      if g_savedata.players_alert[self.items[i].steam_id] == nil then
+        g_savedata.players_alert[self.items[i].steam_id] = { strobe = false, transponder = false }
+      end
+
+      local transponder = self.items[i].vital.incapacitated
+      local strobe = transponder
+      local explosive = false
 
       for j = 1, #g_savedata.missions do
-        alert = alert or g_savedata.missions[j].type == "disaster" and matrix.distance(g_savedata.missions[j].search_center, self.items[i].transform) <= g_savedata.missions[j].search_radius
+        strobe = strobe or g_savedata.missions[j].tracker == "disaster" and matrix.distance(g_savedata.missions[j].search_center, self.items[i].transform) <= g_savedata.missions[j].search_radius
       end
 
-      for j = 1, #g_savedata.objects do
-        alert = alert or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 50
-      end
+      -- for j = 1, #g_savedata.objects do
+      --   strobe = strobe or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 20
+      -- end
 
       for j = 1, 10 do
         local item = server.getCharacterItem(self.items[i].object_id, j)
 
-        if item == 23 and g_savedata.players_alert[self.items[i].steam_id] ~= alert then
-          server.setCharacterItem(self.items[i].object_id, j, 23, alert, 0, 100)
-          g_savedata.players_alert[self.items[i].steam_id] = alert
+        if item == 23 and g_savedata.players_alert[self.items[i].steam_id].strobe ~= strobe then
+          g_savedata.players_alert[self.items[i].steam_id].strobe = strobe
+          server.setCharacterItem(self.items[i].object_id, j, 23, strobe, 0, 100)
 
-          if alert then
-            console.notify(string.format("%s has issued an alert.", self.items[i].name))
+          if strobe then
+            console.notify(string.format("%s's strobe has activated.", self.items[i].name))
+          end
+        elseif item == 25 and g_savedata.players_alert[self.items[i].steam_id].transponder ~= transponder then
+          g_savedata.players_alert[self.items[i].steam_id].transponder = transponder
+          server.setCharacterItem(self.items[i].object_id, j, 25, transponder, 0, 100)
+
+          if transponder then
+            console.notify(string.format("%s's transponder has activated.", self.items[i].name))
           end
         end
       end
@@ -3828,6 +3857,7 @@ function onCreate(is_world_create)
 
   console.notify(name)
   console.notify(version)
+  console.notify(string.format("Players: %d", #players.items))
   console.notify(string.format("Locations: %d", #locations.items))
   console.notify(string.format("Landscapes: %d", #landscapes.items))
   console.notify(string.format("Gone missions: %d", #g_savedata.locations_history))

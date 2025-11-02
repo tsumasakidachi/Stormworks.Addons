@@ -7,13 +7,15 @@ g_savedata = {
     autosave_interval = property.slider("Autosave interval (min, -1 = disable)", -1, 60, 1, -1) * 3600,
     autosave_next = 0,
     time = 0,
+    chats = {}
 }
 
 timing_default = 60
 timing = timing_default
-pilot_seats = {"pilot", "driver", "co-pilot", "copilot"}
+pilot_seats = { "pilot", "driver", "co-pilot", "copilot" }
 spawn_by_myself = false
 spawn_location = nil
+chat_ignore = false
 
 function onTick(tick)
     for i = #g_savedata.pins, 1, -1 do
@@ -226,11 +228,11 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local x, y, z = matrix.position(transform)
 
         server.announce("[LOG]", string.format("%.00f, %.00f, %.00f", x, y, z))
-    -- elseif command == "?weather" and is_admin then -- weather
-    --     local transform = server.getPlayerPos(peer_id)
-    --     local weather = server.getWeather(transform)
+        -- elseif command == "?weather" and is_admin then -- weather
+        --     local transform = server.getPlayerPos(peer_id)
+        --     local weather = server.getWeather(transform)
 
-    --     server.announce("[LOG]", string.format("fog: %.3f\nrain: %.3f\nsnow: %.3f\nwind: %.3f\ntemp: %.3f", weather.fog, weather.rain, weather.snow, weather.wind, weather.temp))
+        --     server.announce("[LOG]", string.format("fog: %.3f\nrain: %.3f\nsnow: %.3f\nwind: %.3f\ntemp: %.3f", weather.fog, weather.rain, weather.snow, weather.wind, weather.temp))
     elseif (command == "?location" or command == "?l") and is_admin then
         local verb, name = ...
 
@@ -293,10 +295,19 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
 
             console.log(string.format("%d vehicles", #g_savedata.vehicles), peer_id)
         end
+    elseif command == "?chat" and is_admin then
+        chat_ignore = true
+
+        for i = 1, #g_savedata.chats do
+            server.announce(g_savedata.chats[i].name, g_savedata.chats[i].message, peer_id)
+        end
+
+        console.log(string.format("%d chat messages.", #g_savedata.chats))
+        chat_ignore = false
     elseif command == "?autosave-interval" and is_admin then
         local interval = ...
         interval = tonumber(interval)
-        
+
         if interval ~= nil then
             g_savedata.autosave_interval = interval * 3600
         end
@@ -349,6 +360,16 @@ function onGroupSpawn(group_id, peer_id, x, y, z, cost)
         if not server.getGameSettings().infinite_money and player ~= nil then
             server.notify(-1, string.format("Paid out $%.00f", cost), string.format("%s deployed vehicle.", player.name), 2)
         end
+    end
+end
+
+function onChatMessage(peer_id, name, message)
+    if not chat_ignore then
+        table.insert(g_savedata.chats, {
+            peer_id = peer_id,
+            name = name,
+            message = message,
+        })
     end
 end
 
@@ -695,4 +716,3 @@ function table.shuffle(x)
         x[i], x[j] = x[j], x[i]
     end
 end
-
