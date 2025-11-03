@@ -471,25 +471,11 @@ location_properties = { {
   dispersal_area = 100,
   report = "洋上風力発電機のエレベーターが故障, タービン室から降りられず閉じこめられている.",
   note = "パトロールからの通報",
-  -- }, {
-  --     pattern = "^mission:hostile_offshore_%d+$",
-  --     tracker = "sar",
-  --     suitable_zones = {"offshore", "underwater", "diving_spot"},
-  --     is_main_location = true,
-  --     sub_locations = {},
-  --     sub_location_min = 1,
-  --     sub_location_max = 1,
-  --     is_unique_sub_location = false,
-  --     dispersal_area = 250,
-  --     --     report = "危険生物\n危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
-  --     report_timer_min = 0,
-  --     report_timer_max = 0,
-  --     note = "パトロールからの通報",
 }, {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = "mainlands",
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:boat_sink_%d+$" },
@@ -716,6 +702,8 @@ location_properties = { {
   case = cases.alert,
   geologic = "mainlands",
   suitable_zones = { "channel", "lake", "ait", "forest", "field", "beach" },
+  count = 0,
+  save_to_history = false,
   is_main_location = true,
   sub_locations = {},
   is_unique_sub_location = false,
@@ -728,6 +716,8 @@ location_properties = { {
   case = cases.alert,
   geologic = "waters",
   suitable_zones = { "offshore" },
+  count = 0,
+  save_to_history = false,
   is_main_location = true,
   sub_locations = {},
   is_unique_sub_location = false,
@@ -740,6 +730,8 @@ location_properties = { {
   case = cases.alert,
   geologic = "waters",
   suitable_zones = { "offshore" },
+  count = 0,
+  save_to_history = false,
   is_main_location = true,
   sub_locations = {},
   is_unique_sub_location = false,
@@ -948,6 +940,7 @@ mission_trackers = {
     status = function(self)
       local text = self.locations[1].note
       text = text .. string.format("\n\n[半径]\n%dm", self.search_radius)
+      text = text .. string.format("\n\n[有効期間]\nこの警報は残り%d分間有効.", math.ceil(self.finish_timer / 3600))
 
       return text
     end
@@ -1685,7 +1678,7 @@ object_trackers = {
       if self.components ~= nil and not self.components_checked then
         self.attention = find_component(self.components.buttons, "attention")
 
-        for i = 1, 6 do
+        for i = 1, 5 do
           self.missions[i] = {}
           self.missions[i].id = find_component(self.components.buttons, string.format("mission_%d_id", i))
           self.missions[i].x = find_component(self.components.buttons, string.format("mission_%d_x", i))
@@ -1701,7 +1694,7 @@ object_trackers = {
     end,
     tick = function(self, tick)
       if self.headquarter then
-        for i = 1, 6 do
+        for i = 1, 5 do
           local id = 0
           local x = 0
           local y = 0
@@ -1788,6 +1781,8 @@ function initialize_mission(_locations, report_timer, ...)
   mission.dispersal_area = mission.locations[1].dispersal_area
   mission.tracker = mission.locations[1].tracker
   mission.case = mission.locations[1].case
+  mission.count = mission.locations[1].count
+  mission.save_to_history = mission.locations[1].save_to_history
   mission.search_center = matrix.identity()
   mission.search_radius = 0
   mission.category = 0
@@ -1808,7 +1803,10 @@ function initialize_mission(_locations, report_timer, ...)
   mission.explosive = false
   mission:init({ ... })
 
-  record_location_history(mission.locations[1])
+  if mission.save_to_history then
+    record_location_history(mission.locations[1])
+  end
+
   table.insert(g_savedata.missions, mission)
   spawn_mission(mission)
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
@@ -2584,6 +2582,9 @@ locations = {
     obj.tracker = prop.tracker or nil
     obj.case = prop.case or nil
     obj.geologic = prop.geologic or nil
+    obj.spawnable = prop.spawnable or (function() return true end)
+    obj.count = prop.count or 1
+    obj.save_to_history = prop.save_to_history or true
     obj.suitable_zones = prop.suitable_zones or {}
 
     if prop.is_main_location ~= nil then
@@ -2709,10 +2710,11 @@ locations = {
           and (g_savedata.subsystems.mission.geologic.waters and x.geologic == "waters" or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == "mainlands" or g_savedata.subsystems.mission.geologic.islands and x.geologic == "islands")
           and self:is_suitable(x, center, range_min, range_max)
           and (not is_main or not is_unprecedented or self:is_unprecedented(x))
+          and x.spawnable()
     end)
 
     if #_locations == 0 then
-      local text = "No locations has matchd your requirements were found: "
+      local text = "No locations has matchd your conditions were found: "
 
       for i = 1, #patterns do
         if i > 1 then
@@ -2742,9 +2744,10 @@ locations = {
 
       if _locations[i].tile == "" then
         local _zones = landscapes:find_all(function(x)
-          return landscapes:is_suitable(x, _locations[i], center, range_min, range_max) and
-              (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area)) and
-              not landscapes:is_occupied(x, result) and not landscapes:is_occupied(x, sibling_locations)
+          return landscapes:is_suitable(x, _locations[i], center, range_min, range_max)
+          and    (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area))
+          and    not landscapes:is_occupied(x, result)
+          and    not landscapes:is_occupied(x, sibling_locations)
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
           return x.landscape
@@ -2796,8 +2799,7 @@ locations = {
         end
       else
         console.error(string.format(
-          "Although locations matching the requirements were found, no landscapes were found for them: %s",
-          _locations[i].name))
+          "Although locations matching your conditions were found, no landscapes were found for them: %s", _locations[i].name))
       end
     end
 
@@ -3338,8 +3340,7 @@ function onTick(tick)
       g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min,
         g_savedata.subsystems.mission.interval_max)
     else
-      g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval -
-          (tick * g_savedata.subsystems.mission.timer_tickrate)
+      g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - (tick * g_savedata.subsystems.mission.timer_tickrate)
     end
   end
 
@@ -3918,7 +3919,13 @@ function set_vehicle_keypad(vehicle_id, keypad, value)
 end
 
 function missions_less_than_limit()
-  return #g_savedata.missions < (#players.items / g_savedata.subsystems.mission.player_factor)
+  local count = 0
+
+  for i = 1, #g_savedata.missions do
+    count = count + g_savedata.missions[i].count
+  end
+
+  return count < (#players.items / g_savedata.subsystems.mission.player_factor)
 end
 
 function despawn_vehicle_group(group_id, is_instant)

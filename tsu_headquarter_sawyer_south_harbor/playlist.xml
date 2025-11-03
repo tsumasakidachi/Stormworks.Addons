@@ -14,7 +14,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="3" cargo_zone_import_cargo_type="facility=respawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="-0.485027" 02="0.874499" 20="-0.874499" 22="-0.485027" 30="207.683029" 31="8.018828" 32="-352.070312"/>
+						<spawn_transform 00="-0.485027" 02="0.874499" 20="-0.874499" 22="-0.485027" 30="208.780838" 31="8.018828" 32="-349.583252"/>
 						<spawn_bounds>
 							<min x="-1.97934" y="-1.469489" z="-1.460467"/>
 							<max x="1.97934" y="1.469489" z="1.460467"/>
@@ -31,7 +31,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,facility=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
-						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="203.397629" 31="8.227949" 32="-347.613251"/>
+						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="203.397629" 31="8.227949" 32="-345.511261"/>
 						<spawn_bounds>
 							<min x="-10.635959" y="-2.087271" z="-3.241685"/>
 							<max x="10.635959" y="2.087271" z="3.241685"/>
@@ -102,7 +102,7 @@
 						<graph_links/>
 					</c>
 					<c component_type="3" id="63" name="tracker=unit,headquarter=true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_63.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
-						<spawn_transform 00="0.486143" 02="-0.873879" 20="0.873879" 22="0.486143" 30="209.528885" 31="10.940797" 32="-344.449677"/>
+						<spawn_transform 00="0.486143" 02="-0.873879" 20="0.873879" 22="0.486143" 30="209.528885" 31="10.940797" 32="-342.09079"/>
 						<spawn_bounds>
 							<min x="-8.875" y="-4.625" z="-16.125"/>
 							<max x="14.125" y="6.375" z="7.125"/>
