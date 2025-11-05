@@ -97,35 +97,35 @@ g_savedata = {
 cases = {
   ems = {
     id = 1,
-    text = "救急",
+    text = "MED 救急",
   },
   far = {
     id = 2,
-    text = "火災",
+    text = "FAR 火災",
   },
   sar = {
     id = 3,
-    text = "捜索救難",
+    text = "SAR 捜索救難",
   },
   water = {
     id = 4,
-    text = "水難",
+    text = "WAT 水難",
   },
   securite = {
     id = 5,
-    text = "警備行動",
+    text = "SEC 警備行動",
   },
   accident = {
     id = 6,
-    text = "事故",
+    text = "ACC 事故",
   },
   mayday = {
     id = 7,
-    text = "メーデー",
+    text = "MDY メーデー",
   },
   alert = {
     id = 8,
-    text = "警報"
+    text = "ALT 警報"
   }
 }
 
@@ -137,8 +137,8 @@ location_properties = { {
   suitable_zones = { "forest", "mountain" },
   is_main_location = false,
   sub_locations = { "^mission:climber_missing_%d+$", "^mission:raft_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 500,
   report = "悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
@@ -208,7 +208,7 @@ location_properties = { {
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
-  sub_location_min = 1,
+  sub_location_min = 2,
   sub_location_max = 3,
   is_unique_sub_location = false,
   dispersal_area = 1000,
@@ -224,8 +224,8 @@ location_properties = { {
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 1000,
   report = "本船客室より出火し, 船全体に火の手が回りつつあり非常に危険な状況である. 迅速な救援を求む.",
@@ -240,8 +240,8 @@ location_properties = { {
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 1000,
   report = "積荷の石油に火がアアア......",
@@ -284,8 +284,8 @@ location_properties = { {
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 2000,
   report = "本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
@@ -330,8 +330,8 @@ location_properties = { {
   suitable_zones = { "diving_spot" },
   is_main_location = true,
   sub_locations = { "^mission:diver_missing_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 500,
   report = "ダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
@@ -355,8 +355,8 @@ location_properties = { {
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 5,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 2000,
   report = "操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
@@ -373,8 +373,8 @@ location_properties = { {
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:car_collision_%d+$", "^mission:car_stuck_%d+$" },
-  sub_location_min = 3,
-  sub_location_max = 5,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 500,
   report = "大型トラックの事故で大火災が発生. トンネルの中が全部燃えていてこのままでは全員焼け死んでしまう!",
@@ -411,8 +411,8 @@ location_properties = { {
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_land_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = true,
   dispersal_area = 1000,
   report = "バラバラになって落ちていく飛行機が見えた!",
@@ -453,8 +453,8 @@ location_properties = { {
   suitable_zones = { "forest", "field", "mountain", "hill" },
   is_main_location = true,
   sub_locations = { "^mission:climber_missing_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 500,
   report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
@@ -479,8 +479,8 @@ location_properties = { {
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:boat_sink_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   is_unique_sub_location = false,
   dispersal_area = 500,
   report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
@@ -1553,7 +1553,7 @@ object_trackers = {
       return false
     end,
     reward_base = 5,
-    text = "残骸をスクラップヤードへ輸送",
+    text = "残骸を基地へ輸送(報酬あり)\nまたは破壊(報酬なし)",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -1681,10 +1681,10 @@ object_trackers = {
         for i = 1, 5 do
           self.missions[i] = {}
           self.missions[i].id = find_component(self.components.buttons, string.format("mission_%d_id", i))
-          self.missions[i].x = find_component(self.components.buttons, string.format("mission_%d_x", i))
-          self.missions[i].y = find_component(self.components.buttons, string.format("mission_%d_y", i))
-          self.missions[i].r = find_component(self.components.buttons, string.format("mission_%d_r", i))
-          self.missions[i].c = find_component(self.components.buttons, string.format("mission_%d_c", i))
+          self.missions[i].c = find_component(self.components.buttons, string.format("mission_%d_code", i))
+          self.missions[i].x = find_component(self.components.buttons, string.format("mission_%d_gpsx", i))
+          self.missions[i].y = find_component(self.components.buttons, string.format("mission_%d_gpsy", i))
+          self.missions[i].r = find_component(self.components.buttons, string.format("mission_%d_radius", i))
         end
 
         self.components_checked = true
@@ -1711,10 +1711,10 @@ object_trackers = {
           end
 
           if self.missions[i].id ~= nil then set_vehicle_keypad(self.id, self.missions[i].id, id) end
+          if self.missions[i].c ~= nil then set_vehicle_keypad(self.id, self.missions[i].c, c) end
           if self.missions[i].x ~= nil then set_vehicle_keypad(self.id, self.missions[i].x, x) end
           if self.missions[i].y ~= nil then set_vehicle_keypad(self.id, self.missions[i].y, y) end
           if self.missions[i].r ~= nil then set_vehicle_keypad(self.id, self.missions[i].r, r) end
-          if self.missions[i].c ~= nil then set_vehicle_keypad(self.id, self.missions[i].c, c) end
         end
       end
     end,
@@ -2685,7 +2685,9 @@ locations = {
     local noise_x = math.random() * 1000 - 500
     local noise_z = math.random() * 1000 - 500
     local noise = matrix.translation(noise_x, 0, noise_z)
+    local noise_rotation_y = matrix.rotationY(math.random() * 2 * math.pi)
     transform = matrix.multiply(transform, noise)
+    transform = matrix.multiply(transform, noise_rotation_y)
 
     return transform, s
   end,
