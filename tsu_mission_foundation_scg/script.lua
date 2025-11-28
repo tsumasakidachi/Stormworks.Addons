@@ -3,7 +3,7 @@ version = "1.3.0"
 
 -- properties
 g_savedata = {
-  mode = "prod",
+  mode = "debug",
   missions = {},
   objects = {},
   oil_spills = {},
@@ -12,6 +12,7 @@ g_savedata = {
   players_map = {},
   players_alert = {},
   players_enroute = {},
+  locations_count = 0,
   locations_history = {},
   location_comparer = "pattern",
   subsystems = {
@@ -697,6 +698,19 @@ location_properties = { {
   dispersal_area = 1000,
   report = "このエリアに隕石の落下が予測されている...",
   note = "気象当局からの通報",
+}, {
+  pattern = "^device:lakiston$",
+  tracker = nil,
+  case = nil,
+  geologic = nil,
+  suitable_zones = {},
+  count = 0,
+  save_to_history = false,
+  is_main_location = false,
+  sub_locations = {},
+  dispersal_area = 0,
+  report = "",
+  note = "捜査犬ラキストン",
 } }
 
 facilty_properties = { {
@@ -1545,6 +1559,8 @@ object_trackers = {
         self.illigal = true
         self.found = false
       end
+
+      self.destination = nil
       -- if is_vehicle(self) then
       --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
       -- elseif is_object(self) then
@@ -1598,7 +1614,9 @@ object_trackers = {
       return type == "creature" and tags.tracker == "sniffer"
     end,
     init = function(self)
-      server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
+      self.vital = server.getObjectData(self.id)
+      self.destination = nil
+      -- server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
     end,
     clear = function(self)
     end,
@@ -1607,6 +1625,27 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
+      -- local distance = math.maxinteger
+      -- local rescuee = nil
+
+      -- for i = 1, #g_savedata.objects do
+      --   if g_savedata.objects[i].tracker == "rescuee" then
+      --     local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
+
+      --     if _d <= 1000 and _d < distance then
+      --       rescuee = g_savedata.objects[i]
+      --       distance = _d
+      --     end
+      --   end
+      -- end
+
+      -- if self.destination == nil then
+      --   self.destination = matrix.translation(7279, 12, -10358)
+      --   server.setCreatureMoveTarget(self.id, self.destination)
+      -- end
+
+      local vital = server.getObjectData(self.id)
+      self.vital = vital
     end,
     dispensable = function(self)
       return false
@@ -1615,7 +1654,7 @@ object_trackers = {
       return false
     end,
     fail = function(self)
-      return false
+      return self.vital.dead
     end,
     reward = function(self)
       return self.reward_base
@@ -1740,6 +1779,8 @@ function random_mission(center, range_max, range_min, is_unprecedented, pattern)
 
   if pattern ~= nil then
     patterns[1] = pattern
+  else
+    patterns[1] = "^mission:.+$"
   end
 
   local _locations = locations:random(center, range_min, range_max, true, is_unprecedented, patterns)
@@ -1878,7 +1919,7 @@ function spawn_mission(mission)
   local x, y, z, object_count, location_count = 0, 0, 0, 0, #mission.locations
 
   for i = 1, location_count do
-    spawn_location(mission.locations[i], mission.id, i)
+    spawn_location(mission.locations[i], mission.id)
   end
 
   for i = 1, #g_savedata.objects do
@@ -1906,7 +1947,7 @@ function spawn_mission(mission)
 
     for j = 1, #sub_locations do
       table.insert(mission.locations, sub_locations[j])
-      spawn_location(sub_locations[j], mission.id, #mission.locations)
+      spawn_location(sub_locations[j], mission.id)
     end
   end
 
@@ -2135,13 +2176,11 @@ end
 function despawn_object(object)
   if is_vehicle(object) then
     server.despawnVehicle(object.id, true)
-  else
-    if is_object(object) then
-      server.despawnObject(object.id, true)
-    end
-
-    clear_object(object)
+  elseif is_object(object) then
+    server.despawnObject(object.id, true)
   end
+
+  clear_object(object)
 end
 
 function tick_object(object, tick)
@@ -2259,7 +2298,7 @@ function tick_object(object, tick)
       object.completed = true
     end
 
-    if object.mission ~= nil and (object.completed or object.failed) then
+    if object.completed or object.failed then
       if object.elapsed_clear >= object.clear_timer then
         despawn_object(object)
       else
@@ -2576,20 +2615,14 @@ locations = {
   refresh = function(self)
     self.items = self:load()
   end,
-  match_name = function(self, location, patterns)
-    local matched = false
-
-    for i = 1, #patterns do
-      matched = matched or string.match(location.name, patterns[i]) ~= nil
-    end
-
-    return matched
+  is_match = function(self, location, pattern)
+    return string.match(location.name, pattern) ~= nil
   end,
   is_match_multipattern = function(self, location, patterns)
     local is = false
 
     for i = 1, #patterns do
-      is = is or string.match(location.name, patterns[i]) ~= nil
+      is = is or self:is_match(location, patterns[i])
     end
 
     return is
@@ -2776,7 +2809,9 @@ locations = {
   end
 }
 
-function spawn_location(location, mission_id, location_id)
+function spawn_location(location, mission_id)
+  g_savedata.locations_count = g_savedata.locations_count + 1
+  local location_id = g_savedata.locations_count
   local vehicles = {}
   local characters = {}
   local fires = {}
@@ -3297,10 +3332,8 @@ function onTick(tick)
 
   if g_savedata.subsystems.mission.timer_tickrate > 0 then
     if g_savedata.subsystems.mission.interval <= 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
-      random_mission(get_center_transform(), g_savedata.subsystems.mission.range_max,
-        g_savedata.subsystems.mission.range_min)
-      g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min,
-        g_savedata.subsystems.mission.interval_max)
+      random_mission(get_center_transform(), g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min)
+      g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min, g_savedata.subsystems.mission.interval_max)
     else
       g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - (tick * g_savedata.subsystems.mission.timer_tickrate)
     end
@@ -3336,8 +3369,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         return
       end
 
-      random_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, false,
-        location)
+      random_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, false, location)
     elseif verb == "clear-all" and is_admin then
       for i = #g_savedata.missions, 1, -1 do
         clear_mission(g_savedata.missions[i])
@@ -3551,6 +3583,14 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
           console.log(string.format("%s#%d %s", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].name))
         end
       end
+    end
+  elseif command == "?device" and is_admin then
+    if verb == "init" then
+      local name = ...
+
+      local location = table.find(locations.items, function(x) return locations:is_match(x, "^" .. name .. "$") end)
+      local player = table.find(players.items, function(x) return x.id == peer_id end)
+      spawn_location(location, player.transform)
     end
   elseif command == "?tp" then
     local target = tonumber(verb)
