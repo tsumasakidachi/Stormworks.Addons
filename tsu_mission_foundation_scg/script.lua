@@ -1180,14 +1180,17 @@ object_trackers = {
       self.admitted_time = 0
       self.picked = false
       self.team = 2
+      self.activated = false
       self.neutralized = false
       self.ai_state = 0
       self.destination = nil
+      self.target = nil
       self.close_quarters = false
       self.weapon = nil
       self.ransom_paid = false
+      server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
       server.setAICharacterTeam(self.id, self.team)
-      server.setAICharacterTargetTeam(self.id, 1, false)
+      server.setAICharacterTargetTeam(self.id, 1, true)
     end,
     clear = function(self)
     end,
@@ -1198,30 +1201,31 @@ object_trackers = {
     tick = function(self, tick)
       local character_vehicle = server.getCharacterVehicle(self.id)
       local vital_update = server.getCharacterData(self.id)
-      local vehicle_id = server.getCharacterVehicle(self.id)
       local is_in_police_sta = facilities:is_in_facility(self.transform, "police_station")
       local is_in_base = facilities:is_in_facility(self.transform, "base")
       local picked = table.any(g_savedata.objects, function(x)
         return character_vehicle > 0 and x.tracker == "unit" and x.player_owned and x.id == character_vehicle
       end)
 
-      if not self.neutralized and self.command ~= nil and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and self.mounted and vehicle_id == 0) then
-        self.neutralized = true
-        self.ai_state = 0
-        server.setAIState(self.id, self.ai_state)
-        server.setAICharacterTargetTeam(self.id, 1, false)
-        server.setCharacterItem(self.id, 9, 23, false, 1, 100)
-
-        if self.weapon ~= nil then
-          server.setCharacterItem(self.id, self.weapon.slot, 0, false, 0, 0.0)
-        end
-
-        console.notify(string.format("%s#%d has neutralized.", self.tracker, self.id))
+      if self.simulated and self.role == nil and self.weapon == nil then
+        self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
+        server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
       end
 
-      if not self.neutralized then
-        local vehicle_closest = nil
-        local vehicle_distance = math.maxinteger
+      if self.simulated and self.command == nil and players:is_in_range(self.transform, self.invocation_distance) then
+        local command = table.random(self.commands)
+
+        for i = 1, #g_savedata.objects do
+          if g_savedata.objects[i].mission == self.mission and g_savedata.objects[i].tracker == self.tracker and g_savedata.objects[i].team == self.team then
+            g_savedata.objects[i].command = command
+            console.notify(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
+          end
+        end
+      end
+
+      if self.simulated and self.command ~= nil and not self.neutralized then
+        local unit_closest = nil
+        local unit_distance = math.maxinteger
         local player_closest = nil
         local player_distance = math.maxinteger
 
@@ -1229,9 +1233,9 @@ object_trackers = {
           if g_savedata.objects[i].tracker == "unit" and g_savedata.objects[i].player_owned then
             local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
 
-            if _d < 500 and _d < vehicle_distance then
-              vehicle_distance = _d
-              vehicle_closest = g_savedata.objects[i]
+            if _d < 500 and _d < unit_distance then
+              unit_distance = _d
+              unit_closest = g_savedata.objects[i]
             end
           end
         end
@@ -1252,43 +1256,27 @@ object_trackers = {
               self.paths = pathfind(self.transform, self.destination, "ocean_path", "")
               self.ai_state = 1
               server.setAIState(self.id, self.ai_state)
-              server.setAICharacterTargetTeam(self.id, 1, true)
             end
           elseif self.command == "attack" then
-            if vehicle_closest ~= nil then
+            if self.ai_state == 0 then
               self.ai_state = 1
-              server.setAITarget(self.id, vehicle_closest.transform)
               server.setAIState(self.id, self.ai_state)
-              server.setAICharacterTargetTeam(self.id, 1, true)
+            end
+
+            if unit_closest ~= nil then
+              server.setAITarget(self.id, unit_closest.transform)
             end
           end
-        elseif self.role ~= nil and string.match(self.role, "^gunner%s-%d-$") ~= nil then
-          if self.ai_state == 0 then
-            self.ai_state = 1
-            server.setAIState(self.id, self.ai_state)
-            server.setAICharacterTargetTeam(self.id, 1, true)
-          end
-
-          if player_distance <= vehicle_distance and player_closest ~= nil then
-            server.setAITargetCharacter(self.id, player_closest.object_id)
-          elseif vehicle_closest ~= nil then
-            server.setAITargetVehicle(self.id, vehicle_closest.id)
-          end
-        elseif self.role ~= nil and string.match(self.role, "^designator%s-%d-$") ~= nil then
-          if self.ai_state == 0 then
-            self.ai_state = 1
-            server.setAIState(self.id, self.ai_state)
-            server.setAICharacterTargetTeam(self.id, 1, true)
-          end
         else
-          if self.weapon == nil then
-            self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
-            server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
-            server.setAICharacterTargetTeam(self.id, 1, true)
+          if self.role ~= nil and (string.match(self.role, "^gunner%s-%d-$") ~= nil or string.match(self.role, "^designator%s-%d-$") ~= nil) then
+            if self.ai_state == 0 then
+              self.ai_state = 1
+              server.setAIState(self.id, self.ai_state)
+            end
           end
 
-          if self.mount_vehicle ~= nil and self.mount_seat ~= nil then
-            local close_quarters_update = vehicle_distance < 100 or player_distance < 100
+          if self.weapon ~= nil and self.mount_vehicle ~= nil and self.mount_seat ~= nil then
+            local close_quarters_update = unit_distance < 100 or player_distance < 100
 
             if close_quarters_update and not self.close_quarters then
               local t = matrix.translation(0, 0.25, 0)
@@ -1306,7 +1294,39 @@ object_trackers = {
 
             self.close_quarters = close_quarters_update
           end
+
+          local target = nil
+
+          if player_closest ~= nil and player_distance <= unit_distance then
+            target = player_closest.object_id
+
+            if target ~= self.target then
+              server.setAITargetCharacter(self.id, target)
+            end
+          elseif unit_closest ~= nil then
+            target = unit_closest.id
+
+            if target ~= self.target then
+              server.setAITargetVehicle(self.id, target)
+            end
+          end
+
+          self.target = target
         end
+      end
+
+      if not self.neutralized and (vital_update.incapacitated or vital_update.dead or self.role ~= nil and self.mounted and vehicle_id == 0) then
+        self.neutralized = true
+        self.ai_state = 0
+        server.setAIState(self.id, self.ai_state)
+        server.setAICharacterTargetTeam(self.id, 1, false)
+        server.setCharacterItem(self.id, 9, 23, false, 1, 100)
+
+        if self.weapon ~= nil then
+          server.setCharacterItem(self.id, self.weapon.slot, 0, false, 0, 0.0)
+        end
+
+        console.notify(string.format("%s#%d has neutralized.", self.tracker, self.id))
       end
 
       if is_in_base or is_in_police_sta then
@@ -1652,7 +1672,7 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
-      if self.headquarter then
+      if self.components_checked and self.headquarter then
         for i = 1, 5 do
           local id = 0
           local x = 0
@@ -2137,19 +2157,6 @@ function tick_object(object, tick)
     if object.mount_vehicle ~= nil and not object.mounted then
       object.mounted = mount_vehicle(object)
     end
-
-    if object.simulated and object.type == "character" and #object.commands > 0 and object.command == nil and players:is_in_range(object.transform, object.invocation_distance) then
-      local command = table.random(object.commands)
-
-      for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].mission == object.mission and g_savedata.objects[i].type == object.type and g_savedata.objects[i].team == object.team and matrix.distance(g_savedata.objects[i].transform, object.transform) <= 50 then
-          local data = server.getObjectData(g_savedata.objects[i].id)
-          server.setCharacterData(g_savedata.objects[i].id, data.hp, data.interactable, true)
-          g_savedata.objects[i].command = command
-          console.notify(string.format("%s#%d has invoked %s command.", g_savedata.objects[i].type, g_savedata.objects[i].id, g_savedata.objects[i].command))
-        end
-      end
-    end
   end
 
   if object.simulated and object.type == "character" and #object.paths > 0 and object.ai_state > 0 then
@@ -2430,7 +2437,7 @@ end
 function mount_vehicle(object)
   local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == object.mount_vehicle end)
 
-  if vehicle == nil or not vehicle.loaded then
+  if vehicle == nil or not vehicle.simulated then
     return false
   end
 
@@ -2700,9 +2707,9 @@ locations = {
       if _locations[i].tile == "" then
         local _zones = landscapes:find_all(function(x)
           return landscapes:is_suitable(x, _locations[i], center, range_min, range_max)
-          and    (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area))
-          and    not landscapes:is_occupied(x, result)
-          and    not landscapes:is_occupied(x, sibling_locations)
+              and (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area))
+              and not landscapes:is_occupied(x, result)
+              and not landscapes:is_occupied(x, sibling_locations)
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
           return x.landscape
@@ -3602,9 +3609,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
 end
 
 function onPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
-  if peer_id < 0 or name == "Server" then
-    return
-  end
+  -- if peer_id < 0 or name == "Server" then
+  --   return
+  -- end
 
   local character_id = server.getPlayerCharacterID(peer_id)
   local transform = server.getPlayerPos(peer_id)
