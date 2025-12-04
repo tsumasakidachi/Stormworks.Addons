@@ -784,7 +784,7 @@ targets = {
   oil_spill = "oil_spill",
   failure = "failure",
   cargo = "cargo",
-  illigal_cargo = "illigal_cargo",
+  illigal_vehicle = "illigal_vehicle",
   wreckage = "wreckage",
 }
 
@@ -796,53 +796,62 @@ responses = {
   transportation = "transportation",
 }
 
-objectives = {
-  {
-    target = targets.rescuee,
-    response = responses.search,
-    text = "要救助者をHQか病院へ搬送",
-  }, {
-    target = targets.suspect,
-    response = responses.search,
-    text = "被疑者をHQか警察署へ連行",
-  }, {
-    target = targets.illigal_cargo,
-    response = responses.search,
-    text = "違法貨物を捜索",
-  }, {
-    target = targets.fire,
-    response = responses.extinguish,
-    text = "火災を鎮圧",
-  }, {
-    target = targets.forest_fire,
-    response = responses.extinguish,
-    text = "森林火災を鎮圧",
-  }, {
-    target = targets.hostile,
-    response = responses.destroy,
-    text = "危険生物を排除",
-  }, {
-    target = targets.oil_spill,
-    response = responses.remediation,
-    text = "漏出した油を回収",
-  }, {
-    target = targets.failure,
-    response = responses.remediation,
-    text = "故障個所を修繕",
-  }, {
-    target = targets.cargo,
-    response = responses.transportation,
-    text = "貨物を配送先へ輸送",
-  }, {
-    target = targets.illigal_cargo,
-    response = responses.transportation,
-    text = "違法貨物をHQへ輸送",
-  }, {
-    target = targets.wreckage,
-    response = responses.transportation,
-    text = "残骸をHQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
-  },
-}
+objectives = { {
+  target = targets.rescuee,
+  response = responses.search,
+  text = "要救助者をHQか病院へ搬送",
+  text_picked = "収容済み",
+}, {
+  target = targets.suspect,
+  response = responses.search,
+  text = "被疑者をHQか警察署へ連行",
+  text_picked = "収容済み",
+}, {
+  target = targets.illigal_vehicle,
+  response = responses.search,
+  text = "積荷の違法性を検査",
+  text_picked = nil,
+}, {
+  target = targets.fire,
+  response = responses.extinguish,
+  text = "火災を鎮圧",
+  text_picked = nil,
+}, {
+  target = targets.forest_fire,
+  response = responses.extinguish,
+  text = "森林火災を鎮圧",
+  text_picked = nil,
+}, {
+  target = targets.hostile,
+  response = responses.destroy,
+  text = "危険生物を排除",
+  text_picked = nil,
+}, {
+  target = targets.oil_spill,
+  response = responses.remediation,
+  text = "漏出した油を回収",
+  text_picked = nil,
+}, {
+  target = targets.failure,
+  response = responses.remediation,
+  text = "故障個所を修繕",
+  text_picked = nil,
+}, {
+  target = targets.cargo,
+  response = responses.transportation,
+  text = "貨物を配送先へ輸送",
+  text_picked = nil,
+}, {
+  target = targets.illigal_vehicle,
+  response = responses.transportation,
+  text = "違法な乗り物をHQへ輸送",
+  text_picked = nil,
+}, {
+  target = targets.wreckage,
+  response = responses.transportation,
+  text = "残骸をHQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
+  text_picked = nil,
+}, }
 
 mission_trackers = {
   sar = {
@@ -881,23 +890,47 @@ mission_trackers = {
 
       text = text .. "\n\n[目標]"
 
-      for tracker, data in pairs(self.objectives) do
-        if data.count > 0 then
-          text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
+      -- for tracker, data in pairs(self.objectives) do
+      --   if data.count > 0 then
+      --     text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
 
-          if data.count_picked > 0 then
-            text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
+      --     if data.count_picked > 0 then
+      --       text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
+      --     end
+
+      --     if #data.contents > 0 then
+      --       text = text .. "\n("
+
+      --       for i = 1, #data.contents do
+      --         if i > 1 then
+      --           text = text .. ", "
+      --         end
+
+      --         text = text .. data.contents[i]
+      --       end
+
+      --       text = text .. ")"
+      --     end
+      --   end
+      -- end
+
+      for i = 1, #self.objectives do
+        if self.objectives[i].count > 0 then
+          text = text .. string.format("\n%.0f %s", self.objectives[i].count, self.objectives[i].text)
+
+          if self.objectives[i].count_picked > 0 then
+            text = text .. string.format("\n(%.0f %s)", self.objectives[i].count_picked, "収容済み")
           end
 
-          if #data.contents > 0 then
+          if #self.objectives[i].contents > 0 then
             text = text .. "\n("
 
-            for i = 1, #data.contents do
-              if i > 1 then
+            for j = 1, #self.objectives[i].contents do
+              if j > 1 then
                 text = text .. ", "
               end
 
-              text = text .. data.contents[i]
+              text = text .. self.objectives[i].contents[j]
             end
 
             text = text .. ")"
@@ -1126,13 +1159,16 @@ object_trackers = {
     count = function(self)
       return 1
     end,
+    objectives = function(self)
+      return {
+        objective(responses.search, targets.rescuee, 1, self.picked and 1 or 0),
+      }
+    end,
     reported = function(self)
       return true
     end,
     mapped = function(self)
-      local mission = table.find(g_savedata.missions, function(x)
-        return x.id == self.mission
-      end)
+      local mission = table.find(g_savedata.missions, function(x) return x.id == self.mission end)
       return mission.taken_to_long
     end,
     reward_base = 2000,
@@ -1212,6 +1248,11 @@ object_trackers = {
         return 0
       end
     end,
+    objectives = function(self)
+      return {
+        objective(responses.extinguish, targets.fire, self.activated and 1 or 0, 0),
+      }
+    end,
     reported = function(self)
       return true
     end,
@@ -1257,6 +1298,11 @@ object_trackers = {
     count = function(self)
       return 1
     end,
+    objectives = function(self)
+      return {
+        objective(responses.extinguish, targets.forest_fire, 1, 0),
+      }
+    end,
     reported = function(self)
       return true
     end,
@@ -1279,6 +1325,7 @@ object_trackers = {
       self.is_in_the_act = false
       self.team = 2
       self.activated = false
+      self.illigal = false
       self.neutralized = false
       self.ai_state = 0
       self.destination = nil
@@ -1428,13 +1475,14 @@ object_trackers = {
         end
       end
 
-      if is_in_base or is_in_police_sta then
-        self.admitted_time = self.admitted_time + tick
-      end
-
-      self.activated = self.command == "attack" or self.command == "escape"
+      self.activated = self.activated or self.command == "attack" or self.command == "escape"
+      self.illigal = self.illigal or self.activated or has_illigality(self.mission)
       self.picked = picked
       self.vital = vital_update
+
+      if self.illigal and (is_in_base or is_in_police_sta) then
+        self.admitted_time = self.admitted_time + tick
+      end
     end,
     dispensable = function(self)
       return false
@@ -1457,6 +1505,11 @@ object_trackers = {
       else
         return 0
       end
+    end,
+    objectives = function(self)
+      return {
+        objective(responses.search, targets.suspect, self.illigal and 1 or 0, self.picked and 1 or 0),
+      }
     end,
     reported = function(self)
       return true
@@ -1520,6 +1573,11 @@ object_trackers = {
     count = function(self)
       return 1
     end,
+    objectives = function(self)
+      return {
+        objective(responses.destroy, targets.hostile, 1, 0),
+      }
+    end,
     reported = function(self)
       return true
     end,
@@ -1576,6 +1634,11 @@ object_trackers = {
     end,
     count = function(self)
       return self.amount
+    end,
+    objectives = function(self)
+      return {
+        objective(responses.remediation, targets.oil_spill, 1, 0),
+      }
     end,
     reported = function(self)
       return true
@@ -1651,6 +1714,19 @@ object_trackers = {
     count = function(self)
       return 1
     end,
+    objectives = function(self)
+      local o = {}
+
+      if self.illigal and not self.investigated then
+        table.insert(o, objective(responses.search, targets.illigal_vehicle, #self.investigation_points, 0))
+      elseif self.illigal and self.investigated then
+        table.insert(o, objective(responses.transportation, targets.illigal_vehicle, 1, 0, self.name))
+      elseif self.wreckage then
+        table.insert(o, objective(responses.transportation, targets.wreckage, 1, 0, self.name))
+      end
+
+      return o
+    end,
     reported = function(self)
       return true
     end,
@@ -1669,17 +1745,6 @@ object_trackers = {
       return g_savedata.subsystems.cargo.tracker and (type == "vehicle" or type == "object") and tags.tracker == "cargo"
     end,
     init = function(self)
-      if self.tags.illigal == "true" then
-        self.illigal = true
-        self.found = false
-      end
-
-      self.destination = nil
-      -- if is_vehicle(self) then
-      --   server.setVehicleTooltip(self.id, string.format("%s\n\nVehicle ID: %d", self.text, self.id))
-      -- elseif is_object(self) then
-      --   server.setCharacterTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
-      -- end
     end,
     clear = function(self)
     end,
@@ -1690,7 +1755,7 @@ object_trackers = {
     tick = function(self, tick)
     end,
     dispensable = function(self)
-      return self.mission ~= nil
+      return false
     end,
     complete = function(self)
       return false
@@ -1702,7 +1767,7 @@ object_trackers = {
       return 0
     end,
     label = function(self)
-      return self.illigal and self.text_illigal or self.text
+      return self.text
     end,
     count = function(self)
       if self.found then
@@ -1710,6 +1775,11 @@ object_trackers = {
       else
         return 0
       end
+    end,
+    objectives = function(self)
+      return {
+        objective(responses.transportation, targets.cargo, 1, 0),
+      }
     end,
     reported = function(self)
       return true
@@ -1719,7 +1789,6 @@ object_trackers = {
     end,
     reward_base = 10,
     text = "貨物を配送先へ輸送",
-    text_illigal = "違法貨物を回収して基地へ搬送",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -1738,7 +1807,8 @@ object_trackers = {
       self.search_speed = math.random() + 0.5
       self.search_completion_time = 900 * self.search_speed
       self.search_duration = 0
-      server.setCreatureTooltip(self.id, string.format("%s%s\n\nObject ID: %d", self.text, self.name, self.id))
+      server.setAICharacterTeam(self.id, 1)
+      server.setCharacterTooltip(self.id, string.format("%s%s\n\nObject ID: %d", self.text, self.name, self.id))
     end,
     clear = function(self)
     end,
@@ -1794,13 +1864,19 @@ object_trackers = {
             self.search_duration = self.search_duration + tick
 
             if self.search_duration >= self.search_completion_time then
-              investigate(interactions.items[i])
+              local illigality = investigate(interactions.items[i])
+
+              if illigality then
+                server.notify(-1, "ワンワン!", "違法貨物を発見!", 1)
+              else
+                server.notify(-1, "ヘッヘッヘッ.", "違法貨物は発見されなかった.", 1)
+              end
             end
           end
         end
 
         if is_investigating then
-          console.notify(self.search_duration)
+          server.notify(-1, "スンスン...", "捜査犬が違法貨物を検査中...", 0)
         end
 
         if not is_investigating and self.search_duration > 0 then
@@ -1827,6 +1903,9 @@ object_trackers = {
     end,
     count = function(self)
       return 1
+    end,
+    objectives = function(self)
+      return {}
     end,
     reported = function(self)
       return true
@@ -1917,6 +1996,9 @@ object_trackers = {
     count = function(self)
       return 1
     end,
+    objectives = function(self)
+      return {}
+    end,
     reported = function(self)
       return true
     end,
@@ -1968,7 +2050,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.save_to_history = mission.locations[1].save_to_history
   mission.search_center = matrix.identity()
   mission.search_radius = 0
-  mission.category = 0
+  mission.category = mission.locations[1].category
   mission.reported = false
   mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
   mission.spawned = false
@@ -1982,7 +2064,6 @@ function initialize_mission(_locations, report_timer, ...)
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
-  mission.category = aggregate_mission_category(mission)
   mission.explosive = false
   mission:init({ ... })
 
@@ -2023,7 +2104,6 @@ function tick_mission(mission, tick)
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
-  mission.category = aggregate_mission_category(mission)
   mission.explosive = has_explosive_event(mission)
 
   if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
@@ -2058,10 +2138,6 @@ function tick_mission(mission, tick)
     alert_headquarter()
 
     local notification_type = 0
-
-    if mission.category >= 2 then
-      notification_type = 1
-    end
 
     server.notify(-1, mission:report(), mission.locations[1].note, notification_type)
     mission.reported = true
@@ -2168,70 +2244,63 @@ function aggregate_mission_events(mission)
 end
 
 function aggregate_mission_objectives(mission)
-  local objs = {}
+  local objs_result = {}
 
-  for k, v in pairs(object_trackers) do
-    objs[k] = {
+  for i = 1, #objectives do
+    local obj = {
+      target = objectives[i].target,
+      response = objectives[i].response,
+      text = objectives[i].text,
+      text_picked = objectives[i].text_picked,
       count = 0,
-      obligatory = 0,
-      dispensable = 0,
       count_picked = 0,
       contents = {}
     }
-  end
 
-  for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].tracker ~= nil then
-      local data = objs[g_savedata.objects[i].tracker]
-      local amount = g_savedata.objects[i]:count()
+    for j = 1, #g_savedata.objects do
+      if g_savedata.objects[j].mission == mission.id and g_savedata.objects[j].objectives ~= nil then
+        local objs_object = g_savedata.objects[j]:objectives()
 
-      data.count = data.count + amount
-
-      -- if g_savedata.objects[i]:dispensable() then
-      --     data.dispensable = data.dispensable + amount
-      -- else
-      --     data.obligatory = data.obligatory + amount
-      -- end
-
-      if g_savedata.objects[i].picked then
-        data.count_picked = data.count_picked + amount
-      end
-
-      if not string.nil_or_empty(g_savedata.objects[i].name) then
-        table.insert(data.contents, g_savedata.objects[i].name)
-        data.contents = table.distinct(data.contents)
+        for k = 1, #objs_object do
+          if obj.target == objs_object[k].target and obj.response == objs_object[k].response then
+            obj.count = obj.count + objs_object[k].count
+            obj.count_picked = obj.count_picked + objs_object[k].count_picked
+            table.insert(obj.contents, objs_object[k].content)
+          end
+        end
       end
     end
+
+    obj.contents = table.distinct(obj.contents)
+
+    table.insert(objs_result, obj)
   end
 
-  return objs
+  return objs_result
 end
 
-function aggregate_mission_category(mission)
-  local category = 0
-  local category_basis = 0
-  local category_bonus = 0
-
-  if mission.objectives.rescuee.count >= 20 or mission.objectives.fire.count >= 25 or mission.objectives.suspect.count >= 10 or mission.objectives.forest_fire.count >= 1 or mission.search_radius > 1000 then
-    category_basis = 2
-  elseif mission.objectives.rescuee.count >= 5 or mission.objectives.fire.count >= 5 or mission.objectives.suspect.count >= 2 or mission.search_radius > 500 then
-    category_basis = 1
-  else
-    category_basis = 0
-  end
-
-  category_bonus = math.min(category_bonus, 2)
-  category = math.max(mission.category, category_basis + category_bonus)
-
-  -- if category >= 2 and mission.category < 2 then
-  --     server.notify(-1, string.format("ミッション#%dの状況が深刻.", mission.id), "詳細はミッション情報を確認せよ.", 1)
-  -- end
-
-  return category
+function objective(response, target, count, count_picked, content)
+  return {
+    response = response,
+    target = target,
+    count = count,
+    count_picked = count_picked,
+    content = content
+  }
 end
 
 function has_explosive_event(mission)
   return table.contains(mission.events, "chemical") or table.contains(mission.events, "dust") or table.contains(mission.events, "oil") or table.contains(mission.events, "gas")
+end
+
+function has_illigality(mission_id)
+  local illigal = false
+
+  for i = 1, #g_savedata.objects do
+    illigal = illigal or g_savedata.objects[i].mission == mission_id and (g_savedata.objects[i].tracker == "accessory" and g_savedata.objects[i].investigated and g_savedata.objects[i].illigal) or (g_savedata.objects[i].tracker == "suspect" and g_savedata.objects[i].illigal)
+  end
+
+  return illigal
 end
 
 -- objects
@@ -3329,18 +3398,13 @@ interactions = {
 }
 
 function investigate(zone)
-  local illigal = math.random(0, 99) < 80
+  local illigal = math.random(0, 99) < 50
   table.insert(g_savedata.investigation_points, {
     vehicle_id = zone.parent_vehicle_id,
     name = zone.name,
     illigal = illigal,
   })
-
-  if illigal then
-    console.notify("違法貨物を発見!")
-  else
-    console.notify("この場所に違法性のある貨物は発見されなかった.")
-  end
+  return illigal
 end
 
 -- headquarter
