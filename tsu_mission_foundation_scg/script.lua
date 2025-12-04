@@ -8,6 +8,7 @@ g_savedata = {
   objects = {},
   oil_spills = {},
   oil_spill_count = 0,
+  investigation_points = {},
   players = {},
   players_map = {},
   players_alert = {},
@@ -741,6 +742,8 @@ interactions_property = { {
   mapped = true,
   icon = 3,
 }, {
+  type = "investigate",
+}, {
   type = "first_spawn",
 }, {
   type = "respawn",
@@ -769,6 +772,54 @@ strings = {
   notice = {
     massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ.",
     mission_taken_to_long = "協力者によってミッション#%dの残りの行方不明者が発見された.",
+  },
+}
+
+objectives = {
+  {
+    target = "rescuee",
+    response = "search",
+    text = "要救助者をHQか病院へ搬送",
+  }, {
+    target = "suspect",
+    response = "search",
+    text = "被疑者をHQか警察署へ連行",
+  }, {
+    target = "illigal_cargo",
+    response = "search",
+    text = "違法貨物を捜索",
+  }, {
+    target = "fire",
+    response = "extinguish",
+    text = "火災を鎮圧",
+  }, {
+    target = "forest_fire",
+    response = "extinguish",
+    text = "森林火災を鎮圧",
+  }, {
+    target = "hostile",
+    response = "destroy",
+    text = "危険生物を排除",
+  }, {
+    target = "oil_spill",
+    response = "remediation",
+    text = "漏出した油を回収",
+  }, {
+    target = "failure",
+    response = "remediation",
+    text = "故障個所を修繕",
+  }, {
+    target = "cargo",
+    response = "transportation",
+    text = "貨物を配送先へ輸送",
+  }, {
+    target = "illigal_cargo",
+    response = "transportation",
+    text = "違法貨物をHQへ輸送",
+  }, {
+    target = "wreckage",
+    response = "transportation",
+    text = "残骸をHQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
   },
 }
 
@@ -1271,7 +1322,7 @@ object_trackers = {
           end
         end
 
-        if (self.command == "attack" or self.command == "escape") and self.weapon == nil then
+        if self.weapon == nil and self.role == nil and (self.command == "attack" or self.command == "escape") then
           self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
           server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
         end
@@ -1310,7 +1361,7 @@ object_trackers = {
               resist(self)
             end
 
-            if self.weapon ~= nil then
+            if self.mounted and self.weapon ~= nil then
               local close_quarters_update = unit_distance < 100 or player_distance < 100
 
               if close_quarters_update and not self.close_quarters then
@@ -1318,12 +1369,12 @@ object_trackers = {
                 server.setObjectPos(self.id, matrix.multiply(self.transform, t))
                 console.notify(string.format("%s#%d has set close quarter combat.", self.type, self.id))
               elseif not close_quarters_update and self.close_quarters then
+                console.log(tostring(self.mount_vehicle))
                 local vehicle = table.find(g_savedata.objects, function(x) return x.type == "vehicle" and x.id == self.mount_vehicle end)
                 local _d = matrix.distance(vehicle.transform, self.transform)
 
                 if _d <= 50 then
-                  mount_vehicle(self)
-                  -- server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
+                  server.setSeated(self.id, self.mount_vehicle, self.mount_seat.pos.x, self.mount_seat.pos.y, self.mount_seat.pos.z)
                   console.notify(string.format("%s#%d has set seated.", self.type, self.id))
                 end
               end
@@ -1524,6 +1575,10 @@ object_trackers = {
       self.completion_timer = 0
       self.initial_transform = server.getVehiclePos(self.id)
       self.indispensable = self.tags.indispensable == "true"
+      self.wreckage = self.tags.wreckage == "true"
+      self.illigal = self.tags.illigal == "true"
+      self.investigated = self.tags.investigated == "true"
+      self.investigation_points = {}
 
       server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
     end,
@@ -1534,7 +1589,21 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
-      if interactions:is_in_interaction(self.transform, "scrap_yard") then
+      if self.illigal and not self.investigated then
+        self.investigation_points = interactions:find_all(function(x) return x.type == "investigate" and x.parent_vehicle_id == self.id end)
+        local illigal_investigated
+
+        for i = 1, #self.investigation_points do
+          illigal_investigated = illigal_investigated or self.investigation_points[i].investigated and self.investigation_points[i].illigal
+        end
+
+        if illigal_investigated and not self.wreckage then
+          self.investigated = true
+          self.wreckage = true
+        end
+      end
+
+      if self.wreckage and interactions:is_in_interaction(self.transform, "scrap_yard") then
         self.completion_timer = self.completion_timer + tick
       end
     end,
@@ -1552,7 +1621,11 @@ object_trackers = {
       return math.ceil(self.mass / 1000) * 1000 * self.reward_base
     end,
     label = function(self)
-      return self.text
+      if self.wreckage or self.illigal then
+        return self.text_wreckage
+      else
+        return self.text_uninventigated
+      end
     end,
     count = function(self)
       return 1
@@ -1564,7 +1637,9 @@ object_trackers = {
       return false
     end,
     reward_base = 5,
-    text = "残骸を基地へ輸送(報酬あり)\nまたは破壊(報酬なし)",
+    text = "",
+    text_wreckage = "不審点を調査",
+    text_illigal = "違法車輛を基地へ輸送(報酬あり)\nまたは破壊(報酬なし)",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -1632,9 +1707,17 @@ object_trackers = {
       return type == "creature" and tags.tracker == "sniffer"
     end,
     init = function(self)
+      if string.nil_or_empty(self.name) then
+        self.name = tostring(self.id) .. "号"
+      end
+
       self.vital = server.getObjectData(self.id)
       self.destination = nil
-      -- server.setCreatureTooltip(self.id, string.format("%s\n\nObject ID: %d", self.text, self.id))
+      self.command = nil
+      self.search_speed = math.random() + 0.5
+      self.search_completion_time = 900 * self.search_speed
+      self.search_duration = 0
+      server.setCreatureTooltip(self.id, string.format("%s%s\n\nObject ID: %d", self.text, self.name, self.id))
     end,
     clear = function(self)
     end,
@@ -1643,21 +1726,67 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
-      -- local distance = math.maxinteger
-      -- local rescuee = nil
-
-      -- for i = 1, #g_savedata.objects do
-      --   if g_savedata.objects[i].tracker == "rescuee" then
-      --     local _d = matrix.distance(g_savedata.objects[i].transform, self.transform)
-
-      --     if _d <= 1000 and _d < distance then
-      --       rescuee = g_savedata.objects[i]
-      --       distance = _d
-      --     end
-      --   end
-      -- end
-
       local vital = server.getObjectData(self.id)
+
+      if not vital.incapacitated and not vital.dead then
+        if self.command == "search" and self.destination ~= nil and matrix.distance(self.transform, self.destination) < 5 then
+          self.command = nil
+          self.destination = nil
+        elseif self.command == "search" and self.destination == nil then
+          local destination = nil
+          local target_distance = math.maxinteger
+
+          for i = 1, #g_savedata.objects do
+            if g_savedata.objects[i].tracker == "rescuee" and not g_savedata.objects[i].picked then
+              local d = matrix.distance(g_savedata.objects[i].transform, self.transform)
+
+              if d <= 1000 and d < target_distance then
+                target_distance = d
+                destination = g_savedata.objects[i].transform
+              end
+            end
+          end
+
+          for i = 1, #interactions.items do
+            if interactions.items[i].interaction == "search" then
+              local d = matrix.distance(interactions.items.transform, self.transform)
+
+              if d <= 250 and d < target_distance then
+                target_distance = d
+                destination = interactions.items[i].transform
+              end
+            end
+          end
+
+          if destination ~= nil then
+            local noise = matrix.translation(math.random() * target_distance * 0.5, 0, math.random() * target_distance * 0.5)
+            self.destination = matrix.multiply(destination, noise)
+            server.setCreatureMoveTarget(self.id, self.destination)
+          end
+        end
+
+        local is_investigating = false
+
+        for i = 1, #interactions.items do
+          if interactions.items[i].interaction == "investigate" and not interactions.items[i].investigated and interactions:is_in(self.transform, interactions.items[i]) then
+            is_investigating = true
+            self.search_duration = self.search_duration + tick
+
+            if self.search_duration >= self.search_completion_time then
+              investigate(interactions.items[i])
+            end
+          end
+        end
+
+        if is_investigating then
+          console.notify(self.search_duration)
+        end
+
+        if not is_investigating and self.search_duration > 0 then
+          self.search_duration = 0
+        end
+      end
+
       self.vital = vital
     end,
     dispensable = function(self)
@@ -2990,21 +3119,7 @@ landscapes = {
     return obj
   end,
   refresh = function(self)
-    for j = 1, #players.items do
-      if players.items[j].map_opened then
-        self:clear_all_map(players.items[j].id)
-      end
-    end
-
     self.items = self:load()
-
-    for i = 1, #self.items do
-      for j = 1, #players.items do
-        if players.items[j].map_opened then
-          self:map(self.items[i], players.items[j].id)
-        end
-      end
-    end
   end,
   is_in_landscape = function(self, transform, landscape)
     local is = false
@@ -3054,6 +3169,11 @@ landscapes = {
   find_all = function(self, test)
     return table.find_all(self.items, test)
   end,
+  map_all = function(self, peer_id)
+    for i = 1, #self.items do
+      self:map(self.items[i], peer_id)
+    end
+  end,
   map = function(self, zone, peer_id)
     local peer_id = peer_id or -1
 
@@ -3070,7 +3190,7 @@ landscapes = {
         color, 255)
     end
   end,
-  clear_all_map = function(self, peer_id)
+  clear_map_all = function(self, peer_id)
     local peer_id = peer_id or -1
     server.removeMapID(peer_id, g_savedata.subsystems.mapping.landscape.markar_id)
   end
@@ -3100,36 +3220,42 @@ interactions = {
     return models
   end,
   init = function(self, obj)
-    local tags = string.parse_tags(obj.tags_full)
+    obj.tags = string.parse_tags(obj.tags_full)
+
     local prop = table.find(interactions_property, function(x)
-      return x.type == tags.interaction
+      return x.type == obj.tags.interaction
     end)
 
     if prop == nil then
       return nil
     end
 
-    obj.tags = tags
     obj.type = prop.type
     obj.mapped = prop.mapped or false
-    obj.icon = prop.icon or 0
+    obj.icon = prop.icon or 1
+    obj.interaction = obj.tags.interaction
+
+    if obj.type == "investigate" then
+      local investigation = table.find(g_savedata.investigation_points, function(x) return x.vehicle_id == obj.parent_vehicle_id and x.name == obj.name end)
+
+      obj.investigated = investigation ~= nil
+      obj.illigal = obj.investigated and investigation.illigal
+    end
 
     return obj
   end,
   refresh = function(self)
     for j = 1, #players.items do
       if players.items[j].map_opened then
-        self:clear_all_map(players.items[j].id)
+        self:clear_map_all(players.items[j].id)
       end
     end
 
     self.items = self:load()
 
-    for i = 1, #self.items do
-      for j = 1, #players.items do
-        if players.items[j].map_opened then
-          self:map(self.items[i], players.items[j].id)
-        end
+    for j = 1, #players.items do
+      if players.items[j].map_opened then
+        self:map_all(players.items[j].id)
       end
     end
   end,
@@ -3155,21 +3281,46 @@ interactions = {
   find_all = function(self, test)
     return table.find_all(self.items, test)
   end,
+  map_all = function(self, peer_id)
+    for i = 1, #self.items do
+      self:map(self.items[i], peer_id)
+    end
+  end,
   map = function(self, zone, peer_id)
     local peer_id = peer_id or -1
 
     if g_savedata.mode == "debug" or zone.mapped and zone.parent_vehicle_id == 0 then
       local x, y, z = matrix.position(zone.transform)
       local color = zone.icon == 8 and 255 or 0
+      local name = zone.name
 
-      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.interaction.markar_id, zone.icon, zone.name, x, z, color, color, color, 255)
+      if string.nil_or_empty(name) then
+        name = zone.type
+      end
+
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.interaction.markar_id, zone.icon, name, x, z, color, color, color, 255)
     end
   end,
-  clear_all_map = function(self, peer_id)
+  clear_map_all = function(self, peer_id)
     local peer_id = peer_id or -1
     server.removeMapID(peer_id, g_savedata.subsystems.mapping.interaction.markar_id)
   end
 }
+
+function investigate(zone)
+  local illigal = math.random(0, 99) < 80
+  table.insert(g_savedata.investigation_points, {
+    vehicle_id = zone.parent_vehicle_id,
+    name = zone.name,
+    illigal = illigal,
+  })
+
+  if illigal then
+    console.notify("違法貨物を発見!")
+  else
+    console.notify("この場所に違法性のある貨物は発見されなかった.")
+  end
+end
 
 -- headquarter
 
@@ -3636,8 +3787,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       local player_transform = get_player_transform(peer_id)
       local sniffer = nil
       local sniffer_distance = math.maxinteger
-      local rescuee = nil
-      local rescuee_distance = math.maxinteger
 
       for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].tracker == "sniffer" then
@@ -3654,24 +3803,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         return
       end
 
-      for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].tracker == "rescuee" then
-          local d = matrix.distance(g_savedata.objects[i].transform, sniffer.transform)
-
-          if d <= 1000 and d < rescuee_distance then
-            rescuee_distance = d
-            rescuee = g_savedata.objects[i]
-          end
-        end
-      end
-
-      if rescuee == nil then
-        return
-      end
-
-      local noise = matrix.translation(math.random() * rescuee_distance, 0, math.random() * rescuee_distance)
-      local destination = matrix.multiply(rescuee.transform, noise)
-      server.setCreatureMoveTarget(sniffer.id, destination)
+      sniffer.command = "search"
     end
   elseif command == "?tp" then
     local target = tonumber(verb)
@@ -3919,6 +4051,11 @@ end
 
 function onToggleMap(peer_id, is_open)
   g_savedata.players_map[peer_id] = is_open
+
+  if is_open then
+    landscapes:clear_map_all(peer_id)
+    landscapes:map_all(peer_id)
+  end
 end
 
 function onCreate(is_world_create)
