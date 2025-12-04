@@ -775,50 +775,71 @@ strings = {
   },
 }
 
+targets = {
+  rescuee = "rescuee",
+  suspect = "suspect",
+  fire = "fire",
+  forest_fire = "forest_fire",
+  hostile = "hostile",
+  oil_spill = "oil_spill",
+  failure = "failure",
+  cargo = "cargo",
+  illigal_cargo = "illigal_cargo",
+  wreckage = "wreckage",
+}
+
+responses = {
+  search = "search",
+  extinguish = "extinguish",
+  destroy = "destroy",
+  remediation = "remediation",
+  transportation = "transportation",
+}
+
 objectives = {
   {
-    target = "rescuee",
-    response = "search",
+    target = targets.rescuee,
+    response = responses.search,
     text = "要救助者をHQか病院へ搬送",
   }, {
-    target = "suspect",
-    response = "search",
+    target = targets.suspect,
+    response = responses.search,
     text = "被疑者をHQか警察署へ連行",
   }, {
-    target = "illigal_cargo",
-    response = "search",
+    target = targets.illigal_cargo,
+    response = responses.search,
     text = "違法貨物を捜索",
   }, {
-    target = "fire",
-    response = "extinguish",
+    target = targets.fire,
+    response = responses.extinguish,
     text = "火災を鎮圧",
   }, {
-    target = "forest_fire",
-    response = "extinguish",
+    target = targets.forest_fire,
+    response = responses.extinguish,
     text = "森林火災を鎮圧",
   }, {
-    target = "hostile",
-    response = "destroy",
+    target = targets.hostile,
+    response = responses.destroy,
     text = "危険生物を排除",
   }, {
-    target = "oil_spill",
-    response = "remediation",
+    target = targets.oil_spill,
+    response = responses.remediation,
     text = "漏出した油を回収",
   }, {
-    target = "failure",
-    response = "remediation",
+    target = targets.failure,
+    response = responses.remediation,
     text = "故障個所を修繕",
   }, {
-    target = "cargo",
-    response = "transportation",
+    target = targets.cargo,
+    response = responses.transportation,
     text = "貨物を配送先へ輸送",
   }, {
-    target = "illigal_cargo",
-    response = "transportation",
+    target = targets.illigal_cargo,
+    response = responses.transportation,
     text = "違法貨物をHQへ輸送",
   }, {
-    target = "wreckage",
-    response = "transportation",
+    target = targets.wreckage,
+    response = responses.transportation,
     text = "残骸をHQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
   },
 }
