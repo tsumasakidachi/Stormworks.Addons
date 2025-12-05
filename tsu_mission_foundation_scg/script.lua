@@ -131,15 +131,21 @@ cases = {
   },
   alert = {
     id = 91,
-    text = "ALT 警報"
+    text = "WRN 警報"
   }
+}
+
+geologics = {
+  mainlands = "mainlands",
+  islands = "islands",
+  waters = "waters",
 }
 
 location_properties = { {
   pattern = "^mission:climber_missing_%d+$",
   tracker = "sar",
   case = cases.sar,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "forest", "mountain" },
   is_main_location = false,
   sub_locations = { "^mission:climber_missing_%d+$", "^mission:raft_%d+$" },
@@ -152,7 +158,7 @@ location_properties = { {
   pattern = "^mission:em_call_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "house" },
   is_main_location = true,
   sub_locations = {},
@@ -163,7 +169,7 @@ location_properties = { {
   pattern = "^mission:passenger_fallen_land_%d+$",
   tracker = "sar",
   case = cases.water,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "field", "mountain", "forest" },
   is_main_location = false,
   sub_locations = {},
@@ -173,7 +179,7 @@ location_properties = { {
   pattern = "^mission:passenger_fallen_water_%d+$",
   tracker = "sar",
   case = cases.water,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
@@ -183,7 +189,7 @@ location_properties = { {
   pattern = "^mission:lifeboat_%d+$",
   tracker = "sar",
   case = cases.water,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
@@ -192,7 +198,7 @@ location_properties = { {
 }, {
   pattern = "^mission:raft_%d+$",
   tracker = "sar",
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   case = cases.water,
   suitable_zones = { "lake", "beach" },
   is_main_location = true,
@@ -204,7 +210,7 @@ location_properties = { {
   pattern = "^mission:freighter_fire_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -219,7 +225,7 @@ location_properties = { {
   pattern = "^mission:ferry_fire_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -234,7 +240,7 @@ location_properties = { {
   pattern = "^mission:tanker_fire_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -249,7 +255,7 @@ location_properties = { {
   pattern = "^mission:boat_sink_%d+$",
   tracker = "sar",
   case = cases.water,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "lake" },
   is_main_location = true,
   sub_locations = {},
@@ -262,7 +268,7 @@ location_properties = { {
   pattern = "^mission:overboard_%d+$",
   tracker = "sar",
   case = cases.water,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel", "beach" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
@@ -275,7 +281,7 @@ location_properties = { {
   pattern = "^mission:ferry_sink_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -290,7 +296,7 @@ location_properties = { {
   pattern = "^mission:fishboat_fire_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
@@ -305,7 +311,7 @@ location_properties = { {
   pattern = "^mission:heli_crash_wind_turbine_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "islands",
+  geologic = geologics.islands,
   suitable_zones = { "wind_turbine" },
   is_main_location = true,
   sub_locations = {},
@@ -318,7 +324,7 @@ location_properties = { {
   pattern = "^mission:diver_yacht_%d+$",
   tracker = "sar",
   case = cases.sar,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "diving_spot" },
   is_main_location = true,
   sub_locations = { "^mission:diver_missing_%d+$" },
@@ -331,7 +337,7 @@ location_properties = { {
   pattern = "^mission:diver_missing_%d+$",
   tracker = "sar",
   case = cases.sar,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "underwater" },
   is_main_location = false,
   sub_locations = {},
@@ -341,7 +347,7 @@ location_properties = { {
   pattern = "^mission:oil_platform_fire_%d+$",
   tracker = "sar",
   case = cases.accident,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
@@ -358,7 +364,7 @@ location_properties = { {
   pattern = "^mission:tunnel_fire_%d+$",
   tracker = "sar",
   case = cases.accident,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = { "^mission:car_collision_%d+$", "^mission:car_stuck_%d+$" },
@@ -373,7 +379,7 @@ location_properties = { {
   pattern = "^mission:car_collision_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
   sub_locations = {},
@@ -383,7 +389,7 @@ location_properties = { {
   pattern = "^mission:car_stuck_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
   sub_locations = {},
@@ -393,7 +399,7 @@ location_properties = { {
   pattern = "^mission:aircraft_down_%d+$",
   tracker = "sar",
   case = cases.mayday,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_land_%d+$" },
@@ -406,7 +412,7 @@ location_properties = { {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
   case = cases.accident,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -419,7 +425,7 @@ location_properties = { {
   pattern = "^mission:campsite_fire_%d+$",
   tracker = "sar",
   case = cases.far,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -432,7 +438,7 @@ location_properties = { {
   pattern = "^mission:hostile_forest_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "forest", "field", "mountain", "hill" },
   is_main_location = true,
   sub_locations = { "^mission:climber_missing_%d+$" },
@@ -445,7 +451,7 @@ location_properties = { {
   pattern = "^mission:wind_turbine_fire_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -456,7 +462,7 @@ location_properties = { {
   pattern = "^mission:hostile_water_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "lake", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:boat_sink_%d+$" },
@@ -469,7 +475,7 @@ location_properties = { {
   pattern = "^mission:naval_mine_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel", "diving_spot" },
   is_main_location = true,
   sub_locations = {},
@@ -480,7 +486,7 @@ location_properties = { {
   pattern = "^mission:train_crash_head_on$",
   tracker = "sar",
   case = cases.accident,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -493,7 +499,7 @@ location_properties = { {
   pattern = "^mission:train_crash_log_trailer$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -506,7 +512,7 @@ location_properties = { {
   pattern = "^mission:power_plant_fire_%d+$",
   tracker = "sar",
   case = cases.accident,
-  geologic = "islands",
+  geologic = geologics.islands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -519,7 +525,7 @@ location_properties = { {
   pattern = "^mission:chemical_storage_fire_%d+$",
   tracker = "sar",
   case = cases.far,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -532,7 +538,7 @@ location_properties = { {
   pattern = "^mission:house_fire_%d+$",
   tracker = "sar",
   case = cases.far,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -545,7 +551,7 @@ location_properties = { {
   pattern = "^mission:highway_car_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -558,7 +564,7 @@ location_properties = { {
   pattern = "^mission:highway_oil_tanker_%d+$",
   tracker = "sar",
   case = cases.far,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   sub_locations = {},
@@ -571,7 +577,7 @@ location_properties = { {
   pattern = "^mission:air_medevac_%d+$",
   tracker = "sar",
   case = cases.ems,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "airfield", "heliport" },
   is_main_location = true,
   sub_locations = {},
@@ -582,7 +588,7 @@ location_properties = { {
   pattern = "^mission:visit_cargo_vessel_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = {},
@@ -593,7 +599,7 @@ location_properties = { {
   pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
@@ -606,7 +612,7 @@ location_properties = { {
   pattern = "^mission:smuggling_boat_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore" },
   is_main_location = true,
   sub_locations = {},
@@ -619,7 +625,7 @@ location_properties = { {
   pattern = "^mission:vessel_hijacked_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore", "shallow" },
   is_main_location = true,
   sub_locations = {},
@@ -632,7 +638,7 @@ location_properties = { {
   pattern = "^mission:piracy_infantry_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine" },
   is_main_location = false,
   sub_locations = { "bunker" },
@@ -642,7 +648,7 @@ location_properties = { {
   pattern = "^mission:piracy_technical_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "bunker" },
   is_main_location = false,
   sub_locations = {},
@@ -652,7 +658,7 @@ location_properties = { {
   pattern = "^mission:piracy_static_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "bunker" },
   is_main_location = false,
   sub_locations = {},
@@ -662,7 +668,7 @@ location_properties = { {
   pattern = "^mission:port_occupied_%d+$",
   tracker = "sar",
   case = cases.securite,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = {},
   is_main_location = true,
   dispersal_area = 500,
@@ -675,7 +681,7 @@ location_properties = { {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
   case = cases.alert,
-  geologic = "mainlands",
+  geologic = geologics.mainlands,
   suitable_zones = { "channel", "lake", "ait", "forest", "field", "beach" },
   count = 0,
   save_to_history = false,
@@ -688,7 +694,7 @@ location_properties = { {
   pattern = "^mission:whirlpool_alert_%d+$",
   tracker = "disaster",
   case = cases.alert,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore" },
   count = 0,
   save_to_history = false,
@@ -701,7 +707,7 @@ location_properties = { {
   pattern = "^mission:meteor_alert_%d+$",
   tracker = "disaster",
   case = cases.alert,
-  geologic = "waters",
+  geologic = geologics.waters,
   suitable_zones = { "offshore" },
   count = 0,
   save_to_history = false,
@@ -754,8 +760,15 @@ landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beac
 
 strings = {
   statuses = {
-    essentials = "必須の目標",
-    dispensables = "オプションの目標"
+    objectives = "[目標]",
+    objective_item = "%d %sを%s",
+    objective_admitted = "%d 収容済み",
+    events = "[事象]",
+    search_radius = "[範囲]",
+    responders = "[対応中]",
+    check_in = "(?go %d でチェックイン)",
+    remainings = "[有効期間]",
+    remaining_item = "この警報は残り%d分間有効.",
   },
   events = {
     chemical = "chemical spills",
@@ -773,9 +786,45 @@ strings = {
     massive_meteor_impact = "津波警報. 津波警報. 巨大隕石の落下により津波の発生が確実視されている. 早急に高台へ避難せよ.",
     mission_taken_to_long = "協力者によってミッション#%dの残りの行方不明者が発見された.",
   },
+  objects = {
+    rescuee = "要救助者",
+    suspect = "被疑者",
+    fire = "火災",
+    forest_fire = "森林火災",
+    hostile = "危険生物",
+    oil_spills = "漏出した油",
+    failure = "障害",
+    illigal_object = "違法貨物",
+    cargo = "貨物",
+    wreckage = "残骸",
+    picked = "収容済み",
+  },
+  works = {
+    search = {
+      rescuee = "治療しHQか病院へ搬送",
+      suspect = "制圧しHQか警察署へ連行",
+      illigal_object = "検査",
+    },
+    extinguish = {
+      fire = "鎮圧",
+      forest_fire = "鎮圧",
+    },
+    destroy = {
+      hostile = "排除",
+    },
+    remediation = {
+      oil_spills = "回収",
+      failure = "復旧",
+    },
+    transportation = {
+      cargo = "配送先へ輸送",
+      illigal_object = "HQへ輸送",
+      wreckage = "HQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
+    },
+  }
 }
 
-targets = {
+objects = {
   rescuee = "rescuee",
   suspect = "suspect",
   fire = "fire",
@@ -784,11 +833,11 @@ targets = {
   oil_spill = "oil_spill",
   failure = "failure",
   cargo = "cargo",
-  illigal_vehicle = "illigal_vehicle",
+  illigal_vehicle = "illigal_object",
   wreckage = "wreckage",
 }
 
-responses = {
+works = {
   search = "search",
   extinguish = "extinguish",
   destroy = "destroy",
@@ -797,60 +846,38 @@ responses = {
 }
 
 objectives = { {
-  target = targets.rescuee,
-  response = responses.search,
-  text = "要救助者をHQか病院へ搬送",
-  text_picked = "収容済み",
+  object = objects.rescuee,
+  work = works.search,
 }, {
-  target = targets.suspect,
-  response = responses.search,
-  text = "被疑者をHQか警察署へ連行",
-  text_picked = "収容済み",
+  object = objects.suspect,
+  work = works.search,
 }, {
-  target = targets.illigal_vehicle,
-  response = responses.search,
-  text = "積荷の違法性を検査",
-  text_picked = nil,
+  object = objects.illigal_vehicle,
+  work = works.search,
 }, {
-  target = targets.fire,
-  response = responses.extinguish,
-  text = "火災を鎮圧",
-  text_picked = nil,
+  object = objects.fire,
+  work = works.extinguish,
 }, {
-  target = targets.forest_fire,
-  response = responses.extinguish,
-  text = "森林火災を鎮圧",
-  text_picked = nil,
+  object = objects.forest_fire,
+  work = works.extinguish,
 }, {
-  target = targets.hostile,
-  response = responses.destroy,
-  text = "危険生物を排除",
-  text_picked = nil,
+  object = objects.hostile,
+  work = works.destroy,
 }, {
-  target = targets.oil_spill,
-  response = responses.remediation,
-  text = "漏出した油を回収",
-  text_picked = nil,
+  object = objects.oil_spill,
+  work = works.remediation,
 }, {
-  target = targets.failure,
-  response = responses.remediation,
-  text = "故障個所を修繕",
-  text_picked = nil,
+  object = objects.failure,
+  work = works.remediation,
 }, {
-  target = targets.cargo,
-  response = responses.transportation,
-  text = "貨物を配送先へ輸送",
-  text_picked = nil,
+  object = objects.cargo,
+  work = works.transportation,
 }, {
-  target = targets.illigal_vehicle,
-  response = responses.transportation,
-  text = "違法な乗り物をHQへ輸送",
-  text_picked = nil,
+  object = objects.illigal_vehicle,
+  work = works.transportation,
 }, {
-  target = targets.wreckage,
-  response = responses.transportation,
-  text = "残骸をHQへ輸送(報酬あり)\nまたは破壊(報酬なし)",
-  text_picked = nil,
+  object = objects.wreckage,
+  work = works.transportation,
 }, }
 
 weapons = { {
@@ -923,14 +950,14 @@ mission_trackers = {
     status = function(self)
       local text = self.locations[1].note
 
-      text = text .. "\n\n[目標]"
+      text = text .. "\n\n" .. strings.statuses.objectives
 
       for i = 1, #self.objectives do
         if self.objectives[i].count > 0 then
-          text = text .. string.format("\n%.0f %s", self.objectives[i].count, self.objectives[i].text)
+          text = text .. "\n" .. string.format(strings.statuses.objective_item, self.objectives[i].count, strings.objects[self.objectives[i].object], strings.works[self.objectives[i].work][self.objectives[i].object])
 
           if self.objectives[i].count_picked > 0 then
-            text = text .. string.format("\n(%.0f %s)", self.objectives[i].count_picked, "収容済み")
+            text = text .. "\n" .. string.format(strings.statuses.objective_admitted, self.objectives[i].count_picked)
           end
 
           if #self.objectives[i].contents > 0 then
@@ -950,17 +977,17 @@ mission_trackers = {
       end
 
       if #self.events > 0 then
-        text = text .. "\n\n[事象]"
+        text = text .. "\n\n" .. strings.statuses.events
 
         for i = 1, #self.events do
           text = text .. "\n" .. strings.events[self.events[i]]
         end
       end
 
-      text = text .. "\n\n[捜索半径]"
+      text = text .. "\n\n" .. strings.statuses.search_radius
       text = text .. string.format("\n%dm", self.search_radius)
 
-      text = text .. "\n\n[対応中]"
+      text = text .. "\n\n" .. strings.statuses.responders
 
       local count = 0
 
@@ -971,7 +998,7 @@ mission_trackers = {
         end
       end
 
-      text = text .. string.format("\n(?go %d でチェックイン)", self.id)
+      text = text .. "\n" .. string.format(strings.statuses.check_in, self.id)
 
       return text
     end
@@ -1039,8 +1066,10 @@ mission_trackers = {
     end,
     status = function(self)
       local text = self.locations[1].note
-      text = text .. string.format("\n\n[半径]\n%dm", self.search_radius)
-      text = text .. string.format("\n\n[有効期間]\nこの警報は残り%d分間有効.", math.ceil(self.finish_timer / 3600))
+      text = text .. "\n\n" .. strings.statuses.search_radius
+      text = text .. "\n" .. string.format("%dm", self.search_radius)
+      text = text .. "\n\n" .. strings.statuses.remainings
+      text = text .. "\n" .. string.format(strings.statuses.remaining_item, math.ceil(self.finish_timer / 3600))
 
       return text
     end
@@ -1076,7 +1105,7 @@ object_trackers = {
       self.picked = false
 
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
-      server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self:label(), self.mission, self.id))
+      server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", strings.objects.rescuee, self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1163,16 +1192,9 @@ object_trackers = {
 
       return value
     end,
-    label = function(self)
-      -- return string.format("%s\n\nHP: %.00f/100\n心肺停止回数: %.00f回", self.text, self.vital.hp, self.cpa_count)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       return {
-        objective(responses.search, targets.rescuee, 1, self.picked and 1 or 0),
+        objective(works.search, objects.rescuee, 1, self.picked and 1 or 0),
       }
     end,
     reported = function(self)
@@ -1183,7 +1205,6 @@ object_trackers = {
       return mission.taken_to_long
     end,
     reward_base = 2000,
-    text = "要救助者を基地か病院へ搬送",
     marker_type = 1,
     clear_timer = 300
   },
@@ -1249,19 +1270,9 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      if self.activated then
-        return 1
-      else
-        return 0
-      end
-    end,
     objectives = function(self)
       return {
-        objective(responses.extinguish, targets.fire, self.activated and 1 or 0, 0),
+        objective(works.extinguish, objects.fire, self.activated and 1 or 0, 0),
       }
     end,
     reported = function(self)
@@ -1271,7 +1282,6 @@ object_trackers = {
       return false
     end,
     reward_base = 500,
-    text = "炎を鎮火",
     marker_type = 5,
     clear_timer = 0
   },
@@ -1303,15 +1313,9 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       return {
-        objective(responses.extinguish, targets.forest_fire, 1, 0),
+        objective(works.extinguish, objects.forest_fire, 1, 0),
       }
     end,
     reported = function(self)
@@ -1321,7 +1325,6 @@ object_trackers = {
       return false
     end,
     reward_base = 2500,
-    text = "森林火災を鎮火",
     marker_type = 5,
     clear_timer = 0
   },
@@ -1346,6 +1349,7 @@ object_trackers = {
       self.ransom_paid = false
       server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, true)
       server.setAICharacterTeam(self.id, self.team)
+      server.setCharacterTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", strings.objects.suspect, self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1486,8 +1490,8 @@ object_trackers = {
         end
       end
 
-      self.activated = self.activated or self.command == "attack" or self.command == "escape"
-      self.illigal = self.illigal or self.activated or has_illigality(self.mission)
+      self.activated = self.activated or self.command ~= nil
+      self.illigal = self.illigal or self.command == "attack" or self.command == "escape" or has_illigality(self.mission)
       self.picked = picked
       self.vital = vital_update
 
@@ -1507,19 +1511,9 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      if self.activated then
-        return 1
-      else
-        return 0
-      end
-    end,
     objectives = function(self)
       return {
-        objective(responses.search, targets.suspect, self.illigal and 1 or 0, self.picked and 1 or 0),
+        objective(works.search, objects.suspect, self.illigal and 1 or 0, self.picked and 1 or 0),
       }
     end,
     reported = function(self)
@@ -1529,7 +1523,6 @@ object_trackers = {
       return false
     end,
     reward_base = 2000,
-    text = "被疑者を制圧して基地か警察署へ連行",
     marker_type = 1,
     clear_timer = 300
   },
@@ -1546,8 +1539,6 @@ object_trackers = {
         return d >= 10 and d < 500
       end))
       self.vital = server.getCharacterData(self.id)
-
-      server.setCreatureTooltip(self.id, string.format("%s\n\nMission ID: %d\nObject ID: %d", self.text, self.mission, self.id))
     end,
     clear = function(self)
     end,
@@ -1578,15 +1569,9 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       return {
-        objective(responses.destroy, targets.hostile, 1, 0),
+        objective(works.destroy, objects.hostile, 1, 0),
       }
     end,
     reported = function(self)
@@ -1596,7 +1581,6 @@ object_trackers = {
       return false
     end,
     reward_base = 1000,
-    text = "敵を排除",
     marker_type = 6,
     clear_timer = 300
   },
@@ -1640,15 +1624,9 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return string.format("%s\n\n%.0f", self.text, self.amount)
-    end,
-    count = function(self)
-      return self.amount
-    end,
     objectives = function(self)
       return {
-        objective(responses.remediation, targets.oil_spill, 1, 0),
+        objective(works.remediation, objects.oil_spill, 1, 0),
       }
     end,
     reported = function(self)
@@ -1658,7 +1636,6 @@ object_trackers = {
       return false
     end,
     reward_base = 0,
-    text = "漏出した油を回収",
     marker_type = 2,
     clear_timer = 0
   },
@@ -1675,7 +1652,11 @@ object_trackers = {
       self.investigated = self.tags.investigated == "true"
       self.investigation_points = {}
 
-      server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", self.text, self.mission, self.id))
+      if self.wreckage then
+        server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", strings.objects.wreckage, self.mission, self.id))
+      elseif self.illigal then
+        server.setVehicleTooltip(self.id, string.format("%s\n\nMission ID: %d\nVehicle ID: %d", strings.objects.illigal_object, self.mission, self.id))
+      end
     end,
     clear = function(self)
     end,
@@ -1686,25 +1667,28 @@ object_trackers = {
     tick = function(self, tick)
       if self.illigal and not self.investigated then
         self.investigation_points = interactions:find_all(function(x) return x.type == "investigate" and x.parent_vehicle_id == self.id end)
-        local illigal_investigated
+        local investigated = false
+        local illigal = false
 
         for i = 1, #self.investigation_points do
-          illigal_investigated = illigal_investigated or self.investigation_points[i].investigated and self.investigation_points[i].illigal
+          investigated = investigated and self.investigation_points[i].investigated
+          illigal = illigal or self.investigation_points[i].illigal
         end
 
-        if illigal_investigated and not self.wreckage then
+        if investigated or illigal then
           self.investigated = true
-          self.wreckage = true
+          self.illigal = illigal
         end
       end
 
-      if self.wreckage and interactions:is_in_interaction(self.transform, "scrap_yard") then
+      local x, y, z = matrix.position(self.transform)
+
+      if self.investigated and not self.illigal or (self.illigal or self.wreckage) and interactions:is_in_interaction(self.transform, "scrap_yard") or y <= -20 then
         self.completion_timer = self.completion_timer + tick
       end
     end,
     dispensable = function(self)
-      local x, y, z = matrix.position(self.transform)
-      return (self.investigated or not self.indispensable) and not players:is_in_range(self.transform, 500) or y <= -25
+      return not self.indispensable and (self.investigated or self.wreckage) and not players:is_in_range(self.transform, 500)
     end,
     complete = function(self)
       return self.completion_timer >= 300
@@ -1715,25 +1699,15 @@ object_trackers = {
     reward = function(self)
       return math.ceil(self.mass / 1000) * 1000 * self.reward_base
     end,
-    label = function(self)
-      if self.wreckage or self.illigal then
-        return self.text_wreckage
-      else
-        return self.text_uninventigated
-      end
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       local o = {}
 
       if self.illigal and not self.investigated then
-        table.insert(o, objective(responses.search, targets.illigal_vehicle, #self.investigation_points, 0))
+        table.insert(o, objective(works.search, objects.illigal_vehicle, #self.investigation_points, 0))
       elseif self.illigal and self.investigated then
-        table.insert(o, objective(responses.transportation, targets.illigal_vehicle, 1, 0, self.name))
+        table.insert(o, objective(works.transportation, objects.illigal_vehicle, 1, 0, self.name))
       elseif self.wreckage then
-        table.insert(o, objective(responses.transportation, targets.wreckage, 1, 0, self.name))
+        table.insert(o, objective(works.transportation, objects.wreckage, 1, 0, self.name))
       end
 
       return o
@@ -1745,9 +1719,6 @@ object_trackers = {
       return false
     end,
     reward_base = 5,
-    text = "",
-    text_wreckage = "不審点を調査",
-    text_illigal = "違法車輛を基地へ輸送(報酬あり)\nまたは破壊(報酬なし)",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -1777,19 +1748,9 @@ object_trackers = {
     reward = function(self)
       return 0
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      if self.found then
-        return 1
-      else
-        return 0
-      end
-    end,
     objectives = function(self)
       return {
-        objective(responses.transportation, targets.cargo, 1, 0),
+        objective(works.transportation, objects.cargo, 1, 0),
       }
     end,
     reported = function(self)
@@ -1799,7 +1760,6 @@ object_trackers = {
       return false
     end,
     reward_base = 10,
-    text = "貨物を配送先へ輸送",
     marker_type = 2,
     clear_timer = 3600
   },
@@ -1820,7 +1780,6 @@ object_trackers = {
       self.search_completion_time = 900 * self.search_speed
       self.search_duration = 0
       server.setAICharacterTeam(self.id, 1)
-      server.setCharacterTooltip(self.id, string.format("%s%s\n\nObject ID: %d", self.text, self.name, self.id))
     end,
     clear = function(self)
     end,
@@ -1911,12 +1870,6 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       return {}
     end,
@@ -1927,7 +1880,6 @@ object_trackers = {
       return true
     end,
     reward_base = 0,
-    text = "捜査犬",
     marker_type = 9,
     clear_timer = 0
   },
@@ -2003,12 +1955,6 @@ object_trackers = {
     reward = function(self)
       return self.reward_base
     end,
-    label = function(self)
-      return self.text
-    end,
-    count = function(self)
-      return 1
-    end,
     objectives = function(self)
       return {}
     end,
@@ -2019,7 +1965,6 @@ object_trackers = {
       return false
     end,
     reward_base = 0,
-    text = "UNIT",
     marker_type = 12,
     clear_timer = 0
   }
@@ -2154,13 +2099,9 @@ function tick_mission(mission, tick)
   end
 
   if mission:complete() or mission.terminated then
-    if not server.getGameSettings().infinite_money then
-      reward_mission(mission)
-    else
-      server.notify(-1, string.format("mission#%d has cleared.", mission.id), nil, 4)
-    end
-
+    reward_mission(mission)
     clear_mission(mission)
+    server.notify(-1, "Mission has cleared.", string.format("mission#%d", mission.id), 4)
   end
 end
 
@@ -2226,7 +2167,7 @@ end
 function reward_mission(mission)
   local reward = mission:reward()
 
-  transact(reward, string.format("mission#%d has cleared.", mission.id))
+  transact(reward, string.format("Reward for mission#%d.", mission.id))
 end
 
 function terminate_mission(mission)
@@ -2258,10 +2199,8 @@ function aggregate_mission_objectives(mission)
 
   for i = 1, #objectives do
     local obj = {
-      target = objectives[i].target,
-      response = objectives[i].response,
-      text = objectives[i].text,
-      text_picked = objectives[i].text_picked,
+      object = objectives[i].object,
+      work = objectives[i].work,
       count = 0,
       count_picked = 0,
       contents = {}
@@ -2272,7 +2211,7 @@ function aggregate_mission_objectives(mission)
         local objs_object = g_savedata.objects[j]:objectives()
 
         for k = 1, #objs_object do
-          if obj.target == objs_object[k].target and obj.response == objs_object[k].response then
+          if obj.object == objs_object[k].object and obj.work == objs_object[k].work then
             obj.count = obj.count + objs_object[k].count
             obj.count_picked = obj.count_picked + objs_object[k].count_picked
             table.insert(obj.contents, objs_object[k].content)
@@ -2289,10 +2228,10 @@ function aggregate_mission_objectives(mission)
   return objs_result
 end
 
-function objective(response, target, count, count_picked, content)
+function objective(work, object, count, count_picked, content)
   return {
-    response = response,
-    target = target,
+    work = work,
+    object = object,
     count = count,
     count_picked = count_picked,
     content = content
@@ -2308,7 +2247,7 @@ function has_illigality(mission_id)
 
   for i = 1, #g_savedata.objects do
     illigal = illigal or g_savedata.objects[i].mission == mission_id and (g_savedata.objects[i].tracker == "accessory" and g_savedata.objects[i].investigated and g_savedata.objects[i].illigal) or
-    (g_savedata.objects[i].tracker == "suspect" and g_savedata.objects[i].illigal)
+        (g_savedata.objects[i].tracker == "suspect" and g_savedata.objects[i].illigal)
   end
 
   return illigal
@@ -2376,7 +2315,6 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
 
     if v ~= nil then
       object.mount_vehicle = v.id
-      -- console.error(string.format("%s#%d is mounting to %s#%d.", object.type, object.id, v.type, v.id))
     end
   end
 
@@ -2515,33 +2453,29 @@ function tick_object(object, tick)
     if g_savedata.mode == "debug" or object.tracker ~= nil and object:mapped() then
       local x, y, z = matrix.position(object.transform)
       local r, g, b, a = 128, 128, 128, 255
-      local label = string.format("%s #%d", object.tracker, object.id)
-      local popup = string.format("%s\n\nX: %.0f\nY: %.0f\nZ: %.0f", object:label(), x, y, z)
+      local label = string.format("%s#%d", object.tracker ~= nil and object.tracker or object.type, object.id)
+      local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
 
       server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     end
 
     if not object.failed and object:fail() then
       object.failed = true
-      server.notify(-1, object:label(), "Objective has lost.", 2)
+      server.notify(-1, "Objective has lost.", object.tracker, 2)
     end
 
     if not object.failed and not object.completed and object:complete() then
-      if not server.getGameSettings().infinite_money then
-        reward_object(object)
-      else
-        server.notify(-1, object:label(), "Objective has achieved.", 4)
-      end
-
+      reward_object(object)
+      server.notify(-1, "Objective has achieved.", object.tracker, 4)
       object.completed = true
     end
 
     if object.completed or object.failed then
       if object.elapsed_clear >= object.clear_timer then
         despawn_object(object)
-      else
-        object.elapsed_clear = object.elapsed_clear + tick
       end
+
+      object.elapsed_clear = object.elapsed_clear + tick
     end
   end
 end
@@ -2553,12 +2487,11 @@ function reward_object(object)
     for j = 1, #g_savedata.missions do
       if g_savedata.missions[j].id == object.mission then
         g_savedata.missions[j].rewards = g_savedata.missions[j].rewards + reward
-        server.notify(-1, object:label(), "Objective has achieved.", 4)
       end
     end
-  else
-    transact(reward, "Objective has achieved.")
   end
+
+  transact(reward, "Objective has achieved.")
 end
 
 function find_parent_object(vehicle_parent_component_id, mission_id)
@@ -2997,7 +2930,7 @@ locations = {
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns))
           and (not is_main or x.is_main_location)
-          and (g_savedata.subsystems.mission.geologic.waters and x.geologic == "waters" or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == "mainlands" or g_savedata.subsystems.mission.geologic.islands and x.geologic == "islands")
+          and (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands)
           and self:is_suitable(x, center, range_min, range_max)
           and (not is_main or not is_unprecedented or self:is_unprecedented(x))
           and x.spawnable()
@@ -3472,14 +3405,12 @@ function transact(amount, message)
   end
 
   local not_type = 4
-  local text = "Accepted $%d"
+  local title = string.format("Accepted $%d", amount)
 
   if amount < 0 then
     not_type = 2
-    text = "Paid out $%d"
+    text = string.format("Paid out $%d", math.abs(amount))
   end
-
-  local title = string.format(text, amount)
 
   server.setCurrency(money)
   server.notify(-1, title, message, not_type)
