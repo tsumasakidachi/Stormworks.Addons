@@ -69,7 +69,7 @@ g_savedata = {
       active = true,
       dispensable = true
     },
-    enemy = {
+    hostile = {
       tracker = true,
       active = true,
       dispensable = true
@@ -1188,8 +1188,7 @@ object_trackers = {
       return true
     end,
     mapped = function(self)
-      local mission = table.find(g_savedata.missions, function(x) return x.id == self.mission end)
-      return mission.taken_to_long
+      return false
     end,
     reward_base = 2000,
     marker_type = 1,
@@ -1513,9 +1512,9 @@ object_trackers = {
     marker_type = 1,
     clear_timer = 300
   },
-  enemy = {
+  hostile = {
     test_type = function(self, id, type, name, tags)
-      return g_savedata.subsystems.enemy.tracker and (type == "character" or type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "enemy"
+      return g_savedata.subsystems.hostile.tracker and (type == "character" or type == "creature" or type == "animal") and tags.tracker ~= nil and tags.tracker == "hostile"
     end,
     init = function(self)
       local mission = table.find(g_savedata.missions, function(x)
@@ -1545,7 +1544,7 @@ object_trackers = {
       self.vital = server.getCharacterData(self.id)
     end,
     dispensable = function(self)
-      return g_savedata.subsystems.enemy.dispensable and not self.indispensable
+      return g_savedata.subsystems.hostile.dispensable and not self.indispensable
     end,
     complete = function(self)
       return self.vital.incapacitated or self.vital.dead
@@ -2051,11 +2050,11 @@ function tick_mission(mission, tick)
   mission.events = aggregate_mission_events(mission)
   mission.explosive = has_explosive_event(mission)
 
-  if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
-    mission.taken_to_long = true
-    server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
-    console.notify(string.format("mission#%d is taking to long.", mission.id))
-  end
+  -- if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
+  --   mission.taken_to_long = true
+  --   server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
+  --   console.notify(string.format("mission#%d is taking to long.", mission.id))
+  -- end
 
   mission:tick(tick)
 
