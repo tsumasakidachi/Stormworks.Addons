@@ -853,6 +853,41 @@ objectives = { {
   text_picked = nil,
 }, }
 
+weapons = { {
+  id = 35,
+  slot = 2,
+  ammo = 10,
+}, {
+  id = 37,
+  slot = 1,
+  ammo = 45,
+}, {
+  id = 39,
+  slot = 1,
+  ammo = 30,
+} }
+
+stormwoofs = {
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+}
+
 mission_trackers = {
   sar = {
     init = function(self)
@@ -889,30 +924,6 @@ mission_trackers = {
       local text = self.locations[1].note
 
       text = text .. "\n\n[目標]"
-
-      -- for tracker, data in pairs(self.objectives) do
-      --   if data.count > 0 then
-      --     text = text .. string.format("\n%.0f %s", data.count, object_trackers[tracker].text)
-
-      --     if data.count_picked > 0 then
-      --       text = text .. string.format("\n(%.0f %s)", data.count_picked, "収容済み")
-      --     end
-
-      --     if #data.contents > 0 then
-      --       text = text .. "\n("
-
-      --       for i = 1, #data.contents do
-      --         if i > 1 then
-      --           text = text .. ", "
-      --         end
-
-      --         text = text .. data.contents[i]
-      --       end
-
-      --       text = text .. ")"
-      --     end
-      --   end
-      -- end
 
       for i = 1, #self.objectives do
         if self.objectives[i].count > 0 then
@@ -1391,7 +1402,7 @@ object_trackers = {
         end
 
         if self.weapon == nil and self.role == nil and (self.command == "attack" or self.command == "escape") then
-          self.weapon = table.random({ { id = 35, slot = 2, ammo = 10 }, { id = 39, slot = 1, ammo = 30 } })
+          self.weapon = table.random(weapons)
           server.setCharacterItem(self.id, self.weapon.slot, self.weapon.id, false, self.weapon.ammo, 0.0)
         end
 
@@ -1485,7 +1496,7 @@ object_trackers = {
       end
     end,
     dispensable = function(self)
-      return false
+      return self.activated and not self.illigal
     end,
     complete = function(self)
       return self.admitted_time > 120
@@ -1693,7 +1704,7 @@ object_trackers = {
     end,
     dispensable = function(self)
       local x, y, z = matrix.position(self.transform)
-      return not self.indispensable and not players:is_in_range(self.transform, 500) or y <= -25
+      return (self.investigated or not self.indispensable) and not players:is_in_range(self.transform, 500) or y <= -25
     end,
     complete = function(self)
       return self.completion_timer >= 300
@@ -1796,11 +1807,12 @@ object_trackers = {
     test_type = function(self, id, type, name, tags)
       return type == "creature" and tags.tracker == "sniffer"
     end,
-    init = function(self)
+    init = function(self, owner_steam_id)
       if string.nil_or_empty(self.name) then
         self.name = tostring(self.id) .. "号"
       end
 
+      self.owner_steam_id = owner_steam_id
       self.vital = server.getObjectData(self.id)
       self.destination = nil
       self.command = nil
@@ -1831,7 +1843,7 @@ object_trackers = {
             if g_savedata.objects[i].tracker == "rescuee" and not g_savedata.objects[i].picked then
               local d = matrix.distance(g_savedata.objects[i].transform, self.transform)
 
-              if d <= 1000 and d < target_distance then
+              if d < target_distance then
                 target_distance = d
                 destination = g_savedata.objects[i].transform
               end
@@ -1856,6 +1868,7 @@ object_trackers = {
           end
         end
 
+        local player = players:find(function(x) return x.steam_id == self.owner_steam_id end)
         local is_investigating = false
 
         for i = 1, #interactions.items do
@@ -1867,16 +1880,16 @@ object_trackers = {
               local illigality = investigate(interactions.items[i])
 
               if illigality then
-                server.notify(-1, "ワンワン!", "違法貨物を発見!", 1)
+                server.notify(player.id, "ワンワン!", "違法貨物を発見!", 1)
               else
-                server.notify(-1, "ヘッヘッヘッ.", "違法貨物は発見されなかった.", 1)
+                server.notify(player.id, "ヘッヘッヘッ...", "違法貨物は発見されなかった.", 1)
               end
             end
           end
         end
 
         if is_investigating then
-          server.notify(-1, "スンスン...", "捜査犬が違法貨物を検査中...", 0)
+          server.notify(player.id, "スンスン...", "捜査犬が違法貨物を検査中...", 0)
         end
 
         if not is_investigating and self.search_duration > 0 then
@@ -2108,11 +2121,8 @@ function tick_mission(mission, tick)
 
   if not mission.taken_to_long and mission.elapsed > g_savedata.subsystems.mission.taken_to_long_threshold then
     mission.taken_to_long = true
-
-    if mission.objectives.rescuee.count > 0 then
-      server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
-      console.notify(string.format("mission#%d is taking to long.", mission.id))
-    end
+    server.notify(-1, string.format(strings.notice.mission_taken_to_long, mission.id), nil, 0)
+    console.notify(string.format("mission#%d is taking to long.", mission.id))
   end
 
   mission:tick(tick)
@@ -2297,7 +2307,8 @@ function has_illigality(mission_id)
   local illigal = false
 
   for i = 1, #g_savedata.objects do
-    illigal = illigal or g_savedata.objects[i].mission == mission_id and (g_savedata.objects[i].tracker == "accessory" and g_savedata.objects[i].investigated and g_savedata.objects[i].illigal) or (g_savedata.objects[i].tracker == "suspect" and g_savedata.objects[i].illigal)
+    illigal = illigal or g_savedata.objects[i].mission == mission_id and (g_savedata.objects[i].tracker == "accessory" and g_savedata.objects[i].investigated and g_savedata.objects[i].illigal) or
+    (g_savedata.objects[i].tracker == "suspect" and g_savedata.objects[i].illigal)
   end
 
   return illigal
@@ -2337,6 +2348,7 @@ function initialize_object(id, type, name, tags, mission_id, location_id, compon
   object.voxels = nil
   object.mass = nil
   object.components = nil
+  object.damage_total = 0
   object.damages = {}
   object.explosive = object.tags.explosive == "true"
   object.invulnerability_timer = 0
@@ -2444,6 +2456,7 @@ function tick_object(object, tick)
     local damages_density = {}
 
     for i = 1, #object.damages do
+      object.damage_total = object.damage_total + object.damages[i].amount
       local x, y, z = matrix.position(object.damages[i].transform)
       x = math.round(x / 20) * 20
       y = math.round(y / 20) * 20
@@ -2586,11 +2599,23 @@ function spawn_equipment(transform, type, int, flt)
   return object
 end
 
+function spawn_sniffer(owner_steam_id, transform, name, size)
+  if size == nil then
+    size = math.random() + 0.5
+  end
+
+  local id = server.spawnCreature(transform, table.random(stormwoofs), size)
+  initialize_object(id, "creature", name, { tracker = "sniffer" }, nil, nil, nil, nil, owner_steam_id)
+end
+
 function loaded_object(object)
   object.loaded = true
 
   if is_vehicle(object) then
-    local data = server.getVehicleComponents(object.id)
+    local data, s = server.getVehicleComponents(object.id)
+
+    if not s then return end
+
     object.voxels = data.voxels
     object.mass = data.mass
     object.components = data.components
@@ -3863,11 +3888,13 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         end
       end
     end
-  elseif command == "?sniffer" and is_admin then
+  elseif (command == "?sniffer" or command == "?s") and is_admin then
     if verb == "init" then
-      local location = table.find(locations.items, function(x) return locations:is_match(x, "^device:lakiston$") end)
-      location.transform = get_player_transform(peer_id)
-      spawn_location(location)
+      local name = ...
+      local player = players:find(function(x) return x.id == peer_id end)
+      local transform = get_player_transform(peer_id)
+      spawn_sniffer(player.steam_id, transform, name)
+      transact(-2000, string.format("%s has bought a new sniffer.", player.name))
     elseif verb == "search" then
       local player_transform = get_player_transform(peer_id)
       local sniffer = nil
@@ -3889,6 +3916,12 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       end
 
       sniffer.command = "search"
+    elseif verb == "clear-all" then
+      for i = #g_savedata.objects, 1, -1 do
+        if g_savedata.objects[i].tracker == "sniffer" then
+          despawn_object(g_savedata.objects[i])
+        end
+      end
     end
   elseif command == "?tp" then
     local target = tonumber(verb)
