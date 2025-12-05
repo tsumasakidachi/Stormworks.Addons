@@ -716,19 +716,6 @@ location_properties = { {
   dispersal_area = 1000,
   report = "このエリアに隕石の落下が予測されている...",
   note = "気象当局からの通報",
-}, {
-  pattern = "^device:lakiston$",
-  tracker = nil,
-  case = nil,
-  geologic = nil,
-  suitable_zones = {},
-  count = 0,
-  save_to_history = false,
-  is_main_location = false,
-  sub_locations = {},
-  dispersal_area = 0,
-  report = "",
-  note = "捜査犬ラキストン",
 } }
 
 interactions_property = { {

@@ -92,12 +92,12 @@ function value_weather(w)
 end
 
 function weather(w)
-    local rain = math.max(value_weather(w.rain) * 0.01, 0)
-    local wind = math.max(value_weather(w.wind) * 0.01, 0)
-    local fog = math.max(value_weather(w.fog) * 0.01 - wind * 0.5, rain * 0.5, 0)
+    local rain = math.max(value_weather(w.rain), 0)
+    local wind = math.max(value_weather(w.wind), 0)
+    local fog = math.min(math.max(value_weather(w.fog) + rain, 0), g_savedata.weather.fog.target_max)
 
-    server.setWeather(fog, rain, wind)
-    console.notify(string.format("W %3.6f; R %3.6f; F %3.6f;", wind, rain, fog))
+    server.setWeather(fog * 0.01, rain * 0.01, wind * 0.01)
+    console.notify(string.format("W %.0f; R %.0f; F %.0f;", wind, rain, fog))
     end
 
 function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command, verb, ...)
