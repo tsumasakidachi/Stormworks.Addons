@@ -593,8 +593,8 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
-  report = "臨検",
-  note = "哨戒機からの通報",
+  report = "違法な貨物を輸送している疑いのある船舶が見つかった. 当該船舶は現在この付近を航行していると思われる. 捜索し乗り込んで調査せよ.",
+  note = "情報局からの通報",
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   tracker = "sar",
@@ -2000,7 +2000,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.spawned = false
   mission.terminated = false
   mission.elapsed = 0
-  mission.launched = false
+  mission.activated = false
   mission.taken_to_long = false
   mission.marker_id = server.getMapID()
   mission.rewards = 0
@@ -2037,11 +2037,11 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
-  if not mission.launched and players:is_in_range(mission.search_center, mission.search_radius) then
-    mission.launched = true
+  if not mission.activated and players:is_in_range(mission.search_center, mission.search_radius) then
+    mission.activated = true
   end
 
-  if mission.launched then
+  if mission.activated then
     mission.elapsed = mission.elapsed + tick
   end
 
