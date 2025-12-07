@@ -402,9 +402,9 @@ location_properties = { {
   geologic = geologics.mainlands,
   suitable_zones = { "field", "mountain" },
   is_main_location = true,
-  sub_locations = { "^mission:passenger_fallen_land_%d+$" },
-  sub_location_min = 2,
-  sub_location_max = 4,
+  sub_locations = {},
+  sub_location_min = 0,
+  sub_location_max = 0,
   dispersal_area = 1000,
   report = "バラバラになって落ちていく飛行機が見えた!",
   note = "民間人からの通報",
@@ -3220,8 +3220,7 @@ landscapes = {
         name = zone.landscape
       end
 
-      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.landscape.markar_id, zone.icon, name, x, z, color, color,
-        color, 255)
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.landscape.markar_id, zone.icon, zone.landscape, x, z, color, color, color, 255)
     end
   end,
   clear_map_all = function(self, peer_id)
@@ -3328,7 +3327,7 @@ interactions = {
       local color = zone.icon == 8 and 255 or 0
       local name = zone.name
 
-      if string.nil_or_empty(name) then
+      if g_savedata.mode == "debug" and string.nil_or_empty(name) then
         name = zone.type
       end
 

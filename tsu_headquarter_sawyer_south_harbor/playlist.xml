@@ -4,13 +4,13 @@
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
-					<c component_type="10" id="3" cargo_zone_import_cargo_type="interaction=respawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="3" vehicle_parent_id="63" cargo_zone_import_cargo_type="interaction=respawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.485189" 02="0.874409" 20="-0.874409" 22="-0.485189" 30="204.274078" 31="7.934159" 32="-353.243988"/>
 						<spawn_bounds>
 							<min x="-1.97934" y="-1.469489" z="-1.460467"/>
 							<max x="1.97934" y="1.469489" z="1.460467"/>
 						</spawn_bounds>
-						<vehicle_parent_transform 00="-1" 02="0.000427" 20="-0.000427" 22="-1" 30="0.746979" 31="-3.199553" 32="-2.276833"/>
+						<vehicle_parent_transform 00="-0.999972" 02="-0.007348" 20="0.007348" 22="-0.999972" 30="7.805573" 31="-2.820561" 32="-4.499106"/>
 						<graph_links/>
 					</c>
 					<c component_type="10" id="4" cargo_zone_import_cargo_type="interaction=first_spawn" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
@@ -21,13 +21,13 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="49" cargo_zone_import_cargo_type="id_49,interaction=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="49" vehicle_parent_id="63" cargo_zone_import_cargo_type="id_49,interaction=base" display_name="Sawyer Coastguard South Harbor Office" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="198.275497" 31="8.266338" 32="-347.602509"/>
 						<spawn_bounds>
 							<min x="-10.635959" y="-2.087271" z="-3.241685"/>
 							<max x="10.635959" y="2.087271" z="3.241685"/>
 						</spawn_bounds>
-						<vehicle_parent_transform 00="0.999997" 02="-0.002637" 20="0.002637" 22="0.999997" 30="0.018982" 31="-9.94163" 32="-0.567802"/>
+						<vehicle_parent_transform 00="0.999987" 02="0.004952" 20="-0.004952" 22="0.999987" 30="-0.019196" 31="-2.488381" 32="-7.064704"/>
 						<graph_links/>
 					</c>
 					<c component_type="3" id="58" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_58.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
