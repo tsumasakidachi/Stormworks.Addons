@@ -3,7 +3,7 @@ version = "1.3.0"
 
 -- properties
 g_savedata = {
-  mode = "debug",
+  mode = "prod",
   missions = {},
   objects = {},
   oil_spills = {},
