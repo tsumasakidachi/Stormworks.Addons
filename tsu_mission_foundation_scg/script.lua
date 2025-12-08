@@ -1229,7 +1229,7 @@ object_trackers = {
 
         if not self.explosive and explosive then
           self.explosive = true
-          self.magnitude = math.max(0.5, math.random() * 1.414) ^ 2
+          self.magnitude = math.max(0.25, math.random() * 1.414) ^ 2
           self.explosive_timer = math.random(240, 720)
         end
 
