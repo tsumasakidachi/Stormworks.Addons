@@ -408,6 +408,8 @@ location_properties = { {
   dispersal_area = 1000,
   report = "バラバラになって落ちていく飛行機が見えた!",
   note = "民間人からの通報",
+  character_min = 50,
+  character_max = 100,
 }, {
   pattern = "^mission:marina_fire_%d+$",
   tracker = "sar",
@@ -1130,7 +1132,7 @@ object_trackers = {
       end
 
       if g_savedata.subsystems.rescuee.has_strobe and not self.hostage then
-        local p = players:is_in_range(self.transform, 500)
+        local p = players:is_in_range(self.transform, 250)
         local opt = (self.strobe.opt or p) and not picked
         local ir = (self.strobe.ir or p) and not picked
         local dead = not self.vital.dead and vital_update.dead
@@ -1777,7 +1779,7 @@ object_trackers = {
       local vital = server.getObjectData(self.id)
 
       if not vital.incapacitated and not vital.dead then
-        if self.command == "search" and self.destination ~= nil and matrix.distance(self.transform, self.destination) < 5 then
+        if self.command == "search" and self.destination ~= nil and matrix.distance(self.transform, self.destination) < 50 then
           self.command = nil
           self.destination = nil
         elseif self.command == "search" and self.destination == nil then
