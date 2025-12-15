@@ -3,7 +3,7 @@ version = "1.3.0"
 
 -- properties
 g_savedata = {
-  mode = "prod",
+  mode = "debug",
   missions = {},
   objects = {},
   oil_spills = {},
@@ -20,8 +20,8 @@ g_savedata = {
     mission = {
       timer_tickrate = 0,
       interval = 0,
-      interval_min = property.slider("Minimum interval at which new missions occur (minutes)", 0, 30, 1, 10) * 3600,
-      interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 20) * 3600,
+      -- interval_min = property.slider("Minimum interval at which new missions occur (minutes)", 0, 30, 1, 1) * 3600,
+      -- interval_max = property.slider("Maximum interval at which new missions occur (minutes)", 0, 60, 1, 5) * 3600,
       range_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
       range_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
       count_limited = true,
@@ -36,7 +36,11 @@ g_savedata = {
       area_x_max = 20000,
       area_y_min = -26000,
       area_y_max = -10000,
-      player_factor = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
+      difficulty = 0,
+      difficulty_remaining_min = 20 * 3600,
+      difficulty_remaining_max = 40 * 3600,
+      difficulty_remaining = 0,
+      category_default = property.slider("Number of players required to complete per mission", 1, 32, 1, 3),
       taken_to_long_threshold = property.slider("Time taken for volunteers to locate missing persons (minutes)", 5, 90, 1, 10) * 3600,
     },
     rescuee = {
@@ -141,6 +145,10 @@ geologics = {
   waters = "waters",
 }
 
+difficulties = {
+  0, common = 2, occasional = 4, rare = 8
+}
+
 location_properties = { {
   pattern = "^mission:climber_missing_%d+$",
   tracker = "sar",
@@ -151,7 +159,8 @@ location_properties = { {
   sub_locations = { "^mission:climber_missing_%d+$", "^mission:raft_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
-  dispersal_area = 500,
+  dispersal_area = 1000,
+  difficulty = 8,
   report = "悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
   note = "警察署からの通報",
 }, {
@@ -163,6 +172,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 0,
+  difficulty = 2,
   report = "タス...ケ......タ......",
   note = "民間人からの通報",
 }, {
@@ -173,6 +183,7 @@ location_properties = { {
   suitable_zones = { "field", "mountain", "forest" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 0,
   report = "落水者",
   note = "",
 }, {
@@ -183,6 +194,7 @@ location_properties = { {
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 0,
   report = "落水者",
   note = "",
 }, {
@@ -193,6 +205,7 @@ location_properties = { {
   suitable_zones = { "offshore", "channel", "shallow" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 0,
   report = "救命ボート",
   note = "",
 }, {
@@ -204,6 +217,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
+  difficulty = 2,
   report = "いかだを作ってあそんでいたら転覆した!",
   note = "民間人からの通報",
 }, {
@@ -215,8 +229,9 @@ location_properties = { {
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
-  sub_location_max = 3,
+  sub_location_max = 4,
   dispersal_area = 1000,
+  difficulty = 8,
   report = "船内で突然何かが爆発した! もう助からないぞ!",
   character_min = 25,
   character_max = 75,
@@ -232,6 +247,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 1000,
+  difficulty = 8,
   report = "本船客室より出火し, 船全体に火の手が回りつつあり非常に危険な状況である. 迅速な救援を求む.",
   character_min = 25,
   character_max = 75,
@@ -247,6 +263,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 1000,
+  difficulty = 8,
   report = "積荷の石油に火がアアア......",
   character_min = 25,
   character_max = 75,
@@ -260,6 +277,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
+  difficulty = 2,
   report = "ボートが壊れて沈没しそう!",
   character_min = 25,
   character_max = 100,
@@ -275,6 +293,7 @@ location_properties = { {
   sub_location_min = 1,
   sub_location_max = 1,
   dispersal_area = 1000,
+  difficulty = 2,
   report = "船から人が落ちた!",
   note = "職員からの通報",
 }, {
@@ -288,6 +307,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 2000,
+  difficulty = 8,
   report = "本船は何らかの物体と接触, 浸水し沈没しかかっている. 乗員乗客はほとんど脱出に成功したが漂流している. 至急救援を求む.",
   character_min = 25,
   character_max = 75,
@@ -300,9 +320,10 @@ location_properties = { {
   suitable_zones = { "offshore", "channel" },
   is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
-  sub_location_min = 1,
-  sub_location_max = 3,
+  sub_location_min = 2,
+  sub_location_max = 4,
   dispersal_area = 1000,
+  difficulty = 8,
   report = "漁船のエンジンが爆発し炎上中! どうやら浸水も起きているようだ. 終わった.",
   character_min = 25,
   character_max = 75,
@@ -316,6 +337,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
+  difficulty = 4,
   report = "ヘリコプターが風力発電機と接触し墜落した. 激しく炎上しており周囲の森林に延焼する可能性がある, 至急救援求む.",
   character_min = 100,
   character_max = 100,
@@ -330,6 +352,7 @@ location_properties = { {
   sub_locations = { "^mission:diver_missing_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
+  difficulty = 4,
   dispersal_area = 500,
   report = "ダイビング中に事故が発生した模様で戻ってこない人がいる. もう1時間以上経っているので捜索してほしい.",
   note = "民間人からの通報",
@@ -341,6 +364,7 @@ location_properties = { {
   suitable_zones = { "underwater" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 0,
   report = "行方不明のダイバー",
   note = "",
 }, {
@@ -354,6 +378,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 2000,
+  difficulty = 8,
   report = "操業中の事故により海上油田で爆発が発生. 油井が激しく炎上し, もう我々の手には負えない. 我々は脱出を開始しているが救命艇が足りず, 身一つで海へ飛び込んだ者もいる. 早急な救出が必要だ.",
   character_min = 25,
   character_max = 75,
@@ -371,6 +396,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 500,
+  difficulty = 8,
   report = "大型トラックの事故で大火災が発生. トンネルの中が全部燃えていてこのままでは全員焼け死んでしまう!",
   fire_min = 100,
   fire_max = 100,
@@ -383,6 +409,7 @@ location_properties = { {
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 2,
   report = "スタックした自動車",
   note = "",
 }, {
@@ -393,6 +420,7 @@ location_properties = { {
   suitable_zones = { "road", "tunnel" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 0,
   report = "スタックした自動車",
   note = "",
 }, {
@@ -406,6 +434,7 @@ location_properties = { {
   sub_location_min = 0,
   sub_location_max = 0,
   dispersal_area = 1000,
+  difficulty = 4,
   report = "バラバラになって落ちていく飛行機が見えた!",
   note = "民間人からの通報",
   character_min = 50,
@@ -419,6 +448,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 8,
   report = "マリーナに係留されているボートから出火して周りの船にも燃え移っている.",
   character_min = 100,
   character_max = 100,
@@ -432,6 +462,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
+  difficulty = 4,
   report = "キャンプ場で火事, 森林火災に発展する可能性が高い. 早急な対応を頼む.",
   character_min = 25,
   character_max = 75,
@@ -447,6 +478,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 500,
+  difficulty = 2,
   report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   note = "パトロールからの通報",
 }, {
@@ -458,6 +490,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 4,
   report = "洋上風力発電機のエレベーターが故障, タービン室から降りられず閉じこめられている.",
   note = "パトロールからの通報",
 }, {
@@ -471,6 +504,7 @@ location_properties = { {
   sub_location_min = 2,
   sub_location_max = 4,
   dispersal_area = 500,
+  difficulty = 2,
   report = "危険な野生動物を発見. 付近にいる人を避難させ, 危害が生じた場合は当該の動物を駆除せよ.",
   note = "パトロールからの通報",
 }, {
@@ -482,6 +516,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
+  difficulty = 2,
   report = "付近を航行する船舶から漂流する機雷を発見したとの通報があった. このエリアで機雷を捜索し, 破壊または基地へ輸送せよ.",
   note = "パトロールからの通報",
 }, {
@@ -493,6 +528,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 4,
   report = "旅客列車が正面衝突し脱線転覆, 多数の負傷者が発生!",
   character_min = 25,
   character_max = 75,
@@ -506,6 +542,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 4,
   report = "旅客列車がトレーラーと衝突し脱線, 負傷者多数. また積荷の丸太が線路に散乱し, 運行不能に陥っている.",
   character_min = 25,
   character_max = 75,
@@ -519,6 +556,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 8,
   report = "発電所のタービンが発火, 天井にまで燃え広がっている. 数名の職員と連絡がつかず中に取り残されているものと思われる.",
   character_min = 25,
   character_max = 75,
@@ -532,7 +570,8 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
-  report = "化学物質が保管されている倉庫が炎上している. 不意の爆発に注意せよ.",
+  difficulty = 4,
+  report = "化学物質が保管されている倉庫が炎上している. 不意の爆発には十分注意せよ.",
   character_min = 25,
   character_max = 75,
   note = "職員からの通報",
@@ -545,6 +584,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 200,
+  difficulty = 2,
   report = "近所の家が燃えている. この家の住民と連絡が取れておらず中に取り残されている可能性がある.",
   character_min = 100,
   character_max = 100,
@@ -558,6 +598,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 2,
   report = "高速道路で乗用車が衝突し横転, 本線を塞いでいる.",
   character_min = 100,
   character_max = 100,
@@ -571,6 +612,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 4,
   report = "高速道路でタンクローリーが横転, 炎上中. 運転手は無事だがインターチェンジを完全に塞いでいる.",
   character_min = 100,
   character_max = 100,
@@ -584,7 +626,8 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
-  report = "近隣で発生した救急患者をこの空港に搬送する. 引き継いで病院へ後送せよ.",
+  difficulty = 2,
+  report = "近隣で発生した救急患者をこの空港に搬送する. 引き継いで後送せよ.",
   note = "職員からの通報",
 }, {
   pattern = "^mission:visit_cargo_vessel_%d+$",
@@ -595,6 +638,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
+  difficulty = 2,
   report = "違法な貨物を輸送している疑いのある船舶が見つかった. 当該船舶は現在この付近を航行していると思われる. 捜索し乗り込んで調査せよ.",
   note = "情報局からの通報",
 }, {
@@ -606,6 +650,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
+  difficulty = 2,
   report = "武装した小型船を発見した. 乗員を拘束せよ.",
   character_min = 50,
   character_max = 100,
@@ -619,6 +664,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 2000,
+  difficulty = 2,
   report = "ソーヤー島に違法な貨物を運び込むという情報を掴んだ. 不審な船舶を捜索し, 乗り込んで調査せよ.",
   character_min = 50,
   character_max = 100,
@@ -632,6 +678,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
+  difficulty = 4,
   report = "この船は我々が乗っ取った! 人質を解放するには ?mission ransom [MissionID] [Amount] (小文字) で身代金 $1,000,000 を振り込んでください.",
   character_min = 50,
   character_max = 100,
@@ -644,6 +691,7 @@ location_properties = { {
   suitable_zones = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine" },
   is_main_location = false,
   sub_locations = { "bunker" },
+  difficulty = 2,
   report = "海賊の歩兵",
   note = "",
 }, {
@@ -654,6 +702,7 @@ location_properties = { {
   suitable_zones = { "bunker" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 2,
   report = "海賊のテクニカル",
   note = "",
 }, {
@@ -664,6 +713,7 @@ location_properties = { {
   suitable_zones = { "bunker" },
   is_main_location = false,
   sub_locations = {},
+  difficulty = 2,
   report = "海賊の固定機銃",
   note = "",
 }, {
@@ -677,6 +727,7 @@ location_properties = { {
   sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$", "^mission:piracy_technical_%d+$" },
   sub_location_min = 10,
   sub_location_max = 12,
+  difficulty = 4,
   report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ. 民間人の退避は完了している.",
   note = "警察署からの通報",
 }, {
@@ -690,6 +741,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
+  difficulty = 0,
   report = "このエリアで竜巻が発生する可能性が高まっている...",
   note = "気象当局からの通報",
 }, {
@@ -703,6 +755,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
+  difficulty = 0,
   report = "このエリアで大渦が発生する可能性が高まっている...",
   note = "気象当局からの通報",
 }, {
@@ -716,6 +769,7 @@ location_properties = { {
   is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
+  difficulty = 0,
   report = "このエリアに隕石の落下が予測されている...",
   note = "気象当局からの通報",
 } }
@@ -1996,7 +2050,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.save_to_history = mission.locations[1].save_to_history
   mission.search_center = matrix.identity()
   mission.search_radius = 0
-  mission.category = mission.locations[1].category
+  mission.difficulty = mission.locations[1].difficulty
   mission.reported = false
   mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
   mission.spawned = false
@@ -2239,6 +2293,34 @@ function has_illigality(mission_id)
   end
 
   return illigal
+end
+
+function get_difficulties()
+  local ds = {}
+  local dsds = {}
+  local min = 0
+  local max = 0
+
+  for i = 1, #locations.items do
+    min = math.min(min, locations.items[i].difficulty)
+    max = math.max(max, locations.items[i].difficulty)
+    table.insert(ds, locations.items[i].difficulty)
+  end
+
+  ds = table.distinct(ds)
+  table.sort(ds)
+
+  for i = 1, #ds do
+    if ds[i] > 0 then
+      local count = max / ds[i]
+
+      for j = 1, count do
+        table.insert(dsds, ds[i])
+      end
+    end
+  end
+
+  return dsds
 end
 
 -- objects
@@ -2813,7 +2895,7 @@ locations = {
     obj.sub_location_min = prop.sub_location_min or 0
     obj.sub_location_max = prop.sub_location_max or 0
     obj.dispersal_area = prop.dispersal_area or 0
-    obj.category = prop.category or nil
+    obj.difficulty = prop.difficulty or 0
     obj.report = prop.report or ""
     obj.report_timer_min = prop.report_timer_min or 0
     obj.report_timer_max = prop.report_timer_max or 0
@@ -2917,8 +2999,9 @@ locations = {
 
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns))
-          and (not is_main or x.is_main_location)
-          and (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands)
+          and (not is_main or x.is_main_location and (x.difficulty == g_savedata.subsystems.mission.difficulty or x.difficulty == 0))
+          and
+          (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands)
           and self:is_suitable(x, center, range_min, range_max)
           and (not is_main or not is_unprecedented or self:is_unprecedented(x))
           and x.spawnable()
@@ -3552,13 +3635,21 @@ function onTick(tick)
     end
   end
 
-  if g_savedata.subsystems.mission.timer_tickrate > 0 then
-    if g_savedata.subsystems.mission.interval <= 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
+  if g_savedata.subsystems.mission.timer_tickrate > 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
+    if g_savedata.subsystems.mission.interval <= 0 then
       random_mission(get_center_transform(), g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min)
-      g_savedata.subsystems.mission.interval = math.random(g_savedata.subsystems.mission.interval_min, g_savedata.subsystems.mission.interval_max)
+      g_savedata.subsystems.mission.interval = math.random(1, 5) * 3600
     else
-      g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - (tick * g_savedata.subsystems.mission.timer_tickrate)
+      g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - tick * g_savedata.subsystems.mission.timer_tickrate
     end
+  end
+
+  if g_savedata.subsystems.mission.difficulty_remaining <= 0 then
+    g_savedata.subsystems.mission.difficulty_remaining = math.random(g_savedata.subsystems.mission.difficulty_remaining_min, g_savedata.subsystems.mission.difficulty_remaining_max)
+    g_savedata.subsystems.mission.difficulty = table.random(get_difficulties())
+    console.notify(string.format("Difficulty has changed to %d.", g_savedata.subsystems.mission.difficulty))
+  else
+    g_savedata.subsystems.mission.difficulty_remaining = g_savedata.subsystems.mission.difficulty_remaining - tick * g_savedata.subsystems.mission.timer_tickrate
   end
 
   timing = timing + 1
@@ -4200,10 +4291,10 @@ function missions_less_than_limit()
   local count = 0
 
   for i = 1, #g_savedata.missions do
-    count = count + g_savedata.missions[i].count
+    count = count + g_savedata.missions[i].difficulty
   end
 
-  return count < (#players.items / g_savedata.subsystems.mission.player_factor)
+  return count < #players.items * 0.8
 end
 
 function despawn_vehicle_group(group_id, is_instant)
