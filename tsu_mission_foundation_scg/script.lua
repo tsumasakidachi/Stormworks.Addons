@@ -1171,7 +1171,7 @@ object_trackers = {
       if #players.items >= g_savedata.subsystems.rescuee.cpa_recurrence_threshold_players and g_savedata.subsystems.rescuee.cpa_recurrence_rate > 0 and not is_safe then
         if not self.vital.incapacitated and vital_update.incapacitated then
           local weather = server.getWeather(self.transform)
-          local weather_factor = math.max(1 + weather.fog * 1, 1 + weather.rain * 4, 1 + weather.snow * 9,　1 + weather.wind * 4, 1 - weather.temp + 1)
+          local weather_factor = math.max(1 + weather.fog * 1, 1 + weather.rain * 4, 1 + weather.snow * 9, 1 + weather.wind * 4, 1 - weather.temp + 1)
 
           self.is_cpa_recurrent = self.is_cpa_recurrent or
               math.random(0, 99) < g_savedata.subsystems.rescuee.cpa_recurrence_rate * weather_factor
