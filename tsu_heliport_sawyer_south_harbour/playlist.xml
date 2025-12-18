@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_ports_heliport" file_store="4" name="TSU Heliport Sawyer South Harbour">
+	<locations location_id_counter="3" component_id_counter="99">
+		<locations>
+			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="58" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_58.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.485536" 02="-0.874217" 20="0.874217" 22="0.485536" 30="90.825409" 31="1.626413" 32="-439.242279"/>
+						<spawn_bounds>
+							<min x="-7.125" y="-0.125" z="-7.625"/>
+							<max x="6.375" y="0.625" z="11.625"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="77" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_77.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.484021" 02="-0.875057" 20="0.875057" 22="0.484021" 30="266.692627" 31="6.62541" 32="-442.128662"/>
+						<spawn_bounds>
+							<min x="-7.125" y="-0.125" z="-7.625"/>
+							<max x="6.375" y="0.625" z="11.625"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="96" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_96.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.483034" 02="-0.875602" 20="0.875602" 22="0.483034" 30="244.556488" 31="6.639651" 32="-402.157593"/>
+						<spawn_bounds>
+							<min x="-7.125" y="-0.125" z="-7.625"/>
+							<max x="6.375" y="0.625" z="11.625"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

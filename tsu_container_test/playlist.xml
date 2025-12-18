@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_container_test" file_store="4" name="TSU Container Test">
+	<locations location_id_counter="4" component_id_counter="27">
+		<locations>
+			<l id="4" tile="data/tiles/island_33_tile_32.xml" name="スパイケークターミナル" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="20" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_20.xml" vehicle_file_store="4">
+						<spawn_transform 00="0.60177" 02="0.79867" 20="-0.79867" 22="0.60177" 30="87.155785" 31="8.690494" 32="243.2509"/>
+						<spawn_bounds>
+							<min x="-1.625" y="-0.375" z="-15.625"/>
+							<max x="8.125" y="5.625" z="10.375"/>
+						</spawn_bounds>
+						<spawn_local_offset x="-3.25" y="-2.625" z="2.625"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="25" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_25.xml" vehicle_file_store="4">
+						<spawn_transform 00="0.361914" 02="0.932212" 20="-0.932212" 22="0.361914" 30="-55.204735" 31="17.108986" 32="258.244171"/>
+						<spawn_bounds>
+							<min x="-1.625" y="-1.375" z="-52.875"/>
+							<max x="1.625" y="0.375" z="10.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="0.5" z="21"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="26" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_26.xml" vehicle_file_store="4">
+						<spawn_transform 00="0.349683" 02="0.936868" 20="-0.936868" 22="0.349683" 30="-51.177711" 31="16.871744" 32="268.825897"/>
+						<spawn_bounds>
+							<min x="-1.625" y="-1.375" z="-52.875"/>
+							<max x="1.625" y="0.375" z="10.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="0.5" z="21"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="27" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_27.xml" vehicle_file_store="4">
+						<spawn_transform 00="0.35344" 02="0.935457" 20="-0.935457" 22="0.35344" 30="-114.96933" 31="16.871895" 32="292.7948"/>
+						<spawn_bounds>
+							<min x="-1.625" y="-1.375" z="-52.875"/>
+							<max x="1.625" y="0.375" z="10.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="0.5" z="21"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

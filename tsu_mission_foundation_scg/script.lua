@@ -79,7 +79,7 @@ g_savedata = {
       dispensable = true
     },
     cargo = {
-      tracker = false,
+      tracker = true,
     },
     mapping = {
       mission = {},
@@ -630,7 +630,7 @@ location_properties = { {
   report = "近隣で発生した救急患者をこの空港に搬送する. 引き継いで後送せよ.",
   note = "職員からの通報",
 }, {
-  pattern = "^mission:visit_cargo_vessel_%d+$",
+  pattern = "^mission:smuggling_cargo_vessel_%d+$",
   tracker = "sar",
   case = cases.securite,
   geologic = geologics.waters,
@@ -688,7 +688,7 @@ location_properties = { {
   tracker = "sar",
   case = cases.securite,
   geologic = geologics.mainlands,
-  landscape = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine" },
+  landscape = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "port", "mine" },
   is_main_location = false,
   sub_locations = { "bunker" },
   difficulty = 2,
@@ -731,17 +731,30 @@ location_properties = { {
   report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ. 民間人の退避は完了している.",
   note = "警察署からの通報",
 }, {
-  pattern = "^mission:supply_barge_%d+$",
+  pattern = "^mission:supply_request_%d+$",
   tracker = "transport",
   case = cases.supply,
   geologic = geologics.waters,
-  landscape = {},
+  landscape = { "wharf" },
   is_main_location = true,
-  dispersal_area = 0,
-  sub_locations = {},
+  dispersal_area = 8000,
+  sub_locations = { "^mission:supply_barge_goods_%d+$" },
+  sub_location_min = 1,
+  sub_location_max = 1,
   difficulty = 2,
   report = "物資",
   note = "市民からの通報",
+}, {
+  pattern = "^mission:supply_barge_goods_%d+$",
+  tracker = "transport",
+  case = cases.supply,
+  geologic = geologics.waters,
+  landscape = { "supply_spawn_waters" },
+  is_main_location = false,
+  dispersal_area = 0,
+  difficulty = 2,
+  report = "物資",
+  note = "",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
   tracker = "disaster",
@@ -803,6 +816,8 @@ interactions_property = { {
   mapped = true,
   icon = 3,
 }, {
+  type = "supply",
+}, {
   type = "investigate",
 }, {
   type = "first_spawn",
@@ -811,7 +826,7 @@ interactions_property = { {
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
-  "bridge", "house", "building", "wind_turbine", "plant", "wharf", "mine", "bunker" }
+  "bridge", "house", "building", "wind_turbine", "plant", "port", "wharf", "mine", "bunker", "supply_spawn_waters", "supply_spawn_lands" }
 
 strings = {
   statuses = {
@@ -973,6 +988,25 @@ stormwoofs = {
 mission_trackers = {
   sar = {
     init = function(self)
+      self.marker_type = 1
+
+      local r = math.random() * self.dispersal_area
+      local t = math.random() * 2 * math.pi
+      local cx = r * math.cos(t)
+      local cy = 0
+      local cz = r * math.sin(t)
+
+      self.marker_center = matrix.multiply(self.transform, matrix.translation(cx, cy, cz))
+
+      local distance_max = 0
+
+      for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].transform ~= nil then
+          distance_max = math.max(distance_max, matrix.distance(self.search_center, g_savedata.objects[i].transform))
+        end
+      end
+
+      self.marker_radius = math.max(math.ceil(distance_max / 500) * 500, self.dispersal_area)
     end,
     clear = function(self)
     end,
@@ -1040,7 +1074,7 @@ mission_trackers = {
       end
 
       text = text .. "\n\n" .. strings.statuses.search_radius
-      text = text .. string.format("\n%dm", self.search_radius)
+      text = text .. string.format("\n%dm", self.marker_radius)
 
       text = text .. "\n\n" .. strings.statuses.responders
 
@@ -1056,10 +1090,12 @@ mission_trackers = {
       text = text .. "\n" .. string.format(strings.statuses.check_in, self.id)
 
       return text
-    end
+    end,
   },
   disaster = {
     init = function(self)
+      self.marker_type = 8
+      
       local type = string.match(self.locations[1].name, "^mission:(%w+)_alert_%d+$")
       self.type = type
       self.started = false
@@ -1098,7 +1134,7 @@ mission_trackers = {
 
           if tsunami then
             self.finish_timer = 28800
-            self.search_radius = 7500
+            self.marker_radius = 7500
             self.locations[1].report = strings.notice.massive_meteor_impact
             server.notify(-1, self:report(), self.locations[1].note, 1)
           end
@@ -1122,13 +1158,91 @@ mission_trackers = {
     status = function(self)
       local text = self.locations[1].note
       text = text .. "\n\n" .. strings.statuses.search_radius
-      text = text .. "\n" .. string.format("%dm", self.search_radius)
+      text = text .. "\n" .. string.format("%dm", self.marker_radius)
       text = text .. "\n\n" .. strings.statuses.remainings
       text = text .. "\n" .. string.format(strings.statuses.remaining_item, math.ceil(self.finish_timer / 3600))
 
       return text
     end
-  }
+  },
+  transport = {
+    init = function(self)
+      self.marker_type = 0
+      self.marker_radius = 0
+    end,
+    clear = function(self)
+    end,
+    tick = function(self, tick)
+    end,
+    complete = function(self)
+      local completed = self.spawned
+
+      for i = 1, #g_savedata.objects do
+        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
+          completed = completed and (g_savedata.objects[i]:dispensable() or g_savedata.objects[i]:complete())
+        end
+      end
+
+      return completed
+    end,
+    reward = function(self)
+      local reward = self.rewards
+
+      if reward > 0 then
+        local distance = matrix.distance(get_center_transform(), self.locations[1].transform)
+        reward = reward + math.ceil(distance / 1000) * 1000 * 5
+      end
+
+      return reward
+    end,
+    report = function(self)
+      return string.format("#%d %s\n%s", self.id, self.case.text, self.locations[1].report)
+    end,
+    status = function(self)
+      local text = self.locations[1].note
+
+      text = text .. "\n\n" .. strings.statuses.objectives
+
+      for i = 1, #self.objectives do
+        if self.objectives[i].count > 0 then
+          text = text .. "\n" .. string.format(strings.statuses.objective_item, self.objectives[i].count, strings.objects[self.objectives[i].object], strings.works[self.objectives[i].work][self.objectives[i].object])
+
+          if self.objectives[i].count_picked > 0 then
+            text = text .. "\n" .. string.format(strings.statuses.objective_admitted, self.objectives[i].count_picked)
+          end
+
+          if #self.objectives[i].contents > 0 then
+            text = text .. "\n("
+
+            for j = 1, #self.objectives[i].contents do
+              if j > 1 then
+                text = text .. ", "
+              end
+
+              text = text .. self.objectives[i].contents[j]
+            end
+
+            text = text .. ")"
+          end
+        end
+      end
+
+      text = text .. "\n\n" .. strings.statuses.responders
+
+      local count = 0
+
+      for i = 1, #players.items do
+        if g_savedata.players_enroute[players.items[i].steam_id] ~= nil and g_savedata.players_enroute[players.items[i].steam_id] == self.id then
+          text = text .. string.format("\n%s", players.items[i].name)
+          count = count + 1
+        end
+      end
+
+      text = text .. "\n" .. string.format(strings.statuses.check_in, self.id)
+
+      return text
+    end
+  },
 }
 
 object_trackers = {
@@ -1794,7 +1908,8 @@ object_trackers = {
       return false
     end,
     complete = function(self)
-      return interactions:is_in(self.transform, self.destination)
+      -- return interactions:is_in(self.transform, self.destination)
+      return false
     end,
     fail = function(self)
       return false
@@ -1981,11 +2096,11 @@ object_trackers = {
           local c = 0
 
           if g_savedata.missions[i] ~= nil then
-            local _x, _y, _z = matrix.position(g_savedata.missions[i].search_center)
+            local _x, _y, _z = matrix.position(g_savedata.missions[i].marker_center)
             id = g_savedata.missions[i].id
             x = _x
             y = _z
-            r = g_savedata.missions[i].search_radius
+            r = g_savedata.missions[i].marker_radius
             c = g_savedata.missions[i].case.id
           end
 
@@ -2060,8 +2175,6 @@ function initialize_mission(_locations, report_timer, ...)
   mission.case = mission.locations[1].case
   mission.count = mission.locations[1].count
   mission.save_to_history = mission.locations[1].save_to_history
-  mission.search_center = matrix.identity()
-  mission.search_radius = 0
   mission.difficulty = mission.locations[1].difficulty
   mission.reported = false
   mission.report_timer = report_timer or math.random(mission.locations[1].report_timer_min, mission.locations[1].report_timer_max)
@@ -2071,6 +2184,10 @@ function initialize_mission(_locations, report_timer, ...)
   mission.activated = false
   mission.taken_to_long = false
   mission.marker_id = server.getMapID()
+  mission.marker_type = 2
+  mission.marker_center = mission.transform
+  mission.marker_radius = mission.dispersal_area
+  mission.marker_color = { 255, 255, 0, 255 }
   mission.rewards = 0
   based(mission, mission_trackers[mission.tracker])
   mission.objectives = aggregate_mission_objectives(mission)
@@ -2083,10 +2200,9 @@ function initialize_mission(_locations, report_timer, ...)
     record_location_history(mission.locations[1])
   end
 
-  table.insert(g_savedata.missions, mission)
   spawn_mission(mission)
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
-
+  table.insert(g_savedata.missions, mission)
   console.notify(string.format("mission#%d has initialized.", mission.id))
 end
 
@@ -2105,13 +2221,15 @@ function clear_mission(mission)
 end
 
 function tick_mission(mission, tick)
-  if not mission.activated and players:is_in_range(mission.search_center, mission.search_radius) then
+  if not mission.activated and players:is_in_range(mission.marker_center, mission.marker_radius) then
     mission.activated = true
   end
 
   if mission.activated then
     mission.elapsed = mission.elapsed + tick
   end
+
+  mission:tick(tick)
 
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
@@ -2124,26 +2242,22 @@ function tick_mission(mission, tick)
   --   console.notify(string.format("mission#%d is taking to long.", mission.id))
   -- end
 
-  mission:tick(tick)
-
-  if g_savedata.mode == "debug" or mission.search_center ~= nil and mission.search_radius ~= nil then
+  if g_savedata.mode == "debug" or mission.marker_center ~= nil and mission.marker_radius ~= nil then
     local label = mission:report()
     local label_hover = mission:status()
-    local x, y, z = matrix.position(mission.search_center)
-    local red = { 255, 0, 255, 255 }
-    local yellow = { 255, 255, 0, 255 }
+    local x, y, z = matrix.position(mission.marker_center)
 
     for i = 1, #players.items do
       if players.items[i].map_opened then
         server.removeMapID(players.items[i].id, mission.marker_id)
-        server.addMapObject(players.items[i].id, mission.marker_id, 0, 1, x, z, 0, 0, nil, nil, label, mission.search_radius, label_hover, yellow[1], yellow[2], yellow[3], yellow[4])
+        server.addMapObject(players.items[i].id, mission.marker_id, 0, mission.marker_type, x, z, 0, 0, nil, nil, label, mission.marker_radius, label_hover, mission.marker_color[1], mission.marker_color[2], mission.marker_color[3], mission.marker_color[4])
       end
     end
   end
 
   -- mission.report_timer = math.max(mission.report_timer - tick, 0)
 
-  if not mission.reported and mission.report_timer == 0 then
+  if not mission.reported and mission.report_timer <= 0 then
     alert_headquarter()
 
     local notification_type = 0
@@ -2195,23 +2309,6 @@ function spawn_mission(mission)
     end
   end
 
-  local r = math.random() * mission.dispersal_area
-  local t = math.random() * 2 * math.pi
-  local cx = r * math.cos(t)
-  local cy = 0
-  local cz = r * math.sin(t)
-
-  mission.search_center = matrix.multiply(mission.transform, matrix.translation(cx, cy, cz))
-
-  local distance_max = 0
-
-  for i = 1, #g_savedata.objects do
-    if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
-      distance_max = math.max(distance_max, matrix.distance(mission.search_center, g_savedata.objects[i].transform))
-    end
-  end
-
-  mission.search_radius = math.max(math.ceil(distance_max / 500) * 500, mission.dispersal_area)
   mission.spawned = true
 
   local tx, ty, tz = matrix.position(mission.transform)
@@ -2280,6 +2377,18 @@ function aggregate_mission_objectives(mission)
   end
 
   return objs_result
+end
+
+function aggregate_mission_radius(mission)
+  local distance_max = 0
+
+  for i = 1, #g_savedata.objects do
+    if g_savedata.objects[i].mission == mission.id and g_savedata.objects[i].transform ~= nil then
+      distance_max = math.max(distance_max, matrix.distance(mission.marker_center, g_savedata.objects[i].transform))
+    end
+  end
+
+  return math.max(math.ceil(distance_max / 500) * 500, mission.dispersal_area)
 end
 
 function objective(work, object, count, count_picked, content)
@@ -3283,9 +3392,7 @@ landscapes = {
     local is = false
 
     for i = 1, #g_savedata.missions do
-      is = is or
-          matrix.distance(g_savedata.missions[i].search_center, zone.transform) <=
-          g_savedata.missions[i].dispersal_area + clearance
+      is = is or matrix.distance(g_savedata.missions[i].transform, zone.transform) <= g_savedata.missions[i].dispersal_area + clearance
     end
 
     return is
@@ -3565,9 +3672,9 @@ players = {
       local strobe = transponder
       local explosive = false
 
-      for j = 1, #g_savedata.missions do
-        strobe = strobe or g_savedata.missions[j].tracker == "disaster" and matrix.distance(g_savedata.missions[j].search_center, self.items[i].transform) <= g_savedata.missions[j].search_radius
-      end
+      -- for j = 1, #g_savedata.missions do
+      --   strobe = strobe or g_savedata.missions[j].tracker == "disaster" and matrix.distance(g_savedata.missions[j].marker_center, self.items[i].transform) <= g_savedata.missions[j].marker_radius
+      -- end
 
       -- for j = 1, #g_savedata.objects do
       --   strobe = strobe or g_savedata.objects[j].tracker == "fire" and g_savedata.objects[j].explosive and matrix.distance(g_savedata.objects[j].transform, self.items[i].transform) <= 20
@@ -4115,7 +4222,7 @@ function onForestFireSpawned(fire_objective_id, x, y, z)
   local distance = 2000
 
   for i = 1, #g_savedata.missions do
-    local d = matrix.distance(transform, g_savedata.missions[i].search_center)
+    local d = matrix.distance(transform, g_savedata.missions[i].transform)
 
     if d <= distance then
       mission_id = g_savedata.missions[i].id
@@ -4166,7 +4273,7 @@ function onOilSpill(x, z, delta, total, vehicle_id)
     local distance = 2000
 
     for i = 1, #g_savedata.missions do
-      local d = matrix.distance(transform, g_savedata.missions[i].search_center)
+      local d = matrix.distance(transform, g_savedata.missions[i].transform)
 
       if d <= distance then
         mission_id = g_savedata.missions[i].id
