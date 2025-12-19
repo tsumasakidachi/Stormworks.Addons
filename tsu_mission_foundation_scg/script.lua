@@ -818,6 +818,8 @@ interactions_property = { {
 }, {
   type = "supply",
 }, {
+  type = "deliver",
+}, {
   type = "investigate",
 }, {
   type = "first_spawn",
@@ -2008,9 +2010,9 @@ object_trackers = {
               local illigality = investigate(interactions.items[i])
 
               if illigality then
-                server.notify(player.id, "ワンワン!", "違法貨物を発見!", 1)
+                server.notify(-1, "ワンワン!", "違法貨物を発見!", 1)
               else
-                server.notify(player.id, "ヘッヘッヘッ...", "違法貨物は発見されなかった.", 1)
+                server.notify(-1, "ヘッヘッヘッ...", "違法貨物は発見されなかった.", 0)
               end
             end
           end
@@ -3354,6 +3356,7 @@ landscapes = {
 
     obj.tags = tags
     obj.landscape = obj.tags.landscape
+    obj.tile = server.getTile(obj.transform)
     obj.icon = 1
 
     return obj
@@ -3414,17 +3417,17 @@ landscapes = {
   end,
   map = function(self, zone, peer_id)
     local peer_id = peer_id or -1
+    local name = string.format(zone.name, zone.tile.name)
 
-    if g_savedata.mode == "debug" then
+    if g_savedata.mode == "debug" or not string.nil_or_empty(name) then
       local x, y, z = matrix.position(zone.transform)
       local color = zone.icon == 8 and 255 or 0
-      local name = zone.name
 
       if name == "" then
         name = zone.landscape
       end
 
-      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.landscape.markar_id, zone.icon, zone.landscape, x, z, color, color, color, 255)
+      server.addMapLabel(peer_id, g_savedata.subsystems.mapping.landscape.markar_id, zone.icon, name, x, z, color, color, color, 255)
     end
   end,
   clear_map_all = function(self, peer_id)
@@ -3470,7 +3473,9 @@ interactions = {
     obj.type = prop.type
     obj.mapped = prop.mapped or false
     obj.icon = prop.icon or 1
+    obj.landscape = obj.tags.landscape
     obj.interaction = obj.tags.interaction
+    obj.tile = server.getTile(obj.transform)
 
     if obj.type == "investigate" then
       local investigation = table.find(g_savedata.investigation_points, function(x) return x.vehicle_id == obj.parent_vehicle_id and x.name == obj.name end)
@@ -4016,7 +4021,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         end
       end
     end
-  elseif (command == "?sniffer" or command == "?s") and is_admin then
+  elseif (command == "?sniffer" or command == "?s") then
     if verb == "init" then
       local name = ...
       local player = players:find(function(x) return x.id == peer_id end)
@@ -4044,7 +4049,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
       end
 
       sniffer.command = "search"
-    elseif verb == "clear-all" then
+    elseif verb == "clear-all" and is_admin then
       for i = #g_savedata.objects, 1, -1 do
         if g_savedata.objects[i].tracker == "sniffer" then
           despawn_object(g_savedata.objects[i])
@@ -4104,6 +4109,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     local player = players:find(function(x) return x.id == peer_id end)
 
     g_savedata.players_enroute[player.steam_id] = mission_id
+  elseif command == "?xmas" and is_admin then
+    local zones = interactions:find_all(function(x) return x.landscape == "house" and x.interaction == "deliver" end)
+    console.log(#zones)
   end
 end
 
