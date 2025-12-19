@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <playlist folder_path="data/missions/tsu_ports" file_store="4" name="TSU Ports">
-	<locations location_id_counter="3" component_id_counter="99">
+	<locations location_id_counter="4" component_id_counter="102">
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -101,6 +101,37 @@
 							<max x="0.125" y="0.875" z="25.125"/>
 						</spawn_bounds>
 						<spawn_local_offset y="-0.375" z="-0.125"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_15_3.xml" name="SAWYER 15_3" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="100" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_100.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.446484" 02="0.894792" 20="-0.894792" 22="0.446484" 30="-43.066132" 31="18.135593" 32="55.560925"/>
+						<spawn_bounds>
+							<min x="-0.375" y="-0.625" z="-0.875"/>
+							<max x="0.375" y="10.625" z="0.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="-5"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="101" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_101.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.443412" 02="0.896318" 20="-0.896318" 22="0.443412" 30="-69.674103" 31="18.069777" 32="1.693714"/>
+						<spawn_bounds>
+							<min x="-0.375" y="-0.625" z="-0.875"/>
+							<max x="0.375" y="10.625" z="0.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="-5"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="102" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_102.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.418727" 02="0.908112" 20="-0.908112" 22="0.418727" 30="-96.668701" 31="18.088764" 32="-52.7174"/>
+						<spawn_bounds>
+							<min x="-0.375" y="-0.625" z="-0.875"/>
+							<max x="0.375" y="10.625" z="0.875"/>
+						</spawn_bounds>
+						<spawn_local_offset y="-5"/>
 						<graph_links/>
 					</c>
 				</components>
