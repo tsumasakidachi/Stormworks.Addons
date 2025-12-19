@@ -155,7 +155,6 @@ location_properties = { {
   case = cases.sar,
   geologic = geologics.mainlands,
   landscape = { "forest", "mountain" },
-  is_main_location = false,
   sub_locations = { "^mission:climber_missing_%d+$", "^mission:raft_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -169,7 +168,6 @@ location_properties = { {
   case = cases.ems,
   geologic = geologics.mainlands,
   landscape = { "house" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 0,
   difficulty = 2,
@@ -177,34 +175,22 @@ location_properties = { {
   note = "民間人からの通報",
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
-  tracker = "sar",
-  case = cases.water,
   geologic = geologics.waters,
   landscape = { "field", "mountain", "forest" },
-  is_main_location = false,
-  sub_locations = {},
   difficulty = 0,
   report = "落水者",
   note = "",
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
-  tracker = "sar",
-  case = cases.water,
   geologic = geologics.waters,
   landscape = { "offshore", "channel", "shallow" },
-  is_main_location = false,
-  sub_locations = {},
   difficulty = 0,
   report = "落水者",
   note = "",
 }, {
   pattern = "^mission:lifeboat_%d+$",
-  tracker = "sar",
-  case = cases.water,
   geologic = geologics.waters,
   landscape = { "offshore", "channel", "shallow" },
-  is_main_location = false,
-  sub_locations = {},
   difficulty = 0,
   report = "救命ボート",
   note = "",
@@ -214,7 +200,6 @@ location_properties = { {
   geologic = geologics.mainlands,
   case = cases.water,
   landscape = { "lake", "beach" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
   difficulty = 2,
@@ -226,7 +211,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -242,7 +226,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -258,7 +241,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -274,7 +256,6 @@ location_properties = { {
   case = cases.water,
   geologic = geologics.mainlands,
   landscape = { "lake" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
   difficulty = 2,
@@ -288,7 +269,6 @@ location_properties = { {
   case = cases.water,
   geologic = geologics.waters,
   landscape = { "offshore", "channel", "beach" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
   sub_location_min = 1,
   sub_location_max = 1,
@@ -302,7 +282,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -318,7 +297,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -334,7 +312,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.islands,
   landscape = { "wind_turbine" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
   difficulty = 4,
@@ -348,7 +325,6 @@ location_properties = { {
   case = cases.sar,
   geologic = geologics.waters,
   landscape = { "diving_spot" },
-  is_main_location = true,
   sub_locations = { "^mission:diver_missing_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -358,11 +334,8 @@ location_properties = { {
   note = "民間人からの通報",
 }, {
   pattern = "^mission:diver_missing_%d+$",
-  tracker = "sar",
-  case = cases.sar,
   geologic = geologics.waters,
   landscape = { "underwater" },
-  is_main_location = false,
   sub_locations = {},
   difficulty = 0,
   report = "行方不明のダイバー",
@@ -373,7 +346,6 @@ location_properties = { {
   case = cases.accident,
   geologic = geologics.waters,
   landscape = {},
-  is_main_location = true,
   sub_locations = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -391,7 +363,6 @@ location_properties = { {
   case = cases.accident,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = { "^mission:car_collision_%d+$", "^mission:car_stuck_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -403,22 +374,16 @@ location_properties = { {
   note = "民間人からの通報",
 }, {
   pattern = "^mission:car_collision_%d+$",
-  tracker = "sar",
-  case = cases.ems,
   geologic = geologics.mainlands,
   landscape = { "road", "tunnel" },
-  is_main_location = false,
   sub_locations = {},
   difficulty = 2,
   report = "スタックした自動車",
   note = "",
 }, {
   pattern = "^mission:car_stuck_%d+$",
-  tracker = "sar",
-  case = cases.ems,
   geologic = geologics.mainlands,
   landscape = { "road", "tunnel" },
-  is_main_location = false,
   sub_locations = {},
   difficulty = 0,
   report = "スタックした自動車",
@@ -429,7 +394,6 @@ location_properties = { {
   case = cases.mayday,
   geologic = geologics.mainlands,
   landscape = { "field", "mountain" },
-  is_main_location = true,
   sub_locations = {},
   sub_location_min = 0,
   sub_location_max = 0,
@@ -445,7 +409,6 @@ location_properties = { {
   case = cases.accident,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 8,
@@ -459,7 +422,6 @@ location_properties = { {
   case = cases.far,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
   difficulty = 4,
@@ -473,7 +435,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.mainlands,
   landscape = { "forest", "field", "mountain", "hill" },
-  is_main_location = true,
   sub_locations = { "^mission:climber_missing_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -487,7 +448,6 @@ location_properties = { {
   case = cases.ems,
   geologic = geologics.waters,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 4,
@@ -499,7 +459,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.mainlands,
   landscape = { "lake", "channel" },
-  is_main_location = true,
   sub_locations = { "^mission:boat_sink_%d+$" },
   sub_location_min = 2,
   sub_location_max = 4,
@@ -513,7 +472,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.waters,
   landscape = { "offshore", "channel", "diving_spot" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 500,
   difficulty = 2,
@@ -525,7 +483,6 @@ location_properties = { {
   case = cases.accident,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 4,
@@ -539,7 +496,6 @@ location_properties = { {
   case = cases.ems,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 4,
@@ -553,7 +509,6 @@ location_properties = { {
   case = cases.accident,
   geologic = geologics.islands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 8,
@@ -567,7 +522,6 @@ location_properties = { {
   case = cases.far,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 4,
@@ -581,7 +535,6 @@ location_properties = { {
   case = cases.far,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 200,
   difficulty = 2,
@@ -595,7 +548,6 @@ location_properties = { {
   case = cases.ems,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 2,
@@ -609,7 +561,6 @@ location_properties = { {
   case = cases.far,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 4,
@@ -623,7 +574,6 @@ location_properties = { {
   case = cases.ems,
   geologic = geologics.mainlands,
   landscape = { "airfield", "heliport" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 2,
@@ -635,7 +585,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.waters,
   landscape = { "offshore", "channel" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 100,
   difficulty = 2,
@@ -647,7 +596,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.waters,
   landscape = { "offshore", "shallow" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
   difficulty = 2,
@@ -661,7 +609,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.waters,
   landscape = { "offshore" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 2000,
   difficulty = 2,
@@ -675,7 +622,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.waters,
   landscape = { "offshore", "shallow" },
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
   difficulty = 4,
@@ -685,33 +631,24 @@ location_properties = { {
   note = "ハイジャッカーからの通報",
 }, {
   pattern = "^mission:piracy_infantry_%d+$",
-  tracker = "sar",
-  case = cases.securite,
   geologic = geologics.mainlands,
   landscape = { "field", "forest", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel", "bridge", "house", "building", "wind_turbine", "plant", "port", "mine" },
-  is_main_location = false,
   sub_locations = { "bunker" },
   difficulty = 2,
   report = "海賊の歩兵",
   note = "",
 }, {
   pattern = "^mission:piracy_technical_%d+$",
-  tracker = "sar",
-  case = cases.securite,
   geologic = geologics.mainlands,
   landscape = { "bunker" },
-  is_main_location = false,
   sub_locations = {},
   difficulty = 2,
   report = "海賊のテクニカル",
   note = "",
 }, {
   pattern = "^mission:piracy_static_%d+$",
-  tracker = "sar",
-  case = cases.securite,
   geologic = geologics.mainlands,
   landscape = { "bunker" },
-  is_main_location = false,
   sub_locations = {},
   difficulty = 2,
   report = "海賊の固定機銃",
@@ -722,7 +659,6 @@ location_properties = { {
   case = cases.securite,
   geologic = geologics.mainlands,
   landscape = {},
-  is_main_location = true,
   dispersal_area = 500,
   sub_locations = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$", "^mission:piracy_technical_%d+$" },
   sub_location_min = 10,
@@ -736,7 +672,6 @@ location_properties = { {
   case = cases.supply,
   geologic = geologics.waters,
   landscape = { "wharf" },
-  is_main_location = true,
   dispersal_area = 8000,
   sub_locations = { "^mission:supply_barge_goods_%d+$" },
   sub_location_min = 1,
@@ -746,13 +681,18 @@ location_properties = { {
   note = "市民からの通報",
 }, {
   pattern = "^mission:supply_barge_goods_%d+$",
-  tracker = "transport",
-  case = cases.supply,
   geologic = geologics.waters,
   landscape = { "supply_spawn_waters" },
-  is_main_location = false,
   dispersal_area = 0,
   difficulty = 2,
+  report = "物資",
+  note = "",
+}, {
+  pattern = "^mission:supply_corrugated_box_%d+$",
+  geologic = geologics.waters,
+  landscape = { "supply_spawn_lands" },
+  dispersal_area = 0,
+  difficulty = 0,
   report = "物資",
   note = "",
 }, {
@@ -763,7 +703,6 @@ location_properties = { {
   landscape = { "channel", "lake", "ait", "forest", "field", "beach" },
   count = 0,
   save_to_history = false,
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
   difficulty = 0,
@@ -777,7 +716,6 @@ location_properties = { {
   landscape = { "offshore" },
   count = 0,
   save_to_history = false,
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
   difficulty = 0,
@@ -791,7 +729,6 @@ location_properties = { {
   landscape = { "offshore" },
   count = 0,
   save_to_history = false,
-  is_main_location = true,
   sub_locations = {},
   dispersal_area = 1000,
   difficulty = 0,
@@ -1097,7 +1034,7 @@ mission_trackers = {
   disaster = {
     init = function(self)
       self.marker_type = 8
-      
+
       local type = string.match(self.locations[1].name, "^mission:(%w+)_alert_%d+$")
       self.type = type
       self.started = false
@@ -1412,7 +1349,7 @@ object_trackers = {
 
         if not self.explosive and explosive then
           self.explosive = true
-          self.magnitude = math.max(0.25, math.random() * 1.414) ^ 2
+          self.magnitude = (math.random() * 1.414) ^ 2
           self.explosive_timer = math.random(240, 720)
         end
 
@@ -2191,12 +2128,19 @@ function initialize_mission(_locations, report_timer, ...)
   mission.marker_radius = mission.dispersal_area
   mission.marker_color = { 255, 255, 0, 255 }
   mission.rewards = 0
-  based(mission, mission_trackers[mission.tracker])
+
+  if mission.tracker ~= nil and mission_trackers[mission.tracker] ~= nil then
+    based(mission, mission_trackers[mission.tracker])
+  end
+
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.explosive = false
-  mission:init({ ... })
+
+  if mission.init ~= nil then
+    mission:init({ ... })
+  end
 
   if mission.save_to_history then
     record_location_history(mission.locations[1])
@@ -2216,7 +2160,11 @@ function clear_mission(mission)
   end
 
   server.removeMapID(-1, mission.marker_id)
-  mission:clear()
+
+  if mission.clear ~= nil then
+    mission:clear()
+  end
+
   mission.cleared = true
 
   console.notify(string.format("mission#%d has cleared.", mission.id))
@@ -2231,7 +2179,9 @@ function tick_mission(mission, tick)
     mission.elapsed = mission.elapsed + tick
   end
 
-  mission:tick(tick)
+  if mission.tick ~= nil then
+    mission:tick(tick)
+  end
 
   mission.objectives = aggregate_mission_objectives(mission)
   mission.landscapes = aggregate_mission_landscapes(mission)
@@ -2244,7 +2194,7 @@ function tick_mission(mission, tick)
   --   console.notify(string.format("mission#%d is taking to long.", mission.id))
   -- end
 
-  if g_savedata.mode == "debug" or mission.marker_center ~= nil and mission.marker_radius ~= nil then
+  if mission.report ~= nil and mission.status ~= nil and (g_savedata.mode == "debug" or mission.marker_center ~= nil and mission.marker_radius ~= nil) then
     local label = mission:report()
     local label_hover = mission:status()
     local x, y, z = matrix.position(mission.marker_center)
@@ -2318,9 +2268,11 @@ function spawn_mission(mission)
 end
 
 function reward_mission(mission)
-  local reward = mission:reward()
+  if mission.reward ~= nil then
+    local reward = mission:reward()
 
-  transact(reward, string.format("Reward for mission#%d.", mission.id))
+    transact(reward, string.format("Reward for mission#%d.", mission.id))
+  end
 end
 
 function terminate_mission(mission)
@@ -3007,13 +2959,6 @@ locations = {
     obj.count = prop.count or 1
     obj.save_to_history = prop.save_to_history or true
     obj.landscape = prop.landscape or {}
-
-    if prop.is_main_location ~= nil then
-      obj.is_main_location = prop.is_main_location
-    else
-      obj.is_main_location = true
-    end
-
     obj.sub_locations = prop.sub_locations or {}
     obj.sub_location_min = prop.sub_location_min or 0
     obj.sub_location_max = prop.sub_location_max or 0
@@ -3053,7 +2998,7 @@ locations = {
     local unique = {}
 
     for i = 1, #self.items do
-      if self.items[i].is_main_location then
+      if self.items[i].tracker ~= nil then
         table.insert(unique, self.items[i][g_savedata.location_comparer])
       end
     end
@@ -3122,7 +3067,7 @@ locations = {
 
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns))
-          and (not is_main or x.is_main_location and (x.difficulty == g_savedata.subsystems.mission.difficulty or x.difficulty == 0))
+          and (not is_main or x.tracker ~= nil and (x.difficulty == g_savedata.subsystems.mission.difficulty or x.difficulty == 0))
           and
           (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands)
           and self:is_suitable(x, center, range_min, range_max)
@@ -4109,9 +4054,9 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     local player = players:find(function(x) return x.id == peer_id end)
 
     g_savedata.players_enroute[player.steam_id] = mission_id
-  elseif command == "?xmas" and is_admin then
+  elseif command == "?op12" and is_admin then
     local zones = interactions:find_all(function(x) return x.landscape == "house" and x.interaction == "deliver" end)
-    console.log(#zones)
+    local count = #zones
   end
 end
 
