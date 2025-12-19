@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<playlist folder_path="data/missions/tsu_headquarter_sawyer_south_harbor" file_store="4" name="TSU Headquarter Sawyer South Harbour">
-	<locations location_id_counter="3" component_id_counter="99">
+<playlist folder_path="data/missions/tsu_headquarter_sawyer_south_harbour" file_store="4" name="TSU Headquarter Sawyer South Harbour">
+	<locations location_id_counter="3" component_id_counter="100">
 		<locations>
 			<l id="1" tile="data/tiles/mega_island_15_2.xml" is_env_mod="true" env_mod_spawn_num="1">
 				<components>
@@ -28,6 +28,15 @@
 							<max x="10.635959" y="2.087271" z="3.241685"/>
 						</spawn_bounds>
 						<vehicle_parent_transform 00="0.999987" 02="0.004952" 20="-0.004952" 22="0.999987" 30="-0.019196" 31="-2.488381" 32="-7.064704"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="58" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_58.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.485536" 02="-0.874217" 20="0.874217" 22="0.485536" 30="90.825409" 31="1.626413" 32="-439.242279"/>
+						<spawn_bounds>
+							<min x="-7.125" y="-0.125" z="-7.625"/>
+							<max x="6.375" y="0.625" z="11.625"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
 						<graph_links/>
 					</c>
 					<c component_type="10" id="60" cargo_zone_import_cargo_type="interaction=scrap_yard" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
