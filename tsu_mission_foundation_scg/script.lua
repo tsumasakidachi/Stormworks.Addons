@@ -684,7 +684,7 @@ location_properties = { {
   geologic = geologics.waters,
   landscape = { "supply_spawn_waters" },
   dispersal_area = 0,
-  difficulty = 2,
+  difficulty = 0,
   report = "物資",
   note = "",
 }, {
@@ -941,7 +941,7 @@ mission_trackers = {
 
       for i = 1, #g_savedata.objects do
         if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].transform ~= nil then
-          distance_max = math.max(distance_max, matrix.distance(self.search_center, g_savedata.objects[i].transform))
+          distance_max = math.max(distance_max, matrix.distance(self.marker_center, g_savedata.objects[i].transform))
         end
       end
 
@@ -2137,6 +2137,9 @@ function initialize_mission(_locations, report_timer, ...)
   mission.landscapes = aggregate_mission_landscapes(mission)
   mission.events = aggregate_mission_events(mission)
   mission.explosive = false
+  g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
+
+  spawn_mission(mission)
 
   if mission.init ~= nil then
     mission:init({ ... })
@@ -2146,8 +2149,6 @@ function initialize_mission(_locations, report_timer, ...)
     record_location_history(mission.locations[1])
   end
 
-  spawn_mission(mission)
-  g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
   table.insert(g_savedata.missions, mission)
   console.notify(string.format("mission#%d has initialized.", mission.id))
 end
@@ -2599,7 +2600,7 @@ function tick_object(object, tick)
       local x, y, z = matrix.position(object.transform)
       local r, g, b, a = 128, 128, 128, 255
       local label = string.format("%s#%d", object.tracker ~= nil and object.tracker or object.type, object.id)
-      local popup = string.format("X: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+      local popup = string.format("Mission: %.0s\nX: %.0f\nY: %.0f\nZ: %.0f", object.mission, x, y, z)
 
       server.addMapObject(-1, object.marker_id, 0, object.marker_type, x, z, 0, 0, nil, nil, label, 0, popup, r, g, b, a)
     end
@@ -4054,9 +4055,23 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     local player = players:find(function(x) return x.id == peer_id end)
 
     g_savedata.players_enroute[player.steam_id] = mission_id
-  elseif command == "?op12" and is_admin then
-    local zones = interactions:find_all(function(x) return x.landscape == "house" and x.interaction == "deliver" end)
-    local count = #zones
+  elseif command == "?op12" and verb == "init" and is_admin then
+    local row, column, stack = ...
+    row = tonumber(row)
+    column = tonumber(column)
+    stack = tonumber(stack)
+    local player = players:find(function(x) return x.id == peer_id end)
+
+    for i = 1, row do
+      for j = 1, column do
+        for k = 1, stack do
+          local translation = matrix.translation(i * 1 - 1, k * 0.5 - 0.5, 2 + j * 0.5 - 0.5)
+          local transform = matrix.multiply(player.transform, translation)
+          local id = server.spawnObject(transform, 38)
+          initialize_object(id, "object", "Present", {})
+        end
+      end
+    end
   end
 end
 
