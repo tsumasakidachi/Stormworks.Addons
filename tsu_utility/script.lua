@@ -716,3 +716,14 @@ function table.shuffle(x)
         x[i], x[j] = x[j], x[i]
     end
 end
+
+function set_or_not(value, set)
+  if set == "true" then
+    return true
+  elseif set == "false" then
+    return false
+  elseif set == nil then
+    return not value
+  end
+end
+

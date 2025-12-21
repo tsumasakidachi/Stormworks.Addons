@@ -1832,8 +1832,10 @@ object_trackers = {
     test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.cargo.tracker and (type == "vehicle" or type == "object") and tags.tracker == "cargo"
     end,
-    init = function(self)
-      self.destination = nil
+    init = function(self, interaction, landscape)
+      self.zone = nil
+      self.interaction = interaction
+      self.landscape = landscape
     end,
     clear = function(self)
     end,
@@ -1847,8 +1849,7 @@ object_trackers = {
       return false
     end,
     complete = function(self)
-      -- return interactions:is_in(self.transform, self.destination)
-      return false
+      return self.interaction ~= nil and self.landscape ~= nil and interactions:is_in_interaction(self.transform, self.interaction, self.landscape)
     end,
     fail = function(self)
       return false
@@ -3447,11 +3448,11 @@ interactions = {
       end
     end
   end,
-  is_in_interaction = function(self, transform, type)
+  is_in_interaction = function(self, transform, type, landscape)
     local is = false
 
     for i = 1, #self.items do
-      is = is or self.items[i].type == type and self:is_in(transform, self.items[i])
+      is = is or self.items[i].type == type and (landscape == nil or self.items[i].landscape == landscape) and self:is_in(transform, self.items[i])
     end
 
     return is
@@ -3935,6 +3936,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         end
       end
     end
+  elseif command == "object" and is_admin then
   elseif command == "?hq" and is_admin then
     if verb == "register" then
       local vehicle_id = ...
@@ -4055,20 +4057,28 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     local player = players:find(function(x) return x.id == peer_id end)
 
     g_savedata.players_enroute[player.steam_id] = mission_id
-  elseif command == "?op12" and verb == "init" and is_admin then
-    local row, column, stack = ...
-    row = tonumber(row)
-    column = tonumber(column)
-    stack = tonumber(stack)
-    local player = players:find(function(x) return x.id == peer_id end)
+  elseif command == "?op12" and is_admin then
+    if verb == "init" then
+      local row, column, stack = ...
+      row = tonumber(row)
+      column = tonumber(column)
+      stack = tonumber(stack)
+      local player = players:find(function(x) return x.id == peer_id end)
 
-    for i = 1, row do
-      for j = 1, column do
-        for k = 1, stack do
-          local translation = matrix.translation(i * 1 - 1, k * 0.5 - 0.5, 2 + j * 0.5 - 0.5)
-          local transform = matrix.multiply(player.transform, translation)
-          local id = server.spawnObject(transform, 38)
-          initialize_object(id, "object", "Present", {})
+      for i = 1, row do
+        for j = 1, column do
+          for k = 1, stack do
+            local translation = matrix.translation(i * 1 - 1, k * 0.5 - 0.5, 2 + j * 0.5 - 0.5)
+            local transform = matrix.multiply(player.transform, translation)
+            local id = server.spawnObject(transform, 38)
+            initialize_object(id, "object", "Present", { tracker = "cargo" }, nil, nil, nil, nil, "deliver", "house")
+          end
+        end
+      end
+    elseif verb == "clear-all" then
+      for i = #g_savedata.objects, 1, -1 do
+        if g_savedata.objects[i].name == "Present" then
+          despawn_object(g_savedata.objects[i])
         end
       end
     end
