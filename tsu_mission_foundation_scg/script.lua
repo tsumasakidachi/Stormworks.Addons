@@ -543,6 +543,19 @@ location_properties = { {
   character_max = 100,
   note = "民間人からの通報",
 }, {
+  pattern = "^mission:ruins_fire_%d+$",
+  tracker = "sar",
+  case = cases.far,
+  geologic = geologics.islands,
+  landscape = {},
+  sub_locations = {},
+  dispersal_area = 200,
+  difficulty = 4,
+  report = "遺跡で火災が発生. 観光客の避難はまだ完了していない.",
+  character_min = 50,
+  character_max = 75,
+  note = "管理人からの通報",
+}, {
   pattern = "^mission:highway_car_%d+$",
   tracker = "sar",
   case = cases.ems,
@@ -2082,20 +2095,22 @@ object_trackers = {
 -- main logics
 -- missions
 
-function random_mission(center, range_max, range_min, is_unprecedented, pattern)
-  if is_unprecedented == nil then
-    is_unprecedented = true
+function create_mission(center, range_max, range_min, patterns)
+  if #patterns == 0 then
+    table.insert(patterns, "^mission:.+$")
   end
 
-  local patterns = {}
+  local _locations = locations:random(center, range_min, range_max, patterns, true, true, true, true, true)
 
-  if pattern ~= nil then
-    patterns[1] = pattern
-  else
-    patterns[1] = "^mission:.+$"
+  if #_locations == 0 then
+    return
   end
 
-  local _locations = locations:random(center, range_min, range_max, true, is_unprecedented, patterns)
+  initialize_mission(_locations)
+end
+
+function create_mission_random(center, range_max, range_min)
+  local _locations = locations:random(center, range_min, range_max, {"^mission:.+$"}, true)
 
   if #_locations == 0 then
     return
@@ -2140,6 +2155,7 @@ function initialize_mission(_locations, report_timer, ...)
   mission.explosive = false
   g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
+  table.insert(g_savedata.missions, mission)
   spawn_mission(mission)
 
   if mission.init ~= nil then
@@ -2150,7 +2166,6 @@ function initialize_mission(_locations, report_timer, ...)
     record_location_history(mission.locations[1])
   end
 
-  table.insert(g_savedata.missions, mission)
   console.notify(string.format("mission#%d has initialized.", mission.id))
 end
 
@@ -2255,7 +2270,7 @@ function spawn_mission(mission)
   local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
   for i = 1, sub_location_count do
-    local sub_locations = locations:random(mission.transform, 0, mission.dispersal_area, false, false, mission.locations[1].sub_locations, {}, mission.locations)
+    local sub_locations = locations:random(mission.transform, 0, mission.dispersal_area, mission.locations[1].sub_locations, false, true, false, false, true)
 
     for j = 1, #sub_locations do
       table.insert(mission.locations, sub_locations[j])
@@ -3052,29 +3067,20 @@ locations = {
 
     return transform, s
   end,
-  random = function(self, center, range_min, range_max, is_main, is_unprecedented, patterns, ls, sibling_locations)
-    local result = {}
+  random = function(self, center, range_min, range_max, patterns, is_main, ignore_duplication, ignore_difficulty, ignore_geologic, ignore_history)
+    result = {}
 
     if patterns == nil then
       patterns = {}
     end
 
-    if ls == nil then
-      ls = {}
-    end
-
-    if sibling_locations == nil then
-      sibling_locations = {}
-    end
-
     local _locations = table.find_all(self.items, function(x)
       return (#patterns == 0 or self:is_match_multipattern(x, patterns))
-          and (not is_main or x.tracker ~= nil and (x.difficulty == g_savedata.subsystems.mission.difficulty or x.difficulty == 0))
-          and
-          (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands)
           and self:is_suitable(x, center, range_min, range_max)
-          and (not is_main or not is_unprecedented or self:is_unprecedented(x))
-          and x.spawnable()
+          and (not is_main or x.case ~= nil)
+          and (ignore_difficulty or x.tracker ~= nil and x.difficulty == g_savedata.subsystems.mission.difficulty)
+          and (ignore_geologic or (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands))
+          and (ignore_history or not ignore_history and self:is_unprecedented(x))
     end)
 
     if #_locations == 0 then
@@ -3109,9 +3115,8 @@ locations = {
       if _locations[i].tile == "" then
         local _zones = landscapes:find_all(function(x)
           return landscapes:is_suitable(x, _locations[i], center, range_min, range_max)
-              and (not is_main or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area))
               and not landscapes:is_occupied(x, result)
-              and not landscapes:is_occupied(x, sibling_locations)
+              and (ignore_duplication or not landscapes:is_in_another_mission(x, _locations[i].dispersal_area))
         end)
         local _zones_landscape = table.distinct(table.select(_zones, function(x)
           return x.landscape
@@ -3156,11 +3161,11 @@ locations = {
 
         table.insert(result, l)
 
-        if is_main then
-          center = transform
-          range_min = 0
-          range_max = _locations[i].dispersal_area
-        end
+        -- if is_main then
+        --   center = transform
+        --   range_min = 0
+        --   range_max = _locations[i].dispersal_area
+        -- end
       else
         console.error(string.format(
           "Although locations matching your conditions were found, no landscapes were found for them: %s", _locations[i].name))
@@ -3708,7 +3713,7 @@ function onTick(tick)
 
   if g_savedata.subsystems.mission.timer_tickrate > 0 and (not g_savedata.subsystems.mission.count_limited or missions_less_than_limit()) then
     if g_savedata.subsystems.mission.interval <= 0 then
-      random_mission(get_center_transform(), g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min)
+      create_mission_random(get_center_transform(), g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min)
       g_savedata.subsystems.mission.interval = math.random(1, 5) * 3600
     else
       g_savedata.subsystems.mission.interval = g_savedata.subsystems.mission.interval - tick * g_savedata.subsystems.mission.timer_tickrate
@@ -3745,15 +3750,16 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     elseif verb == "init" and is_admin then
       local center = get_center_transform()
       local location = ...
+      local locations = {}
 
-      if location ~= nil then
-        location = "^" .. location .. "$"
-      else
+      if location == nil then
         console.error("location name is empty")
         return
       end
 
-      random_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, false, location)
+      locations = { "^" .. location .. "$" }
+
+      create_mission(center, g_savedata.subsystems.mission.range_max, g_savedata.subsystems.mission.range_min, locations)
     elseif verb == "clear-all" and is_admin then
       for i = #g_savedata.missions, 1, -1 do
         clear_mission(g_savedata.missions[i])
@@ -3854,6 +3860,21 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
         console.log(string.format("subsystems.mission.geologic.mainlands: %s", g_savedata.subsystems.mission.geologic.mainlands))
       elseif table.contains(keys, geo) then
         g_savedata.subsystems.mission.geologic[geo] = set_or_not(g_savedata.subsystems.mission.geologic[geo], value)
+      end
+    elseif verb == "difficulty" and is_admin then
+      local value, remaining = ...
+      value = tonumber(value)
+      remaining = tonumber(remaining)
+
+      if remaining == nil then
+        remaining = math.random(g_savedata.subsystems.mission.difficulty_remaining_min, g_savedata.subsystems.mission.difficulty_remaining_max)
+      end
+
+      if value ~= nil then
+        g_savedata.subsystems.mission.difficulty = value
+        g_savedata.subsystems.mission.difficulty_remaining = remaining
+      else
+        console.log(string.format("Difficulty: %d Remaining: %d", g_savedata.subsystems.mission.difficulty, g_savedata.subsystems.mission.difficulty_remaining))
       end
     elseif verb == "tracker" and is_admin then
       local obj, value = ...
