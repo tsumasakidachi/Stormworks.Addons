@@ -680,33 +680,25 @@ location_properties = { {
   report = "この付近の港が武装勢力に占拠された. 当地は交通の要害であり国民生活への影響は測り知れない. 速やかに武装勢力を排除し安全を確保せよ. 民間人の退避は完了している.",
   note = "警察署からの通報",
 }, {
-  pattern = "^mission:supply_request_%d+$",
+  pattern = "^mission:request_generator_%d+$",
   tracker = "transport",
   case = cases.supply,
-  geologic = geologics.waters,
-  landscape = { "wharf" },
-  dispersal_area = 8000,
-  sub_locations = { "^mission:supply_barge_goods_%d+$" },
+  geologic = geologics.islands,
+  landscape = { "request_generator" },
+  dispersal_area = 50000,
+  sub_locations = { "^mission:container_generator_%d+$" },
   sub_location_min = 1,
   sub_location_max = 1,
   difficulty = 2,
-  report = "物資",
+  report = "島の発電機が故障していて, 新しい発電機が必要!",
   note = "市民からの通報",
 }, {
-  pattern = "^mission:supply_barge_goods_%d+$",
-  geologic = geologics.waters,
-  landscape = { "supply_spawn_waters" },
-  dispersal_area = 0,
-  difficulty = 0,
-  report = "物資",
-  note = "",
-}, {
-  pattern = "^mission:supply_corrugated_box_%d+$",
+  pattern = "^mission:container_generator_%d+$",
   geologic = geologics.waters,
   landscape = { "supply_spawn_lands" },
   dispersal_area = 0,
   difficulty = 0,
-  report = "物資",
+  report = "発電機",
   note = "",
 }, {
   pattern = "^mission:tornado_alert_%d+$",
@@ -778,7 +770,7 @@ interactions_property = { {
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
-  "bridge", "house", "building", "wind_turbine", "plant", "port", "wharf", "mine", "bunker", "supply_spawn_waters", "supply_spawn_lands" }
+  "bridge", "house", "building", "wind_turbine", "plant", "port", "wharf", "mine", "bunker", "supply_spawn_waters", "supply_spawn_lands", "request_generator" }
 
 strings = {
   statuses = {
@@ -965,15 +957,15 @@ mission_trackers = {
     tick = function(self, tick)
     end,
     complete = function(self)
-      local completed = self.spawned
+      local count = 0
 
       for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
-          completed = completed and (g_savedata.objects[i]:dispensable() or g_savedata.objects[i]:complete())
+        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil and not g_savedata.objects[i]:dispensable() then
+          count = count + 1
         end
       end
 
-      return completed
+      return self.spawned and count == 0
     end,
     reward = function(self)
       local reward = self.rewards
@@ -1127,15 +1119,15 @@ mission_trackers = {
     tick = function(self, tick)
     end,
     complete = function(self)
-      local completed = self.spawned
+      local count = 0
 
       for i = 1, #g_savedata.objects do
-        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil then
-          completed = completed and (g_savedata.objects[i]:dispensable() or g_savedata.objects[i]:complete())
+        if g_savedata.objects[i].mission == self.id and g_savedata.objects[i].tracker ~= nil and not g_savedata.objects[i]:dispensable() then
+          count = count + 1
         end
       end
 
-      return completed
+      return self.spawned and count == 0
     end,
     reward = function(self)
       local reward = self.rewards
@@ -1845,10 +1837,8 @@ object_trackers = {
     test_type = function(self, id, type, name, tags)
       return g_savedata.subsystems.cargo.tracker and (type == "vehicle" or type == "object") and tags.tracker == "cargo"
     end,
-    init = function(self, interaction, landscape)
-      self.zone = nil
-      self.interaction = interaction
-      self.landscape = landscape
+    init = function(self)
+      self.delivered = false
     end,
     clear = function(self)
     end,
@@ -1857,12 +1847,15 @@ object_trackers = {
     unload = function(self)
     end,
     tick = function(self, tick)
+      local mission = table.find(g_savedata.missions, function(x) return x.id == self.mission end)
+
+      self.delivered = self.delivered or server.isInTransformArea(self.transform, mission.locations[1].zone.transform, mission.locations[1].zone.size.x, mission.locations[1].zone.size.y, mission.locations[1].zone.size.z)
     end,
     dispensable = function(self)
       return false
     end,
     complete = function(self)
-      return self.interaction ~= nil and self.landscape ~= nil and interactions:is_in_interaction(self.transform, self.interaction, self.landscape)
+      return self.delivered
     end,
     fail = function(self)
       return false
@@ -2270,7 +2263,7 @@ function spawn_mission(mission)
   local sub_location_count = math.random(mission.locations[1].sub_location_min, mission.locations[1].sub_location_max)
 
   for i = 1, sub_location_count do
-    local sub_locations = locations:random(mission.transform, 0, mission.dispersal_area, mission.locations[1].sub_locations, false, true, false, false, true)
+    local sub_locations = locations:random(mission.transform, 0, mission.dispersal_area, mission.locations[1].sub_locations, false, true, true, true, true)
 
     for j = 1, #sub_locations do
       table.insert(mission.locations, sub_locations[j])
@@ -2329,7 +2322,7 @@ function aggregate_mission_objectives(mission)
     }
 
     for j = 1, #g_savedata.objects do
-      if g_savedata.objects[j].mission == mission.id and g_savedata.objects[j].objectives ~= nil then
+      if g_savedata.objects[j].mission == mission.id and g_savedata.objects[j].objectives ~= nil and not g_savedata.objects[j]:complete() then
         local objs_object = g_savedata.objects[j]:objectives()
 
         for k = 1, #objs_object do
@@ -4078,31 +4071,6 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, verb
     local player = players:find(function(x) return x.id == peer_id end)
 
     g_savedata.players_enroute[player.steam_id] = mission_id
-  elseif command == "?op12" and is_admin then
-    if verb == "init" then
-      local row, column, stack = ...
-      row = tonumber(row)
-      column = tonumber(column)
-      stack = tonumber(stack)
-      local player = players:find(function(x) return x.id == peer_id end)
-
-      for i = 1, row do
-        for j = 1, column do
-          for k = 1, stack do
-            local translation = matrix.translation(i * 1 - 1, k * 0.5 - 0.5, 2 + j * 0.5 - 0.5)
-            local transform = matrix.multiply(player.transform, translation)
-            local id = server.spawnObject(transform, 38)
-            initialize_object(id, "object", "Present", { tracker = "cargo" }, nil, nil, nil, nil, "deliver", "house")
-          end
-        end
-      end
-    elseif verb == "clear-all" then
-      for i = #g_savedata.objects, 1, -1 do
-        if g_savedata.objects[i].name == "Present" then
-          despawn_object(g_savedata.objects[i])
-        end
-      end
-    end
   end
 end
 
