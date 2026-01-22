@@ -20,7 +20,7 @@ g_savedata = {
             transition = 0,
             duration = 0,
             target_min = property.slider("Minimum level of rain (%)", 0, 100, 1, 0),
-            target_max = property.slider("Maximum level of rain (%)", 0, 100, 1, 80),
+            target_max = property.slider("Maximum level of rain (%)", 0, 100, 1, 120),
             clear = property.slider("Clear rate of rain (%)", 0, 100, 1, 50),
         },
         fog = {
