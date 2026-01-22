@@ -684,7 +684,7 @@ location_properties = { {
   tracker = "transport",
   case = cases.supply,
   geologic = geologics.islands,
-  landscape = { "request_generator" },
+  landscape = { "supply_request_lands" },
   dispersal_area = 50000,
   sub_locations = { "^mission:container_generator_%d+$" },
   sub_location_min = 1,
@@ -770,7 +770,7 @@ interactions_property = { {
 } }
 
 landscape_properties = { "forest", "hill", "mountain", "volcano", "field", "beach", "ait", "island", "campsite", "offshore", "shallow", "underwater", "channel", "lake", "diving_spot", "airfield", "heliport", "runway", "road", "track", "crossing", "tunnel",
-  "bridge", "house", "building", "wind_turbine", "plant", "port", "wharf", "mine", "bunker", "supply_spawn_waters", "supply_spawn_lands", "request_generator" }
+  "bridge", "house", "building", "wind_turbine", "plant", "port", "wharf", "mine", "bunker", "supply_spawn_waters", "supply_spawn_lands", "supply_request_lands", "supply_request_waters" }
 
 strings = {
   statuses = {
@@ -1113,8 +1113,12 @@ mission_trackers = {
     init = function(self)
       self.marker_type = 0
       self.marker_radius = 0
+      self.destination_marker_id = server.getMapID()
+      local x, y, z = matrix.position(self.locations[1].zone.transform)
+      server.setPopup(-1, self.destination_marker_id, "DROP POINT", true, string.format("MISSION#%d DROP POINT", self.id), x, y, z, 200)
     end,
     clear = function(self)
+      server.removeMapID(-1, self.destination_marker_id)
     end,
     tick = function(self, tick)
     end,

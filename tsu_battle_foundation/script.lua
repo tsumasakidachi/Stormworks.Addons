@@ -409,6 +409,7 @@ function initialize_game(mode, map_id, red_count, blue_count)
 
     if zone_center.tags.radius == nil then
         console.error("Operation zone radius is not number")
+        return
     end
 
     local zone_base_red = table.find(g_savedata.zones, function(x)
