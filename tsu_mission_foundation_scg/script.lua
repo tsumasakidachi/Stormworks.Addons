@@ -2107,7 +2107,7 @@ function create_mission(center, range_max, range_min, patterns)
 end
 
 function create_mission_random(center, range_max, range_min)
-  local _locations = locations:random(center, range_min, range_max, {"^mission:.+$"}, true)
+  local _locations = locations:random(center, range_min, range_max, { "^mission:.+$" }, true)
 
   if #_locations == 0 then
     return
@@ -3076,7 +3076,8 @@ locations = {
           and self:is_suitable(x, center, range_min, range_max)
           and (not is_main or x.case ~= nil)
           and (ignore_difficulty or x.tracker ~= nil and x.difficulty == g_savedata.subsystems.mission.difficulty)
-          and (ignore_geologic or (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands))
+          and
+          (ignore_geologic or (g_savedata.subsystems.mission.geologic.waters and x.geologic == geologics.waters or g_savedata.subsystems.mission.geologic.mainlands and x.geologic == geologics.mainlands or g_savedata.subsystems.mission.geologic.islands and x.geologic == geologics.islands))
           and (ignore_history or not ignore_history and self:is_unprecedented(x))
     end)
 
