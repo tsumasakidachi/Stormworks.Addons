@@ -284,12 +284,26 @@ mission = {
     self.cleared = false
     self.reported = false
     self.too_long = false
-    self.elapse = 0
+    self.elapsed_time = 0
+    self.finish_time = 0
     self.reward = 0
     self.objectives = {}
     self.ui_id = server.getMapID()
     self.marker_type = 8
     self.marker_color = { 255, 255, 0, 255 }
+    self.search_center = matrix.multiply(self.locations[1].transform, matrix.translation(math.random() * 500, 0, math.random() * 500))
+    self.search_radius = 0
+
+    for k, o in pairs(g_savedata.objects) do
+      if o.mission_id == self.id and o.objective ~= nil then
+        local object_distance = matrix.distance(o.transform, self.search_center)
+        self.search_radius = math.max(self.search_radius, object_distance)
+      end
+    end
+
+    if self.search_radius > 0 then
+      self.search_radius = math.max(math.ceil(self.search_radius / 500) * 500, self.locations[1].dispersal_area)
+    end
 
     g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
@@ -297,7 +311,6 @@ mission = {
   end,
   clear = function(self)
     mission.despawn(self)
-    -- mission.unmap(self, framework.players)
     self.cleared = true
     console.notify(string.format("mission#%d has cleared.", self.id))
   end,
@@ -313,7 +326,7 @@ mission = {
       mission.clear(self)
     end
 
-    self.elapse = self.elapse + tick
+    self.elapsed_time = self.elapsed_time + tick
   end,
   aggregate_objectives = function(self)
     local objectives = {}
@@ -346,9 +359,9 @@ mission = {
       end
     end
 
-    if false then text = text .. string.format("\n\n[範囲]\n%fkm", 0) end
+    if self.search_radius > 0 then text = text .. string.format("\n\n[範囲]\n%.1fkm", self.search_radius / 1000) end
 
-    if false then text = text .. string.format("\n\n[残り時間]\n%d分", 0) end
+    if self.finish_time > 0 then text = text .. string.format("\n\n[残り時間]\n%d分", math.ceil((self.finish_time - self.elapsed_time) / 3600)) end
 
     return text
   end,
@@ -378,7 +391,7 @@ mission = {
   end,
   map = function(self, players)
     for k, p in pairs(players) do
-      ui.map(self, p, self.locations[1].transform, self.locations[1].dispersal_area, mission.label(self), mission.status(self))
+      ui.map(self, p, self.search_center, self.search_radius, mission.label(self), mission.status(self))
     end
   end,
   unmap = function(self, players)
@@ -406,9 +419,9 @@ mission = {
       end
     end
 
-    -- local sub_locations = location.construct(locations[1].transform, range_min, range_max, filter_location, filter_zone)
-    local m = mission.init(g_savedata.subsystems.mission.count + 1, locations)
-    mission.spawn(m.id, locations)
+    local mission_id = g_savedata.subsystems.mission.count + 1
+    mission.spawn(mission_id, locations)
+    local m = mission.init(mission_id, locations)
 
     if m == nil then return nil end
 
@@ -524,7 +537,7 @@ object = {
     self.cleared = false
     self.simulated = object.simulated(self)
     self.transform = object.get_transform(self)
-    self.elapse = 0
+    self.elapsed_time = 0
     self.damages = {}
     self.ui_id = server.getMapID()
     self.marker_type = 2
@@ -541,7 +554,6 @@ object = {
     return self
   end,
   clear = function(self)
-    -- object.unmap(self, framework.players)
     object.execute(self, "clear")
     object.despawn(self)
     self.cleared = true
@@ -565,7 +577,7 @@ object = {
 
     object.execute(self, "tick", tick)
 
-    self.elapse = self.elapse + 1
+    self.elapsed_time = self.elapsed_time + 1
   end,
   get_transform = function(self)
     if object.is_vehicle(self) then
@@ -614,7 +626,6 @@ object = {
     end
   end,
   unmap = function(self, players)
-    console.notify(string.format("%s has unmapped.", object.label(self)))
     for k, p in pairs(players) do
       ui.unmap(self, p)
     end
@@ -653,9 +664,9 @@ character = {
   brought = function(self, zone_tags)
     return table.any(zone.load(zone_tags), function(z) return zone.is_contained(z, self.transform) end)
   end,
-tick = function(self, tick)
-  self.vital = server.getObjectData(self.id)
-end,
+  tick = function(self, tick)
+    self.vital = server.getObjectData(self.id)
+  end,
 }
 
 
@@ -1080,7 +1091,7 @@ tile = {
     if not s then return nil end
 
     return transform
-  end
+  end,
 }
 
 
