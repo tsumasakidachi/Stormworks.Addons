@@ -85,10 +85,6 @@ location_catalogue = { {
   geologic = geologics.mainlands,
   case = cases.sar,
   dispersal_area = 1000,
-  map = {
-    range = true,
-    marker = 8,
-  },
   zone_tags = {
     { landscape = "forest" },
     { landscape = "mountain" },
@@ -107,10 +103,6 @@ location_catalogue = { {
   geologic = geologics.waters,
   case = cases.mayday,
   dispersal_area = 1000,
-  map = {
-    range = true,
-    marker = 8,
-  },
   offshore = true,
   zone_tags = {
     { landscape = "channel" },
@@ -150,6 +142,15 @@ framework = {
         return is_admin, pattern, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, dispersal_max
       end)
     framework.register_command("?mission", "?m", "clear-all", nil, mission.clear_all, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
+    framework.register_command("?mission", "?m", "muster", "[mission id]", function(peer_id, mission_id)
+      local transform = server.getPlayerPos(peer_id)
+
+      for k, o in pairs(g_savedata.objects) do
+        if o.mission_id == mission_id and object.is_character(o) then
+          server.setObjectPos(o.id, transform)
+        end
+      end
+    end, function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id) return is_admin, peer_id, tonumber(mission_id) end)
 
     if g_savedata.mode == "debug" then
       framework.print_version()
@@ -165,19 +166,23 @@ framework = {
     end
 
     framework.tick(g_savedata.objects, framework.cycle_objects, function(o, k)
-      object.tick(o, tick * framework.cycle_objects)
-      -- objective.tick(o, tick * framework.cycle_objects)
-
       if o.cleared then
+        object.unmap(o, framework.players)
         table.remove(g_savedata.objects, k)
+      else
+        object.tick(o, tick * framework.cycle_objects)
+        objective.tick(o)
+        object.map(o, framework.players)
       end
     end)
 
     framework.tick(g_savedata.missions, framework.cycle_missions, function(m, k)
-      mission.tick(m, tick * framework.cycle_missions)
-
       if m.cleared then
+        mission.unmap(m, framework.players)
         table.remove(g_savedata.missions, k)
+      else
+        mission.tick(m, tick * framework.cycle_missions)
+        mission.map(m, framework.players)
       end
     end)
 
@@ -192,6 +197,11 @@ framework = {
     end
 
     framework.invoke_command(command, command.guard(table.unpack(args)))
+  end,
+  on_player_join = function(steam_id, name, peer_id, is_admin, is_auth)
+    steam_id = tostring(steam_id)
+    local players = table.find_all(framework.players, function(p) return p.steam_id == steam_id end)
+    framework.map(players)
   end,
   register_command = function(subject, shorthand, verb, args, execute, guard)
     if cuard == nil then
@@ -244,8 +254,13 @@ framework = {
   tick = function(items, cycle, action)
     for i = #items, 1, -1 do
       if i % cycle == g_savedata.clock % cycle then
-        action(items[i])
+        action(items[i], i)
       end
+    end
+  end,
+  map = function(players)
+    for k, o in pairs(g_savedata.objects) do
+      object.map(o, players)
     end
   end,
 }
@@ -261,29 +276,28 @@ mission_type = {
 
 mission = {
   init = function(id, locations)
-    local m = {}
+    local self = {}
 
-    m.id = id
-    m.locations = locations
-    m.activated = true
-    m.cleared = false
-    m.reported = false
-    m.too_long = false
-    m.elapse = 0
-    m.reward = 0
-    m.objectives = {}
+    self.id = id
+    self.locations = locations
+    self.activated = true
+    self.cleared = false
+    self.reported = false
+    self.too_long = false
+    self.elapse = 0
+    self.reward = 0
+    self.objectives = {}
+    self.ui_id = server.getMapID()
+    self.marker_type = 8
+    self.marker_color = { 255, 255, 0, 255 }
 
     g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
-    return m
+    return self
   end,
   clear = function(self)
-    for k, o in pairs(g_savedata.objects) do
-      if o.mission_id == self.id then
-        object.clear(o)
-      end
-    end
-
+    mission.despawn(self)
+    -- mission.unmap(self, framework.players)
     self.cleared = true
     console.notify(string.format("mission#%d has cleared.", self.id))
   end,
@@ -318,8 +332,8 @@ mission = {
 
     return objectives
   end,
-  report = function(self)
-    return self.locations[1].report
+  label = function(self)
+    return string.format("#%d %s\n%s", self.id, self.locations[1].case.text, self.locations[1].report)
   end,
   status = function(self)
     local text = self.locations[1].note
@@ -356,6 +370,21 @@ mission = {
     end
   end,
   despawn = function(self)
+    for k, o in pairs(g_savedata.objects) do
+      if o.mission_id == self.id then
+        object.clear(o)
+      end
+    end
+  end,
+  map = function(self, players)
+    for k, p in pairs(players) do
+      ui.map(self, p, self.locations[1].transform, self.locations[1].dispersal_area, mission.label(self), mission.status(self))
+    end
+  end,
+  unmap = function(self, players)
+    for k, p in pairs(players) do
+      ui.unmap(self, p)
+    end
   end,
   load = function(center, range_min, range_max, filter_location, filter_zone)
     local locations = location.construct(center, range_min, range_max, filter_location, filter_zone)
@@ -365,13 +394,13 @@ mission = {
     local sub_locations_count = math.random(locations[1].sub_location.min, locations[1].sub_location.max)
 
     for i = 1, sub_locations_count do
-      for k, v in pairs(location.construct(center, range_min, range_max, function(l)
+      for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].dispersal_area, function(l)
           return table.aggregate(locations[1].sub_location.patterns, false, function(result, x) return result or string.match(l.name, x) end)
         end,
         function(z)
-          return zone.is_in(z, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, g_savedata.subsystems.mission.dispersal_max)
-              and not zone.is_contained_objects(z)
-              and not mission.is_in_any(g_savedata.missions, z.transform)
+          return zone.is_in(z, locations[1].transform, 0, locations[1].dispersal_area) and
+              not zone.is_contained_objects(z) and
+              not mission.is_in_any(g_savedata.missions, z.transform)
         end)) do
         table.insert(locations, v)
       end
@@ -400,9 +429,9 @@ mission = {
         return string.match(l.name, pattern) ~= nil
       end,
       function(z)
-        return zone.is_in(z, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, g_savedata.subsystems.mission.dispersal_max)
-            and not zone.is_contained_objects(z)
-            and not mission.is_in_any(g_savedata.missions, z.transform)
+        return zone.is_in(z, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, g_savedata.subsystems.mission.dispersal_max) and
+            not zone.is_contained_objects(z) and
+            not mission.is_in_any(g_savedata.missions, z.transform)
       end)
   end,
   is_in = function(self, transform)
@@ -434,15 +463,16 @@ objective = {
     if self.objective == nil then return nil end
 
     return {
-      type = objective.value(self, "type"),
+      type = objective.value(self, "name"),
       text = objective.value(self, "how_to_clear"),
-      amount = objective.execute(self, "amount"),
+      amount = objective.execute(self, "compute"),
       name = self.name
     }
   end,
   tick = function(self)
     if self.objective == nil then return end
 
+    self.failed = self.failed or objective.failed(self)
     self.completed = self.completed or objective.completed(self)
 
     if self.completed and not self.cleared then
@@ -450,7 +480,10 @@ objective = {
     end
   end,
   completed = function(self)
-    return objective.execte(self, "completed")
+    return objective.execute(self, "completed")
+  end,
+  failed = function(self)
+    return objective.execute(self, "failed")
   end,
   value = function(self, key)
     return module.value(self, objective_catalogue, self.objective, key)
@@ -462,12 +495,29 @@ objective = {
 
 
 object = {
+  marker_type = {
+    character = 1,
+    vehicle = 12,
+    animal = 6,
+    creature = 6,
+    fire = 5,
+    forest_fire = 5,
+  },
   init = function(id, type, name, tags, objective_type, parent_id, mission_id, ...)
     local self = {}
     self.id = id
     self.type = type
-    self.name = name
     self.objective = objective.type(id, type, name, tags, objective_type)
+    self.name = name
+
+    if string.nil_or_empty(self.name) then
+      self.name = objective.value(self, "name")
+    end
+
+    if string.nil_or_empty(self.name) then
+      self.name = self.type
+    end
+
     self.tags = tags
     self.parent_id = parent_id
     self.mission_id = mission_id
@@ -476,17 +526,26 @@ object = {
     self.transform = object.get_transform(self)
     self.elapse = 0
     self.damages = {}
+    self.ui_id = server.getMapID()
+    self.marker_type = 2
+
+    if object.marker_type[self.type] ~= nil then
+      self.marker_type = object.marker_type[self.type]
+    end
+
+    self.marker_color = { 128, 128, 128, 255 }
 
     object.execute(self, "init", table.unpack({ ... }))
-    console.notify(string.format("%s#%d has initialized.", self.objective or self.type, self.id))
+    console.notify(string.format("%s#%d has initialized.", self.name, self.id))
 
     return self
   end,
   clear = function(self)
+    -- object.unmap(self, framework.players)
     object.execute(self, "clear")
     object.despawn(self)
     self.cleared = true
-    console.notify(string.format("%s#%d has cleared.", self.objective or self.type, self.id))
+    console.notify(string.format("%s#%d has cleared.", self.name, self.id))
   end,
   despawn = function(self)
     if object.is_vehicle(self) then
@@ -526,6 +585,40 @@ object = {
       return server.getObjectSimulating(self.id)
     end
   end,
+  label = function(self)
+    return string.format("%s#%d", self.name, self.id)
+  end,
+  status = function(self)
+    local text = string.format("Mission: #%d", self.mission_id or "nil")
+
+    return text
+  end,
+  map = function(self, players)
+    if self.transform == nil then return end
+
+    local id = nil
+    local type = nil
+
+    if object.is_vehicle(self) then
+      id = self.id
+      type = "vehicle"
+    elseif object.is_object(self) then
+      id = self.id
+      type = "object"
+    end
+
+    for k, p in pairs(players) do
+      if g_savedata.mode == "debug" and p.admin then
+        ui.map(self, p, self.transform, 0, object.label(self), object.status(self), type, id)
+      end
+    end
+  end,
+  unmap = function(self, players)
+    console.notify(string.format("%s has unmapped.", object.label(self)))
+    for k, p in pairs(players) do
+      ui.unmap(self, p)
+    end
+  end,
   is_vehicle = function(self)
     return self.type == "vehicle"
   end,
@@ -554,23 +647,30 @@ object = {
 
 
 character = {
-  amount = function(self) return 1 end,
+  compute = function(self) return 1 end,
+  treated = function(self) return self.vital.hp == 100 end,
   picked = function(self, is_headquarter) return false end,
-  brought = function(self, ...) return false end,
-  -- tick = function(self, tick)
-  --   console.notify(tonumber(self.id))
-  -- end,
+  brought = function(self, zone_tags)
+    return table.any(zone.load(zone_tags), function(z) return zone.is_contained(z, self.transform) end)
+  end,
+tick = function(self, tick)
+  self.vital = server.getObjectData(self.id)
+end,
 }
 
 
 objective_catalogue = {
   rescuee = {
-    type = "要救助者",
-    how_to_clear = "%sを病院に搬送",
-    amount = character.amount,
+    name = "要救助者",
+    how_to_clear = "病院に搬送",
+    compute = character.compute,
     completed = function(self)
-      return character.picked(self, true)
-          or character.brought(self, "hospital", "base")
+      return character.treated(self) and (
+        character.picked(self, true) or
+        character.brought(self, { rescuee = "bring" }))
+    end,
+    failed = function(self)
+      return false
     end,
     typed = function(id, type, name, tags)
       return type == "character" and tags.tracker == "rescuee"
@@ -596,7 +696,7 @@ location = {
     l.addon_index = addon_index
     l.location_index = location_index
     l.pattern = setting.pattern
-    l.tracker = setting.tracker
+    l.type = setting.type
     l.scale = setting.scale
     l.report = setting.report
     l.note = setting.note
@@ -666,7 +766,7 @@ location = {
       local zones = {}
 
       for _, zone_tags in pairs(l.zone_tags) do
-        for _, z in pairs(zone.load(filter_zone, zone_tags)) do
+        for _, z in pairs(zone.load(zone_tags, filter_zone)) do
           table.insert(zones, z)
         end
       end
@@ -719,6 +819,7 @@ location = {
 
     if landscape == "offshore" then
       self.transform = tile.get_offshore(center, range_min, range_max)
+      self.transform = matrix.multiply(self.transform, matrix.translation(math.random() * 1000 - 500, 0, math.random() * 1000 - 500))
     else
       zones = table.find_all(zones, function(z)
         return z.tags.landscape == landscape and table.all(locations, function(l) return l.transform == nil or not zone.is_in(z, l.transform, 0, 100) end)
@@ -844,8 +945,12 @@ zone = {
 
     return z
   end,
-  load = function(filter, tags)
-    zones = {}
+  load = function(tags, filter)
+    local zones = {}
+
+    if filter == nil then
+      filter = function(z) return true end
+    end
 
     for _, z in pairs(server.getZones(tag.serialize(tags))) do
       z = zone.init(z)
@@ -908,6 +1013,39 @@ player = {
     end
 
     return players
+  end,
+}
+
+
+ui = {
+  init = function(position_type, marker_type, vehicle_id, object_id)
+    return {
+      id = server.getMapID(),
+      position_type = position_type,
+      marker_type = marker_type,
+      vehicle_id = vehicle_id,
+      object_id = object_id,
+    }
+  end,
+  map = function(self, p, transform, radius, label, label_hover, parent_type, parent_id)
+    local vehicle_id = nil
+    local object_id = nil
+    local position_type = 0
+    local x, y, z = matrix.position(transform)
+
+    if parent_type == "vehicle" then
+      vehicle_id = parent_id
+      position_type = 1
+    elseif parent_type == "object" then
+      object_id = parent_id
+      position_type = 2
+    end
+
+    server.removeMapID(p.id, self.ui_id)
+    server.addMapObject(p.id, self.ui_id, position_type, self.marker_type, x, z, 0, 0, vehicle_id, object_id, label, radius, label_hover, self.marker_color[1], self.marker_color[2], self.marker_color[3], self.marker_color[4])
+  end,
+  unmap = function(self, p)
+    server.removeMapID(p.id, self.ui_id)
   end,
 }
 
