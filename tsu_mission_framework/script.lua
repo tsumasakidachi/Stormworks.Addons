@@ -292,18 +292,7 @@ mission = {
     self.marker_type = 8
     self.marker_color = { 255, 255, 0, 255 }
     self.search_center = matrix.multiply(self.locations[1].transform, matrix.translation(math.random() * 500, 0, math.random() * 500))
-    self.search_radius = 0
-
-    for k, o in pairs(g_savedata.objects) do
-      if o.mission_id == self.id and o.objective ~= nil then
-        local object_distance = matrix.distance(o.transform, self.search_center)
-        self.search_radius = math.max(self.search_radius, object_distance)
-      end
-    end
-
-    if self.search_radius > 0 then
-      self.search_radius = math.max(math.ceil(self.search_radius / 500) * 500, self.locations[1].dispersal_area)
-    end
+    self.search_radius = mission.compute_search_radius(self)
 
     g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
 
@@ -344,6 +333,20 @@ mission = {
     end
 
     return objectives
+  end,
+  compute_search_radius = function(self)
+    if self.locations[1].no_search_radius then return 0 end
+
+    local search_radius = self.locations[1].dispersal_area
+
+    for k, o in pairs(g_savedata.objects) do
+      if o.mission_id == self.id and o.objective ~= nil then
+        local object_distance = matrix.distance(o.transform, self.search_center)
+        search_radius = math.max(search_radius, object_distance)
+      end
+    end
+
+    return math.ceil(search_radius / 500) * 500
   end,
   label = function(self)
     return string.format("#%d %s\n%s", self.id, self.locations[1].case.text, self.locations[1].report)
@@ -601,9 +604,7 @@ object = {
     return string.format("%s#%d", self.name, self.id)
   end,
   status = function(self)
-    local text = string.format("Mission: #%d", self.mission_id or "nil")
-
-    return text
+    return string.format("mission#%d", self.mission_id or "nil")
   end,
   map = function(self, players)
     if self.transform == nil then return end
@@ -658,6 +659,12 @@ object = {
 
 
 character = {
+  init = function(self)
+    if self.tags.tracker == "rescuee" then
+      server.setCharacterData(self.id, math.random(0, 100), true, false)
+      self.vital = server.getObjectData(self.id)
+    end
+  end,
   compute = function(self) return 1 end,
   treated = function(self) return self.vital.hp == 100 end,
   picked = function(self, is_headquarter) return false end,
@@ -673,8 +680,11 @@ character = {
 objective_catalogue = {
   rescuee = {
     name = "要救助者",
-    how_to_clear = "病院に搬送",
+    how_to_clear = "治療して病院かHQに搬送",
     compute = character.compute,
+    reward = function(self)
+      return 2000
+    end,
     completed = function(self)
       return character.treated(self) and (
         character.picked(self, true) or
@@ -725,6 +735,7 @@ location = {
     l.offshore = setting.offshore or false
     l.transform = nil
     l.spawned = false
+    l.no_search_radius = setting.no_search_radius or false
 
     return l
   end,
