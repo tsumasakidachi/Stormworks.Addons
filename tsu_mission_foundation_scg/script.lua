@@ -617,6 +617,19 @@ location_properties = { {
   character_max = 100,
   note = "哨戒機からの通報",
 }, {
+  pattern = "^mission:piracy_gunboat_%d+$",
+  tracker = "sar",
+  case = cases.securite,
+  geologic = geologics.waters,
+  landscape = { "offshore", "shallow" },
+  sub_locations = {},
+  dispersal_area = 1000,
+  difficulty = 4,
+  report = "武装した船を発見した. 乗員を拘束せよ.",
+  character_min = 100,
+  character_max = 100,
+  note = "哨戒機からの通報",
+}, {
   pattern = "^mission:smuggling_boat_%d+$",
   tracker = "sar",
   case = cases.securite,
@@ -927,6 +940,22 @@ stormwoofs = {
   33,
   34,
   35,
+}
+
+fluids = {
+  fresh_water = 0,
+  diesel = 1,
+  jet = 2,
+  air = 3,
+  exhaust = 4,
+  oil = 5,
+  sea_water = 6,
+  steam = 7,
+  slurry = 8,
+  saturated_slurry = 9,
+  oxygen = 10,
+  nitrogen = 11,
+  hydrogen = 12,
 }
 
 mission_trackers = {
@@ -2545,6 +2574,21 @@ function tick_object(object, tick)
 
       if not object.follow then
         follow_path(object)
+      end
+    end
+  end
+
+  if object.simulated and is_vehicle(object) and object.tags.refill == "true" then
+    for i = 1, #object.components.batteries do
+      if object.components.batteries[i].name == "refill" then
+        server.setVehicleBattery(object.id, object.components.batteries[i].pos.x, object.components.batteries[i].pos.y, object.components.batteries[i].pos.z, 1)
+      end
+    end
+    for i = 1, #object.components.tanks do
+      local tags = string.parse_tags(object.components.tanks[i].name)
+
+      if tags.refill ~= nil and fluids[tags.refill] ~= nil then
+        server.setVehicleTank(object.id, object.components.tanks[i].pos.x, object.components.tanks[i].pos.y, object.components.tanks[i].pos.z, object.components.tanks[i].capacity, fluids[tags.refill])
       end
     end
   end
