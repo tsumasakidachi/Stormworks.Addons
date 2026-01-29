@@ -12,6 +12,10 @@ g_savedata = {
       dispersal_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
       history = {},
     },
+    rescuee = {
+      code_blue_probability = property.slider("Probability of Code Blue to occur (%)", 0, 100, 1, 12),
+      code_blue_required_players = property.slider("Number of players required for a Code Blue to occur", 0, 32, 1, 8),
+    },
     location = {
       count = 0,
     },
@@ -291,15 +295,8 @@ mission = {
     self.finish_time = 0
     self.reward = 0
     self.objectives = {}
-    self.objectives_count = 0
-
-    for k, v in pairs(objective_type.catalogue) do
-      self.objectives[k] = {
-        count = 0,
-        text = objective.module(v).label(v),
-      }
-    end
-
+    self.sorted_objectives = {}
+    self.required_objectives_count = 0
     self.ui_id = server.getMapID()
     self.marker_type = 8
     self.marker_color = { 255, 255, 0, 255 }
@@ -308,7 +305,7 @@ mission = {
 
     console.notify(string.format("mission#%d has occurred.", self.id))
     server.notify(-1, mission.label(self), "a mission has occured.", 0)
-    
+
     return self
   end,
   clear = function(self)
@@ -324,33 +321,30 @@ mission = {
     end
   end,
   tick = function(self, tick)
-    mission.aggregate_objectives(self)
+    self.objectives = table.select(table.find_all(g_savedata.objects, function(o) return o.mission_id == self.id and o.objective_type ~= nil end), function(o) return objective.module(o).progress(o) end)
+    self.sorted_objectives = mission.aggregate_objectives(self, self.objectives)
 
-    if self.is_activate and self.objectives_count == 0 then
+    if self.is_activate and #self.objectives == 0 then
       mission.clear(self)
     end
 
     self.elapsed_time = self.elapsed_time + tick
   end,
-  aggregate_objectives = function(self)
-    for k, v in pairs(self.objectives) do
-      v.count = 0
+  aggregate_objectives = function(self, objectives)
+    local sorted_objectives = {}
+
+    for k, v in pairs(objective_type.catalogue) do
+      sorted_objectives[k] = {
+        count = 0,
+        text = objective.module(v).label(v),
+      }
     end
 
-    self.objectives_count = 0
-
-    for k, o in pairs(g_savedata.objects) do
-      if o.mission_id ~= self.id then goto continue end
-
-      local ov = objective.module(o).progress(o)
-
-      if ov == nil then goto continue end
-
-      self.objectives[ov.type].count = self.objectives[ov.type].count + ov.count
-      self.objectives_count = self.objectives_count + 1
-
-      ::continue::
+    for k, o in pairs(objectives) do
+      sorted_objectives[o.type].count = sorted_objectives[o.type].count + o.count
     end
+
+    return sorted_objectives
   end,
   compute_search_radius = function(self)
     if self.locations[1].no_search_radius then return 0 end
@@ -367,12 +361,12 @@ mission = {
     return math.ceil(search_radius / 500) * 500
   end,
   label = function(self)
-    return string.format("mission#%d %s\n%s", self.id, self.locations[1].case.text, self.locations[1].report)
+    return string.format("mission#%d\n%s\n%s", self.id, self.locations[1].case.text, self.locations[1].report)
   end,
   detail = function(self)
     local text = self.locations[1].note
 
-    if self.objectives_count > 0 then
+    if self.required_objectives_count > 0 then
       text = text .. "\n\n[目標]"
 
       for k, ov in pairs(self.objectives) do
@@ -545,7 +539,7 @@ object = {
     if self.clear_time ~= nil then
       self.clear_time = self.clear_time - tick
 
-      if self.clear_time <= 0 then
+      if self.clear_time ~= nil and self.clear_time <= 0 then
         object.module(self).clear(self)
       end
     end
@@ -622,7 +616,10 @@ object = {
 
 character = {
   init = function(id, type, name, tags, parent_id, mission_id)
-    return object.init(id, type, name, tags, parent_id, mission_id)
+    local self = object.init(id, type, name, tags, parent_id, mission_id)
+    self.vital = server.getObjectData(self.id)
+
+    return self
   end,
   tick = function(self, tick)
     object.tick(self, tick)
@@ -635,8 +632,20 @@ character = {
       return zone.contains(z, self.transform)
     end)
   end,
-  stays_hospital = function(self, time)
+  update_vital = function(self, hp, interactable, ai)
+    if hp ~= nil then
+      self.vital.hp = hp
+    end
 
+    if interactable ~= nil then
+      self.vital.interactable = interactable
+    end
+
+    if ai ~= nil then
+      self.vital.ai = ai
+    end
+
+    server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
   end,
 }
 
@@ -728,6 +737,7 @@ objective = {
     return {
       type = self.objective_type,
       count = objective.module(self).count(self),
+      requires = objective.module(self).requires(self),
     }
   end,
   count = function(self)
@@ -735,6 +745,9 @@ objective = {
   end,
   reward = function(self)
     return 0
+  end,
+  requires = function(self)
+    return true
   end,
   completed = function(self)
     return self.objective_type == nil
@@ -760,8 +773,18 @@ rescuee = {
     self.is_admit_to_hospital = false
     self.admit_to_hospital_duration = 0
     self.admit_to_hospital_threshold = 180
+    self.is_code_blue = #framework.players >= g_savedata.subsystems.rescuee.code_blue_required_players and math.random(0, 99) < g_savedata.rescuee.code_blue_probabillity
 
-    server.setCharacterData(self.id, math.random(0, 100), true, false)
+    if self.vital.hp == 100 then
+      local hp = math.random(0, 100)
+
+      if self.tags.hp ~= nil then
+        hp = tonumber(self.tags.hp)
+      end
+
+      character.update_vital(self, hp)
+    end
+
     server.setCharacterTooltip(self.id, self.name)
     return self
   end,
@@ -772,10 +795,14 @@ rescuee = {
     self.is_admit_to_headquarter, self.admit_to_headquarter_duration = util.progress(is_sit_headquarter, self.admit_to_headquarter_duration, self.admit_to_headquarter_threshold, tick)
     self.is_admit_to_hospital, self.admit_to_hospital_duration = util.progress(is_stay_hospital, self.admit_to_hospital_duration, self.admit_to_hospital_threshold, tick)
 
+    if self.is_code_blue then
+      character.update_vital(self, self.vital.hp - 2)
+    end
+
     objective.tick(self, tick)
 
     if self.is_complete and not self.is_disable then
-      server.setCharacterData(self.id, self.vital.hp, false, false)
+      character.update_vital(self, self.vital.hp, false, false)
       self.is_disable = true
     end
   end,
