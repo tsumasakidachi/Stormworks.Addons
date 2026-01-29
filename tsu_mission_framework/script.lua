@@ -789,8 +789,9 @@ rescuee = {
     return self
   end,
   tick = function(self, tick)
-    local is_sit_headquarter = character.sits(self, true)
-    local is_stay_hospital = character.stays(self, { admit_rescuee = "true" })
+    local is_heal = character.heals(self)
+    local is_sit_headquarter = is_heal and character.sits(self, true)
+    local is_stay_hospital = is_heal and character.stays(self, { admit_rescuee = "true" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_duration = util.progress(is_sit_headquarter, self.admit_to_headquarter_duration, self.admit_to_headquarter_threshold, tick)
     self.is_admit_to_hospital, self.admit_to_hospital_duration = util.progress(is_stay_hospital, self.admit_to_hospital_duration, self.admit_to_hospital_threshold, tick)
@@ -810,14 +811,9 @@ rescuee = {
     return 2000
   end,
   completed = function(self)
-    return character.heals(self) and (self.is_admit_to_headquarter or self.is_admit_to_hospital)
+    return self.is_admit_to_headquarter or self.is_admit_to_hospital
   end,
   failed = function(self) return false end,
-  admits = function(self, tick)
-    self.admits_duration = self.admits_duration + tick
-
-    return self.admits_duration >= self.admits_threshold
-  end,
 }
 
 
