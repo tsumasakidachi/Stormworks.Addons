@@ -1589,7 +1589,7 @@ object_trackers = {
             end
 
             if self.mounted and self.weapon ~= nil then
-              local close_quarters_update = unit_distance < 100 or player_distance < 100
+              local close_quarters_update = unit_distance < 1000 or player_distance < 100
 
               if close_quarters_update and not self.close_quarters then
                 local t = matrix.translation(0, 0.25, 0)

@@ -85,7 +85,7 @@ location_catalogue = { {
   geologic = geologics.mainlands,
   case = cases.sar,
   dispersal_area = 1000,
-  zone_tags = {
+  zone_tag_groups = {
     { landscape = "forest" },
     { landscape = "mountain" },
   },
@@ -104,7 +104,7 @@ location_catalogue = { {
   case = cases.mayday,
   dispersal_area = 1000,
   offshore = true,
-  zone_tags = {
+  zone_tag_groups = {
     { landscape = "channel" },
   },
   sub_location = {
@@ -123,10 +123,9 @@ framework = {
   cycle_players = 10,
   commands = {},
   players = {},
-  on_create = function(is_world_create)
-    if is_world_create then
-      g_savedata.subsystems.mission.center = tile.get_start()
-    end
+  on_load = function()
+    object_type.build()
+    objective_type.build()
 
     framework.register_command("?mission", "?m", "version", nil, framework.print_version, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
     framework.register_command("?mission", "?m", "all-commands", nil, framework.print_all_commands, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
@@ -142,7 +141,7 @@ framework = {
         return is_admin, pattern, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, dispersal_max
       end)
     framework.register_command("?mission", "?m", "clear-all", nil, mission.clear_all, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "muster", "[mission id]", function(peer_id, mission_id)
+    framework.register_command("?mission", "?m", "gather", "[mission id]", function(peer_id, mission_id)
       local transform = server.getPlayerPos(peer_id)
 
       for k, o in pairs(g_savedata.objects) do
@@ -151,6 +150,11 @@ framework = {
         end
       end
     end, function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id) return is_admin, peer_id, tonumber(mission_id) end)
+  end,
+  on_create = function(is_world_create)
+    if is_world_create then
+      g_savedata.subsystems.mission.center = tile.get_start()
+    end
 
     if g_savedata.mode == "debug" then
       framework.print_version()
@@ -302,13 +306,16 @@ mission = {
     self.search_center = matrix.multiply(self.locations[1].transform, matrix.translation(math.random() * 500, 0, math.random() * 500))
     self.search_radius = mission.compute_search_radius(self)
 
-    g_savedata.subsystems.mission.count = g_savedata.subsystems.mission.count + 1
-
+    console.notify(string.format("mission#%d has occurred.", self.id))
+    server.notify(-1, mission.label(self), "a mission has occured.", 0)
+    
     return self
   end,
   clear = function(self)
     mission.despawn(self)
+
     self.is_clear = true
+    server.notify(-1, mission.label(self), "a mission has cleared.", 4)
     console.notify(string.format("mission#%d has cleared.", self.id))
   end,
   clear_all = function()
@@ -447,7 +454,6 @@ mission = {
     table.insert(g_savedata.missions, m)
     history.record(locations[1])
     g_savedata.subsystems.mission.count = m.id
-    console.notify(string.format("mission#%d has occurred.", m.id))
     -- server.setPlayerPos(0, m.locations[1].transform)
   end,
   load_random = function(geologic, scale, case, center, range_min, range_max) end,
@@ -512,34 +518,42 @@ object = {
 
     self.marker_color = { 128, 128, 128, 255 }
 
-    console.notify(string.format("%s#%d has initialized.", self.name, self.id))
+    console.notify(string.format("%s#%d has initialized.", self.type, self.id))
 
     return self
   end,
   clear = function(self)
     object.despawn(self)
     self.is_clear = true
-    console.notify(string.format("%s#%d has cleared.", self.name, self.id))
+    console.notify(string.format("%s#%d has cleared.", self.type, self.id))
+  end,
+  lazy_clear = function(self, clear_time)
+    self.clear_time = clear_time
   end,
   despawn = function(self)
-    if object.is_vehicle(self) then
+    if object.module(self).is_vehicle(self) then
       server.despawnVehicle(self.id, true)
-    elseif object.is_object(self) then
+    elseif object.module(self).is_object(self) then
       server.despawnObject(self.id, true)
     end
   end,
   tick = function(self, tick)
-    self.transform = object.get_transform(self)
-    self.is_simulate = object.simulating(self)
-
-    -- object.mount(self)
-
+    self.transform = object.module(self).get_transform(self)
+    self.is_simulate = object.module(self).simulating(self)
     self.elapsed_time = self.elapsed_time + 1
+
+    if self.clear_time ~= nil then
+      self.clear_time = self.clear_time - tick
+
+      if self.clear_time <= 0 then
+        object.module(self).clear(self)
+      end
+    end
   end,
   get_transform = function(self)
-    if object.is_vehicle(self) then
+    if object.module(self).is_vehicle(self) then
       return server.getVehiclePos(self.id)
-    elseif object.is_object(self) then
+    elseif object.module(self).is_object(self) then
       return server.getObjectPos(self.id)
     elseif self.transform ~= nil then
       return self.transform
@@ -548,9 +562,9 @@ object = {
     end
   end,
   simulating = function(self)
-    if object.is_vehicle(self) then
+    if object.module(self).is_vehicle(self) then
       return server.getVehicleSimulating(self.id)
-    elseif object.is_object(self) then
+    elseif object.module(self).is_object(self) then
       return server.getObjectSimulating(self.id)
     end
   end,
@@ -566,10 +580,10 @@ object = {
     local id = nil
     local type = nil
 
-    if object.is_vehicle(self) then
+    if object.module(self).is_vehicle(self) then
       id = self.id
       type = "vehicle"
-    elseif object.is_object(self) then
+    elseif object.module(self).is_object(self) then
       id = self.id
       type = "object"
     end
@@ -614,10 +628,15 @@ character = {
     object.tick(self, tick)
     self.vital = server.getObjectData(self.id)
   end,
-  heals = function(self) return self.vital.hp == 95 end,
-  sits = function(self) return false end,
-  stays = function(self, zone_tags)
-    return table.any(zone.load(zone_tags), function(z) return zone.is_contained(z, self.transform) end)
+  heals = function(self) return self.vital.hp >= 95 end,
+  sits = function(self, is_headquarter) return false end,
+  stays = function(self, zone_tags, time)
+    return table.any(zone.load(zone_tags), function(z)
+      return zone.contains(z, self.transform)
+    end)
+  end,
+  stays_hospital = function(self, time)
+
   end,
 }
 
@@ -637,6 +656,7 @@ vehicle = {
     -- object.check_components(self)
   end,
 }
+
 
 object_type = {
   catalogue = {
@@ -662,7 +682,6 @@ object_type = {
   end,
 }
 
-object_type.build()
 
 
 objective = {
@@ -684,7 +703,7 @@ objective = {
     self.is_complete = false
     self.failed = false
 
-    console.notify(string.format("%s#%d has established as a objective.", self.name, self.id))
+    console.notify(string.format("%s#%d has established as a %s.", self.type, self.id, self.objective_type))
 
     return self
   end,
@@ -692,10 +711,12 @@ objective = {
     if self.objective_type == nil then return end
 
     self.failed = self.failed or objective.module(self).failed(self)
-    self.is_complete = self.is_complete or objective.module(self).completed(self)
+    local is_complete = self.is_complete or objective.module(self).completed(self)
 
-    if self.is_complete and not self.is_clear then
-      object.module(self).clear(self)
+    if is_complete and not self.is_complete then
+      server.notify(-1, objective.module(self).label(self), "a objective has achieved.", 4)
+      self.is_complete = is_complete
+      object.module(self).lazy_clear(self, 180)
     end
   end,
   label = function(self)
@@ -732,19 +753,44 @@ rescuee = {
   end,
   init = function(self, ot)
     self = objective.init(self, ot)
+    self.is_disable = false
+    self.is_admit_to_headquarter = false
+    self.admit_to_headquarter_duration = 0
+    self.admit_to_headquarter_threshold = 1800
+    self.is_admit_to_hospital = false
+    self.admit_to_hospital_duration = 0
+    self.admit_to_hospital_threshold = 180
 
     server.setCharacterData(self.id, math.random(0, 100), true, false)
-
+    server.setCharacterTooltip(self.id, self.name)
     return self
+  end,
+  tick = function(self, tick)
+    local is_sit_headquarter = character.sits(self, true)
+    local is_stay_hospital = character.stays(self, { admit_rescuee = "true" })
+
+    self.is_admit_to_headquarter, self.admit_to_headquarter_duration = util.progress(is_sit_headquarter, self.admit_to_headquarter_duration, self.admit_to_headquarter_threshold, tick)
+    self.is_admit_to_hospital, self.admit_to_hospital_duration = util.progress(is_stay_hospital, self.admit_to_hospital_duration, self.admit_to_hospital_threshold, tick)
+
+    objective.tick(self, tick)
+
+    if self.is_complete and not self.is_disable then
+      server.setCharacterData(self.id, self.vital.hp, false, false)
+      self.is_disable = true
+    end
   end,
   reward = function(self)
     return 2000
   end,
   completed = function(self)
-    return character.heals(self) and
-        character.stays(self, { rescuee = "bring" })
+    return character.heals(self) and (self.is_admit_to_headquarter or self.is_admit_to_hospital)
   end,
   failed = function(self) return false end,
+  admits = function(self, tick)
+    self.admits_duration = self.admits_duration + tick
+
+    return self.admits_duration >= self.admits_threshold
+  end,
 }
 
 
@@ -776,8 +822,6 @@ objective_type = {
   end,
 }
 
-objective_type.build()
-
 
 location = {
   init = function(id, addon_index, location_index)
@@ -797,7 +841,7 @@ location = {
     l.case = setting.case
     l.geologic = setting.geologics
     l.dispersal_area = setting.dispersal_area
-    l.zone_tags = setting.zone_tags or {}
+    l.zone_tag_groups = setting.zone_tag_groups or {}
     l.sub_location = setting.sub_location or {
       patterns = {},
       min = 0,
@@ -860,7 +904,7 @@ location = {
 
       local zones = {}
 
-      for _, zone_tags in pairs(l.zone_tags) do
+      for _, zone_tags in pairs(l.zone_tag_groups) do
         for _, z in pairs(zone.load(zone_tags, filter_zone)) do
           table.insert(zones, z)
         end
@@ -1021,13 +1065,13 @@ component = {
     local o, s = server.spawnAddonComponent(transform, self.addon_index, self.location_index, self.component_index, parent_id)
     self.is_spawing = false
 
-    o.component_id = self.id
-    o.parent_id = parent_id
-
     if not s then
       console.error(string.format("failed to spawn component#%d.#%d.#%d.", self.addon_index, self.location_index, self.component_index))
       return
     end
+
+    o.component_id = self.id
+    o.parent_id = parent_id
 
     return o
   end,
@@ -1064,7 +1108,7 @@ zone = {
   is_occupied = function(self)
     return false
   end,
-  is_contained = function(self, transform)
+  contains = function(self, transform)
     return server.isInTransformArea(transform, self.transform, self.size.x, self.size.y, self.size.z)
   end,
   is_contained_objects = function(self)
@@ -1198,27 +1242,28 @@ tag = {
 
     return tags
   end,
+  key_value = function(text)
+    return string.gmatch(text, "^([%w_]+)=(.+)$")
+  end,
   match = function(self, key, pattern)
     return string.match(self, "^" .. key .. "=" .. pattern .. "$") ~= nil
   end,
 }
 
 
-module = {
-  value = function(self, catalogue, type, key)
-    if type == nil then return end
-    if catalogue[type] == nil then return end
-    if catalogue[type][key] == nil then return end
+util = {
+  progress = function(executes, duration, threshold, increment)
+    local result = false
 
-    return catalogue[type][key]
-  end,
-  execute = function(self, catalogue, type, key, ...)
-    local method = module.value(self, catalogue, type, key)
+    if executes then
+      duration = duration + increment
+      result = duration >= threshold
+    elseif duration > 0 then
+      duration = 0
+    end
 
-    if method == nil then return end
-
-    return method(self, table.unpack({ ... }))
-  end,
+    return result, duration
+  end
 }
 
 
@@ -1471,3 +1516,4 @@ end
 onCreate        = framework.on_create
 onTick          = framework.on_tick
 onCustomCommand = framework.on_custom_command
+framework.on_load()
