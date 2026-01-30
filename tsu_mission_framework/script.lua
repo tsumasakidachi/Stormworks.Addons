@@ -86,8 +86,8 @@ location_catalogue = { {
   report = "悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
   note = "警察署からの通報",
   scale = scales.massive,
-  geologic = geologics.mainlands,
   case = cases.sar,
+  geologic = geologics.mainlands,
   dispersal_area = 1000,
   zone_tag_groups = {
     { landscape = "forest" },
@@ -104,8 +104,8 @@ location_catalogue = { {
   report = "船内で突然何かが爆発した! もう助からないぞ!",
   note = "乗員からの通報",
   scale = scales.massive,
-  geologic = geologics.waters,
   case = cases.mayday,
+  geologic = geologics.waters,
   dispersal_area = 1000,
   offshore = true,
   zone_tag_groups = {
@@ -116,7 +116,27 @@ location_catalogue = { {
     min = 0,
     max = 0,
   },
-}, }
+}, {
+  pattern = "^mission:piracy_boat_%d+$",
+  type = "sar",
+  report = "武装した小型船を発見した. 乗員を拘束せよ.",
+  note = "哨戒機からの通報",
+  scale = scales.meduim,
+  case = cases.securite,
+  geologic = geologics.waters,
+  offshore = true,
+  dispersal_area = 2000,
+}, {
+  pattern = "^mission:piracy_gunboat_%d+$",
+  type = "sar",
+  report = "武装した船を発見した. 乗員を拘束せよ.",
+  note = "哨戒機からの通報",
+  scale = scales.meduim,
+  case = cases.securite,
+  geologic = geologics.waters,
+  offshore = true,
+  dispersal_area = 2000,
+} }
 
 
 framework = {
@@ -131,9 +151,10 @@ framework = {
     object_type.build()
     objective_type.build()
 
-    framework.register_command("?mission", "?m", "version", nil, framework.print_version, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "all-commands", nil, framework.print_all_commands, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "set", "[name] [value]", framework.update, function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end)
+    framework.register_command("?mission", "?m", "version", nil, framework.print_version, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
+    framework.register_command("?mission", "?m", "list-commands", nil, framework.print_all_commands, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
+    framework.register_command("?mission", "?m", "list-locations", nil, framework.print_all_locations, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
+    framework.register_command("?mission", "?m", "update", "[name] [value]", framework.update, function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end)
     framework.register_command("?mission", "?m", "init", "[pattern] [dispersal_max]", mission.load_pattern,
       function(full_message, peer_id, is_admin, is_auth, subject, verb, pattern, dispersal_max)
         dispersal_max = tonumber(dispersal_max)
@@ -225,7 +246,7 @@ framework = {
       guard = guard,
     })
   end,
-  print_all_commands = function()
+  print_all_commands = function(peer_id)
     for _, command in pairs(framework.commands) do
       local text = string.format("%s %s", command.subject, command.verb)
 
@@ -233,11 +254,20 @@ framework = {
         text = text .. " " .. command.args
       end
 
-      console.log(text)
+      console.log(text, peer_id)
     end
   end,
-  print_version = function()
-    console.log(string.format("%s %s", framework.name, framework.version))
+  print_version = function(peer_id)
+    console.log(string.format("%s %s", framework.name, framework.version), peer_id)
+  end,
+  print_all_locations = function(peer_id)
+    local locations = location.load()
+
+    for k, l in pairs(locations) do
+      console.log(l.name, peer_id)
+    end
+
+    console.log(string.format("%d locations found.", #locations), peer_id)
   end,
   update = function(name, value)
     if name == "range-min" then
@@ -385,17 +415,20 @@ mission = {
       local objects = location.spawn(l)
 
       for _, o in pairs(objects) do
-        local tags = tag.deserialize(o.tags_full)
-        local ot = objective_type.find(o.type, o.name, tags)
+        local ot = objective_type.find(o.type, o.name, o.tags)
 
         if o.type == "vehicle" then
           for _, vehicle_id in pairs(o.vehicle_ids) do
-            o = vehicle.init(vehicle_id, o.type, o.name, tags, o.object_id, o.parent_id, mission_id)
+            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, 0, o.object_id, o.parent_id, mission_id)
             o = objective_type.get(ot).init(o, ot)
             table.insert(g_savedata.objects, o)
           end
+        elseif o.type == "character" then
+          o = character.init(o.id, o.type, o.name, o.tags, o.mount_id, o.parent_id, mission_id)
+          o = objective_type.get(ot).init(o, ot)
+          table.insert(g_savedata.objects, o)
         else
-          o = object.module(o).init(o.id, o.type, o.name, tags, o.parent_id, mission_id)
+          o = object.module(o).init(o.id, o.type, o.name, o.tags, o.parent_id, mission_id)
           o = objective_type.get(ot).init(o, ot)
           table.insert(g_savedata.objects, o)
         end
@@ -545,9 +578,9 @@ object = {
     end
   end,
   get_transform = function(self)
-    if object.module(self).is_vehicle(self) then
+    if object.is_vehicle(self) then
       return server.getVehiclePos(self.id)
-    elseif object.module(self).is_object(self) then
+    elseif object.is_object(self) then
       return server.getObjectPos(self.id)
     elseif self.transform ~= nil then
       return self.transform
@@ -556,9 +589,9 @@ object = {
     end
   end,
   simulating = function(self)
-    if object.module(self).is_vehicle(self) then
+    if object.is_vehicle(self) then
       return server.getVehicleSimulating(self.id)
-    elseif object.module(self).is_object(self) then
+    elseif object.is_object(self) then
       return server.getObjectSimulating(self.id)
     end
   end,
@@ -615,14 +648,19 @@ object = {
 
 
 character = {
-  init = function(id, type, name, tags, parent_id, mission_id)
+  init = function(id, type, name, tags, mount_id, parent_id, mission_id)
     local self = object.init(id, type, name, tags, parent_id, mission_id)
+    self.mount_id = mount_id
+    self.is_mount = false
+    self.seat = nil
+    self.vehicle_id = 0
     self.vital = server.getObjectData(self.id)
 
     return self
   end,
   tick = function(self, tick)
     object.tick(self, tick)
+    self.is_mount = self.is_mount or self.is_simulate and character.mount(self)
     self.vital = server.getObjectData(self.id)
   end,
   heals = function(self) return self.vital.hp >= 95 end,
@@ -647,22 +685,115 @@ character = {
 
     server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
   end,
+  mount = function(self)
+    local v = table.find(g_savedata.objects, function(o) return object.is_vehicle(o) and o.id == self.mount_id end)
+
+    if v == nil then return false end
+
+    local seat = vehicle.assign_seat(v, self)
+
+    if seat == nil then return false end
+    
+    character.seat(self, v.id, seat)
+
+    self.seat = seat
+
+    console.notify(string.format("%s#%d has mounted on %s#%d.", self.type, self.id, v.type, v.id))
+
+    return true
+  end,
+  seat = function(self, vehicle_id, seat)
+    server.setSeated(self.id, vehicle_id, seat.pos.x, seat.pos.y, seat.pos.z)
+  end,
 }
 
 
 vehicle = {
-  init = function(id, type, name, tags, group_id, parent_id, mission_id)
+  role_specific_seats = { "^pilot", "^driver", "^designator", "^gunner" },
+  init = function(id, type, name, tags, cost, group_id, parent_id, mission_id)
     local self = object.init(id, type, name, tags, parent_id, mission_id)
 
+    self.cost = cost
     self.group_id = group_id
+    self.components = nil
+    self.is_check_components = false
     self.damages = {}
+    self.is_mount = false
+    self.mass = nil
+    self.signs = nil
+    self.seats = nil
+    self.buttons = nil
+    self.tanks = nil
+    self.batteries = nil
+    self.hoppers = nil
+    self.guns = nil
+    self.rope_hooks = nil
 
     return self
   end,
   tick = function(self, tick)
     object.tick(self, tick)
     -- object.aggregate_damages(self)
-    -- object.check_components(self)
+    vehicle.check_components(self)
+  end,
+  assign_seat = function(self, c, seat_name)
+    if not self.is_check_components or not self.is_simulate then return nil end
+
+    local seat = nil
+
+    if seat_name ~= nil then
+      seat = vehicle.find_empty_seat(self, seat_name)
+    else
+      seat = vehicle.find_empty_sepcific_seat(self)
+
+      if seat == nil then
+        seat = vehicle.find_empty_seat(self, seat_name)
+      end
+    end
+
+    if seat == nil then return nil end
+
+    seat.seated_id = c.id
+
+    return seat
+  end,
+  find_empty_sepcific_seat = function(self)
+    if self.seats == nil then return end
+
+    local seat = nil
+
+    for rk, r in ipairs(vehicle.role_specific_seats) do
+      for sk, s in ipairs(self.seats) do
+        if s.seated_id >= 4294967295 and string.match(string.lower(s.name), r) ~= nil then
+          seat = s
+          break
+        end
+      end
+    end
+
+    return seat
+  end,
+  find_empty_seat = function(self, seat_name)
+    if self.seats == nil then return end
+
+    return table.find(self.seats, function(s) return s.seated_id >= 4294967295 and (seat_name == nil or string.match(string.lower(s.name), seat_name) ~= nil) end)
+  end,
+  check_components = function(self)
+    if self.is_check_components or not self.is_simulate then return end
+
+    local components = server.getVehicleComponents(self.id)
+    self.voxels = components.voxels
+    self.mass = components.mass
+    self.signs = components.components.signs
+    self.seats = components.components.seats
+    self.buttons = components.components.buttons
+    self.tanks = components.components.tanks
+    self.batteries = components.components.batteries
+    self.hoppers = components.components.hoppers
+    self.guns = components.components.guns
+    self.rope_hooks = components.components.rope_hooks
+
+    self.is_check_components = true
   end,
 }
 
@@ -760,7 +891,7 @@ objective = {
 
 rescuee = {
   name = "要救助者",
-  how_to_clear = "治療して病院かHQに搬送",
+  how_to_clear = "病院かHQに搬送",
   is_match = function(type, name, tags)
     return type == "character" and tags.tracker == "rescuee"
   end,
@@ -768,10 +899,10 @@ rescuee = {
     self = objective.init(self, ot)
     self.is_disable = false
     self.is_admit_to_headquarter = false
-    self.admit_to_headquarter_duration = 0
+    self.admit_to_headquarter_progress = 0
     self.admit_to_headquarter_threshold = 1800
     self.is_admit_to_hospital = false
-    self.admit_to_hospital_duration = 0
+    self.admit_to_hospital_progress = 0
     self.admit_to_hospital_threshold = 180
     self.is_code_blue = #framework.players >= g_savedata.subsystems.rescuee.code_blue_required_players and math.random(0, 99) < g_savedata.rescuee.code_blue_probabillity
 
@@ -793,8 +924,8 @@ rescuee = {
     local is_sit_headquarter = is_heal and character.sits(self, true)
     local is_stay_hospital = is_heal and character.stays(self, { admit_rescuee = "true" })
 
-    self.is_admit_to_headquarter, self.admit_to_headquarter_duration = util.progress(is_sit_headquarter, self.admit_to_headquarter_duration, self.admit_to_headquarter_threshold, tick)
-    self.is_admit_to_hospital, self.admit_to_hospital_duration = util.progress(is_stay_hospital, self.admit_to_hospital_duration, self.admit_to_hospital_threshold, tick)
+    self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
+    self.is_admit_to_hospital, self.admit_to_hospital_progress = util.progress(is_stay_hospital, self.admit_to_hospital_progress, self.admit_to_hospital_threshold, tick)
 
     if self.is_code_blue then
       character.update_vital(self, self.vital.hp - 2)
@@ -817,9 +948,54 @@ rescuee = {
 }
 
 
+suspect = {
+  name = "被疑者",
+  how_to_clear = "警察署かHQに護送",
+  is_match = function(type, name, tags)
+    return type == "character" and tags.tracker == "suspect"
+  end,
+  init = function(self, ot)
+    self = objective.init(self, ot)
+    self.is_disable = false
+    self.is_admit_to_headquarter = false
+    self.admit_to_headquarter_progress = 0
+    self.admit_to_headquarter_threshold = 1800
+    self.is_admit_to_police_station = false
+    self.admit_to_police_station_progress = 0
+    self.admit_to_police_station_threshold = 180
+
+    server.setCharacterTooltip(self.id, self.name)
+    return self
+  end,
+  tick = function(self, tick)
+    local is_heal = character.heals(self)
+    local is_sit_headquarter = is_heal and character.sits(self, true)
+    local is_stay_police_station = is_heal and character.stays(self, { admit_suspect = "true" })
+
+    self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
+    self.is_admit_to_police_station, self.admit_to_police_station_progress = util.progress(is_stay_police_station, self.admit_to_police_station_progress, self.admit_to_police_station_threshold, tick)
+
+    objective.tick(self, tick)
+
+    if self.is_complete and not self.is_disable then
+      character.update_vital(self, self.vital.hp, false, false)
+      self.is_disable = true
+    end
+  end,
+  reward = function(self)
+    return 4000
+  end,
+  completed = function(self)
+    return self.is_admit_to_headquarter or self.is_admit_to_police_station
+  end,
+  failed = function(self) return false end,
+}
+
+
 objective_type = {
   catalogue = {
-    rescuee = rescuee
+    rescuee = rescuee,
+    suspect = suspect,
   },
   inherit = function(self, base)
     for k, v in pairs(base) do
@@ -880,6 +1056,10 @@ location = {
     return l
   end,
   load = function(filter)
+    if filter == nil then
+      filter = function(l) return true end
+    end
+
     local locations = {}
     local addon_index = 0
     local addon_count = server.getAddonCount()
@@ -912,14 +1092,6 @@ location = {
     local locations = {}
     local locations_zones = {}
 
-    if filter_location == nil then
-      filter_location = function(l) return true end
-    end
-
-    if filter_zone == nil then
-      filter_zone = function(z) return true end
-    end
-
     for k, l in pairs(location.load(filter_location)) do
       if l == nil then
         goto continue
@@ -948,6 +1120,10 @@ location = {
       ::continue::
     end
 
+    if #locations == 0 then
+      console.error(string.format("location not found."))
+    end
+
     local location_name = table.random(table.distinct(table.select(locations, function(l) return l.name end)))
 
     locations = table.find_all(locations, function(l, k) return l.name == location_name end)
@@ -956,7 +1132,7 @@ location = {
       location.locate(locations[i], center, range_min, range_max, locations_zones[locations[i].addon_index][locations[i].location_index], locations)
 
       if locations[i].transform == nil then
-        console.error(string.format("location %s transform is nil.", locations[i].name))
+        console.error(string.format("location %s has nil transform.", locations[i].name))
         table.remove(locations, i)
 
         goto continue
@@ -996,21 +1172,21 @@ location = {
   end,
   spawn = function(self)
     local objects = {}
-    local ordered_components = { vehicles = {}, characters = {}, fires = {}, others = {} }
+    local ordered_components = { {}, {}, {}, {} }
 
     for k, c in pairs(component.load(self)) do
       if c.type == "vehicle" then
-        table.insert(ordered_components.vehicles, c)
+        table.insert(ordered_components[1], c)
       elseif c.type == "character" then
-        table.insert(ordered_components.characters, c)
+        table.insert(ordered_components[2], c)
       elseif c.type == "fire" then
-        table.insert(ordered_components.fires, c)
+        table.insert(ordered_components[3], c)
       else
-        table.insert(ordered_components.others, c)
+        table.insert(ordered_components[4], c)
       end
     end
 
-    for type, components in pairs(ordered_components) do
+    for type, components in ipairs(ordered_components) do
       if self.components[type] then
         table.shuffle(components)
         local threshold = math.floor(#components * math.random(self.components[type].min, self.components[type].max) * 0.01)
@@ -1070,12 +1246,12 @@ component = {
 
     return components
   end,
-  spawn = function(self, transform, siblings)
+  spawn = function(self, transform, sibling_objects)
     local transform = matrix.multiply(transform, self.transform)
     local parent_id = nil
 
     if self.vehicle_parent_component_id > 0 then
-      parent = table.find(siblings, function(o)
+      parent = table.find(sibling_objects, function(o)
         return o.component_id == self.vehicle_parent_component_id
       end)
 
@@ -1093,8 +1269,21 @@ component = {
       return
     end
 
+    o.tags = tag.deserialize(o.tags)
     o.component_id = self.id
     o.parent_id = parent_id
+    o.mount_id = nil
+
+    if o.tags.mount ~= nil then
+      local mount_component_id = tonumber(o.tags.mount)
+      local mount_component = table.find(sibling_objects, function(x)
+        return x.component_id == mount_component_id
+      end)
+
+      if mount_component ~= nil then
+        o.mount_id = mount_component.id
+      end
+    end
 
     return o
   end,
@@ -1103,7 +1292,7 @@ component = {
 
 zone = {
   init = function(z)
-    z.tags = tag.deserialize(z.tags_full)
+    z.tags = tag.deserialize(z.tags)
 
     return z
   end,
@@ -1250,23 +1439,68 @@ tag = {
   serialize = function(tags)
     local texts = {}
 
-    for k, v in pairs(tags) do
-      table.insert(texts, k .. "=" .. v)
+    for key, value in pairs(tags) do
+      local key_type = type(key)
+      local value_type = type(value)
+
+      if value_type == "table" then
+        value = table.concat(value, ";")
+      end
+
+      local t = ""
+
+      if key_type == "string" then
+        t = key .. "=" .. value
+      else
+        t = value
+      end
+
+      table.insert(texts, t)
     end
 
     return table.concat(texts, ",")
   end,
-  deserialize = function(text)
-    local tags = {}
+  deserialize = function(tags)
+    -- local tags = {}
 
-    for k, v in string.gmatch(text, "([%w_]+)=([^%s%c,]+)") do
-      tags[k] = v
+    -- for k, v in string.gmatch(text, "([%w_]+)=([^%s%c,]+)") do
+    --   tags[k] = v
+    -- end
+
+    -- return tags
+
+    local deserialized_tags = {}
+
+    for key, value in ipairs(tags) do
+      local value, encoded_key = tag.encode(value)
+
+      if encoded_key == nil then
+        encoded_key = key
+      end
+
+      deserialized_tags[encoded_key] = value
     end
 
-    return tags
+    return deserialized_tags
+  end,
+  encode = function(text)
+    local key, value = tag.key_value(text)
+
+    if key == nil then
+      value = text
+    end
+
+    if string.find(text, ";", 1, true) ~= nil then
+      value = tag.separate_semiclron(value)
+    end
+
+    return value, key
   end,
   key_value = function(text)
-    return string.gmatch(text, "^([%w_]+)=(.+)$")
+    return string.match(text, "^([%w_]+)=(.+)$")
+  end,
+  separate_semiclron = function(text)
+    return string.split(text, ";")
   end,
   match = function(self, key, pattern)
     return string.match(self, "^" .. key .. "=" .. pattern .. "$") ~= nil
