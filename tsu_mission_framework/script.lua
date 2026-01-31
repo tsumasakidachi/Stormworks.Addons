@@ -139,6 +139,22 @@ location_catalogue = { {
 } }
 
 
+fluids = {
+  fresh_water = 0,
+  diesel = 1,
+  jet = 2,
+  air = 3,
+  exhaust = 4,
+  oil = 5,
+  sea_water = 6,
+  steam = 7,
+  slurry = 8,
+  saturated_slurry = 9,
+  oxygen = 10,
+  nitrogen = 11,
+  hydrogen = 12,
+}
+
 framework = {
   name = "TSU Mission Framework",
   version = "1.0.0",
@@ -152,6 +168,8 @@ framework = {
     objective_type.build()
 
     framework.register_command("?mission", "?m", "version", nil, framework.print_version, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
+    framework.register_command("?mission", "?m", "prod", nil, function() g_savedata.mode = "prod" end, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
+    framework.register_command("?mission", "?m", "debug", nil, function() g_savedata.mode = "debug" end, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
     framework.register_command("?mission", "?m", "list-commands", nil, framework.print_all_commands, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
     framework.register_command("?mission", "?m", "list-locations", nil, framework.print_all_locations, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
     framework.register_command("?mission", "?m", "update", "[name] [value]", framework.update, function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end)
@@ -195,6 +213,8 @@ framework = {
     end
 
     framework.tick(g_savedata.objects, framework.cycle_objects, function(o, k)
+      object.module(o).unmap(o, framework.players)
+
       if o.is_clear then
         object.module(o).unmap(o, framework.players)
         table.remove(g_savedata.objects, k)
@@ -206,8 +226,9 @@ framework = {
     end)
 
     framework.tick(g_savedata.missions, framework.cycle_missions, function(m, k)
+      mission.unmap(m, framework.players)
+
       if m.is_clear then
-        mission.unmap(m, framework.players)
         table.remove(g_savedata.missions, k)
       else
         mission.tick(m, tick * framework.cycle_missions)
@@ -229,12 +250,42 @@ framework = {
   end,
   on_player_join = function(steam_id, name, peer_id, is_admin, is_auth)
     steam_id = tostring(steam_id)
-    local players = table.find_all(framework.players, function(p) return p.steam_id == steam_id end)
-    framework.map(players)
+    framework.map(table.find_all(framework.players, function(p) return p.steam_id == steam_id end))
+
+    local character_id = server.getPlayerCharacterID(peer_id)
+    server.setAICharacterTeam(character_id, 1)
+  end,
+  on_group_spawn = function(group_id, peer_id, x, y, z, group_cost)
+    if component.is_spawing then return end
+
+    local player_steam_id = nil
+    local p = table.find(framework.players, function(p) return p.id == peer_id end)
+
+    if p ~= nil then
+      player_steam_id = p.steam_id
+    end
+
+    for k, v in ipairs(server.getVehicleGroup(group_id)) do
+      local cost = 0
+      local data = server.getVehicleData(v)
+      local tags = tag.deserialize(data.tags)
+
+      if k == 1 then cost = group_cost end
+
+      v = vehicle.init(v, "vehicle", data.name, tags, group_id, player_steam_id, cost)
+      table.insert(g_savedata.objects, v)
+    end
+  end,
+  on_vehicle_despawn = function(vehicle_id, peer_id, x, y, z, group_cost, group_id)
+    for k, v in ipairs(g_savedata.objects) do
+      if vehicle.is_vehicle(v) and v.id == vehicle_id then
+        object.module(v).clear(v)
+      end
+    end
   end,
   register_command = function(subject, shorthand, verb, args, execute, guard)
-    if cuard == nil then
-      cuard = function() end
+    if guard == nil then
+      guard = function() end
     end
 
     table.insert(framework.commands, {
@@ -419,7 +470,7 @@ mission = {
 
         if o.type == "vehicle" then
           for _, vehicle_id in pairs(o.vehicle_ids) do
-            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, 0, o.object_id, o.parent_id, mission_id)
+            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, o.object_id, nil, 0, o.parent_id, mission_id)
             o = objective_type.get(ot).init(o, ot)
             table.insert(g_savedata.objects, o)
           end
@@ -438,7 +489,7 @@ mission = {
   despawn = function(self)
     for k, o in pairs(g_savedata.objects) do
       if o.mission_id == self.id then
-        object.module(o).clear(o)
+        object.module(o).despawn(o)
       end
     end
   end,
@@ -500,9 +551,7 @@ mission = {
       end)
   end,
   contains = function(self, transform)
-    local distance = matrix.distance(self.locations[1].transform, transform)
-
-    return distance <= self.locations[1].dispersal_area
+    return matrix.distance(self.locations[1].transform, transform) <= self.locations[1].dispersal_area
   end,
 }
 
@@ -550,7 +599,6 @@ object = {
     return self
   end,
   clear = function(self)
-    object.despawn(self)
     self.is_clear = true
     console.notify(string.format("%s#%d has cleared.", self.type, self.id))
   end,
@@ -562,6 +610,7 @@ object = {
       server.despawnVehicle(self.id, true)
     elseif object.module(self).is_object(self) then
       server.despawnObject(self.id, true)
+      object.module(self).clear(self)
     end
   end,
   tick = function(self, tick)
@@ -573,7 +622,7 @@ object = {
       self.clear_time = self.clear_time - tick
 
       if self.clear_time ~= nil and self.clear_time <= 0 then
-        object.module(self).clear(self)
+        object.module(self).despawn(self)
       end
     end
   end,
@@ -599,7 +648,7 @@ object = {
     return string.format("%s#%d", self.name, self.id)
   end,
   detail = function(self)
-    return string.format("mission#%d", self.mission_id or "nil")
+    return self.mission_id ~= nil and string.format("mission#%d", self.mission_id) or nil
   end,
   map = function(self, players)
     if self.transform == nil then return end
@@ -648,6 +697,22 @@ object = {
 
 
 character = {
+  roles = {
+    pilot_ship = {
+      pattern = "^pilot%sship",
+      states = {
+        drive = 1,
+        attack = 1,
+      },
+    },
+    gunner = {
+      pattern = "^gunner",
+      states = {
+        drive = 0,
+        attack = 1,
+      },
+    },
+  },
   init = function(id, type, name, tags, mount_id, parent_id, mission_id)
     local self = object.init(id, type, name, tags, parent_id, mission_id)
     self.mount_id = mount_id
@@ -655,12 +720,22 @@ character = {
     self.seat = nil
     self.vehicle_id = 0
     self.vital = server.getObjectData(self.id)
+    self.commands = self.tags.commands
+    self.observable_radius = tonumber(tags.invocation_distance)
+    self.role = nil
+    self.paths = {}
+    self.target_transform = nil
+    self.target_id = nil
+    self.target_type = nil
 
     return self
   end,
   tick = function(self, tick)
     object.tick(self, tick)
-    self.is_mount = self.is_mount or self.is_simulate and character.mount(self)
+
+    character.mount(self)
+    character.travel(self)
+
     self.vital = server.getObjectData(self.id)
   end,
   heals = function(self) return self.vital.hp >= 95 end,
@@ -686,37 +761,131 @@ character = {
     server.setCharacterData(self.id, self.vital.hp, self.vital.interactable, self.vital.ai)
   end,
   mount = function(self)
+    if self.is_mount or not self.is_simulate then return end
+
     local v = table.find(g_savedata.objects, function(o) return object.is_vehicle(o) and o.id == self.mount_id end)
 
-    if v == nil then return false end
+    if v == nil then return end
 
     local seat = vehicle.assign_seat(v, self)
 
-    if seat == nil then return false end
-    
+    if seat == nil then return end
+
     character.seat(self, v.id, seat)
 
     self.seat = seat
+    self.is_mount = true
 
     console.notify(string.format("%s#%d has mounted on %s#%d.", self.type, self.id, v.type, v.id))
-
-    return true
   end,
   seat = function(self, vehicle_id, seat)
     server.setSeated(self.id, vehicle_id, seat.pos.x, seat.pos.y, seat.pos.z)
+  end,
+  invoke_command = function(self)
+    if not self.is_simulate or self.command ~= nil and self.role ~= nil then return end
+    if self.mount_id ~= nil and self.seat == nil then return end
+    if not table.aggregate(framework.players, false, function(result, p) return result or character.observes(self, p.transform) end) then return end
+
+    self.command = table.random(self.commands)
+    self.role = table.find_index(character.roles, function(r) return string.match(string.lower(self.seat.name), r.pattern) ~= nil end)
+
+    character.update_vital(self, nil, nil, true)
+    console.notify(string.format("%s#%d has invoke %s command and roled for %s", self.type, self.id, self.command, self.role))
+  end,
+  observes = function(self, transform)
+    return self.is_simulate and matrix.distance(self.transform, transform) <= self.observable_radius
+  end,
+  travel = function(self)
+    if not self.is_simulate then return end
+    if self.target_transform ~= nil and matrix.distance(self.transform, self.target_transform) > 150 then return end
+    if #self.paths < 1 then return end
+
+    character.drive(self, self.paths[1])
+    table.remove(self.paths, 1)
+  end,
+  drive = function(self, target_transform)
+    self.target_transform = target_transform
+    local x, y, z = matrix.position(self.target_transform)
+    server.setAITarget(self.id, self.target_transform)
+    server.setAIState(self.id, character.roles[self.role].states.drive)
+    console.notify(string.format("%s#%s has traveled to %.0f, %.0f, %.0f, %.0fm", self.type, self.id, x, y, z, matrix.distance(self.transform, self.target_transform)))
+  end,
+  attack = function(self, target_id, target_type)
+    if target_type == "vehicle" then
+      server.setAITargetVehicle(self.id, target_id)
+    elseif target_type == "character" then
+      server.setAITargetCharacter(self.id, target_id)
+    end
+
+    server.setAIState(self.id, character.roles[self.role].states.attack)
+    console.notify(string.format("%s#%s has attacked to %s#%d", self.type, self.id, target_type, target_id))
+  end,
+  terminate = function(self)
+    self.paths = {}
+    self.target_transform = nil
+    server.setAIState(self.id, 0)
+  end,
+  route = function(self, goal, required_tags, avoided_tags)
+    for k, t in ipairs(path.find(self.transform, goal, required_tags, avoided_tags)) do
+      table.insert(self.paths, t)
+    end
+
+    table.insert(self.paths, goal)
+  end,
+  nearest_unit = function(self, distance_max)
+    local nearest_obj = nil
+    local distance_min = math.maxinteger
+
+    if distance_max == nil then
+      distance_max = math.maxinteger
+    end
+
+    for k, o in ipairs(g_savedata.objects) do
+      if object.is_vehicle(o) and o.is_player_unit then
+        local distance = matrix.distance(o.transform, self.transform)
+
+        if distance < distance_max and distance < distance_min then
+          nearest_obj = o
+          distance_min = distance
+        end
+      end
+    end
+
+    return nearest_obj, distance_min
+  end,
+  nearest_player = function(self, distance_max)
+    local nearest_obj = nil
+    local distance_min = math.maxinteger
+
+    if distance_max == nil then
+      distance_max = math.maxinteger
+    end
+
+    for k, p in ipairs(framework.players) do
+      local distance = matrix.distance(p.transform, self.transform)
+
+      if distance < distance_max and distance < distance_min then
+        nearest_obj = p
+        distance_min = distance
+      end
+    end
+
+    return nearest_obj, distance_min
   end,
 }
 
 
 vehicle = {
   role_specific_seats = { "^pilot", "^driver", "^designator", "^gunner" },
-  init = function(id, type, name, tags, cost, group_id, parent_id, mission_id)
+  init = function(id, type, name, tags, group_id, player_steam_id, cost, parent_id, mission_id)
     local self = object.init(id, type, name, tags, parent_id, mission_id)
 
     self.cost = cost
+    self.player_steam_id = player_steam_id
+    self.is_player_unit = self.player_steam_id ~= nil or tags.tracker == "unit"
     self.group_id = group_id
-    self.components = nil
     self.is_check_components = false
+    self.is_refill = self.tags.refill == "true"
     self.damages = {}
     self.is_mount = false
     self.mass = nil
@@ -729,12 +898,17 @@ vehicle = {
     self.guns = nil
     self.rope_hooks = nil
 
+    if self.is_player_unit then
+      server.setAIVehicleTeam(self.id, 1)
+    end
+
     return self
   end,
   tick = function(self, tick)
     object.tick(self, tick)
     -- object.aggregate_damages(self)
     vehicle.check_components(self)
+    vehicle.refill(self)
   end,
   assign_seat = function(self, c, seat_name)
     if not self.is_check_components or not self.is_simulate then return nil end
@@ -792,8 +966,25 @@ vehicle = {
     self.hoppers = components.components.hoppers
     self.guns = components.components.guns
     self.rope_hooks = components.components.rope_hooks
-
     self.is_check_components = true
+  end,
+  refill = function(self)
+    if not self.is_refill or not self.is_check_components or not self.is_simulate then return end
+
+    for k, t in ipairs(self.tanks) do
+      local fliud_type = string.lower(t.name)
+
+      if fliud_type == nil or fluids[fliud_type] == nil then goto continue end
+
+      server.setVehicleTank(self.id, t.pos.x, t.pos.y, t.pos.z, 0, fluids.air)
+      server.setVehicleTank(self.id, t.pos.x, t.pos.y, t.pos.z, 0, fluids.sea_water)
+      server.setVehicleTank(self.id, t.pos.x, t.pos.y, t.pos.z, t.capacity, fluids[fliud_type])
+      ::continue::
+    end
+
+    for k, b in ipairs(self.batteries) do
+      server.setVehicleBattery(self.id, b.pos.x, b.pos.y, b.pos.z, 1)
+    end
   end,
 }
 
@@ -840,8 +1031,9 @@ objective = {
     end
 
     self.how_to_clear = objective.module(self).how_to_clear
-    self.is_complete = false
+    self.is_finish = false
     self.failed = false
+    self.is_activate = false
 
     console.notify(string.format("%s#%d has established as a %s.", self.type, self.id, self.objective_type))
 
@@ -850,12 +1042,17 @@ objective = {
   tick = function(self, tick)
     if self.objective_type == nil then return end
 
-    self.failed = self.failed or objective.module(self).failed(self)
-    local is_complete = self.is_complete or objective.module(self).completed(self)
+    local is_fail = objective.module(self).failed(self)
 
-    if is_complete and not self.is_complete then
+    if not self.is_finish and objective.module(self).failed(self) then
+      server.notify(-1, objective.module(self).label(self), "a objective has failed.", 2)
+      self.is_finish = true
+      object.module(self).lazy_clear(self, 180)
+    end
+
+    if not self.is_finish and objective.module(self).completed(self) then
       server.notify(-1, objective.module(self).label(self), "a objective has achieved.", 4)
-      self.is_complete = is_complete
+      self.is_finish = true
       object.module(self).lazy_clear(self, 180)
     end
   end,
@@ -920,20 +1117,20 @@ rescuee = {
     return self
   end,
   tick = function(self, tick)
-    local is_heal = character.heals(self)
-    local is_sit_headquarter = is_heal and character.sits(self, true)
-    local is_stay_hospital = is_heal and character.stays(self, { admit_rescuee = "true" })
+    local is_done = character.heals(self) or self.vital.dead
+    local is_sit_headquarter = is_done and character.sits(self, true)
+    local is_stay_hospital = is_done and character.stays(self, { admit_rescuee = "true" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
     self.is_admit_to_hospital, self.admit_to_hospital_progress = util.progress(is_stay_hospital, self.admit_to_hospital_progress, self.admit_to_hospital_threshold, tick)
 
-    if self.is_code_blue then
+    if self.is_simulated and self.is_code_blue then
       character.update_vital(self, self.vital.hp - 2)
     end
 
     objective.tick(self, tick)
 
-    if self.is_complete and not self.is_disable then
+    if self.is_finish and not self.is_disable then
       character.update_vital(self, self.vital.hp, false, false)
       self.is_disable = true
     end
@@ -957,27 +1154,39 @@ suspect = {
   init = function(self, ot)
     self = objective.init(self, ot)
     self.is_disable = false
+    self.is_neutralize = false
     self.is_admit_to_headquarter = false
     self.admit_to_headquarter_progress = 0
     self.admit_to_headquarter_threshold = 1800
     self.is_admit_to_police_station = false
     self.admit_to_police_station_progress = 0
     self.admit_to_police_station_threshold = 180
+    self.can_change_target = false
+    self.fix_target_progress = 0
+    self.fix_target_threshold = 900
 
+    server.setAICharacterTeam(self.id, 2)
+    server.setAICharacterTargetTeam(self.id, 1, true)
     server.setCharacterTooltip(self.id, self.name)
     return self
   end,
   tick = function(self, tick)
-    local is_heal = character.heals(self)
-    local is_sit_headquarter = is_heal and character.sits(self, true)
-    local is_stay_police_station = is_heal and character.stays(self, { admit_suspect = "true" })
+    local is_done = character.heals(self) or self.vital.dead
+    local is_sit_headquarter = is_done and character.sits(self, true)
+    local is_stay_police_station = is_done and character.stays(self, { admit_suspect = "true" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
     self.is_admit_to_police_station, self.admit_to_police_station_progress = util.progress(is_stay_police_station, self.admit_to_police_station_progress, self.admit_to_police_station_threshold, tick)
 
+    character.invoke_command(self)
+    suspect.neutralize(self)
+    suspect.act(self, tick)
+
+    self.is_activate = self.is_activate or self.command ~= nil and self.role ~= nil
+
     objective.tick(self, tick)
 
-    if self.is_complete and not self.is_disable then
+    if self.is_finish and not self.is_disable then
       character.update_vital(self, self.vital.hp, false, false)
       self.is_disable = true
     end
@@ -988,7 +1197,57 @@ suspect = {
   completed = function(self)
     return self.is_admit_to_headquarter or self.is_admit_to_police_station
   end,
-  failed = function(self) return false end,
+  failed = function(self) return self.vital.dead end,
+  neutralize = function(self)
+    if self.is_neutralize or not (self.vital.incapacitated or self.vital.dead) then return end
+
+    character.terminate(self)
+    server.setAICharacterTargetTeam(self.id, 1, false)
+    self.is_neutralize = true
+    console.notify(string.format("%s#%d has neutralized.", self.type, self.id))
+  end,
+  act = function(self, tick)
+    if self.is_neutralize then return end
+
+    if self.role == "pilot_ship" and self.command == "attack" then
+      self.can_change_target, self.fix_target_progress = util.progress(not self.can_change_target, self.fix_target_progress, self.fix_target_threshold, tick)
+
+      if not self.can_change_target then return end
+
+      local u, ud = character.nearest_unit(self, self.observable_radius)
+
+      if u ~= nil then
+        character.drive(self, u.transform)
+      end
+    elseif self.role == "pilot_ship" and self.command == "escape" and #self.paths == 0 then
+      character.route(self, tile.get_offshore(self.transform, 2000, 4000), "ocean_path")
+    elseif self.role == "gunner" and self.command == "attack" then
+      self.can_change_target, self.fix_target_progress = util.progress(not self.can_change_target, self.fix_target_progress, self.fix_target_threshold, tick)
+
+      if not self.can_change_target then return end
+
+      local target_type = nil
+      local target_id = nil
+      local u, ud = character.nearest_unit(self, self.observable_radius)
+      local p, pd = character.nearest_player(self, self.observable_radius)
+
+      if u ~= nil then
+        target_type = "vehicle"
+        target_id = u.id
+      end
+
+      if p ~= nil and pd < ud then
+        target_type = "character"
+        target_id = p.object_id
+      end
+
+      if target_type ~= nil and target_type ~= self.target_type and target_id ~= nil and target_id ~= self.target_id then
+        character.attack(self, target_id, target_type)
+        self.can_change_target = false
+        self.fix_target_progress = 0
+      end
+    end
+  end,
 }
 
 
@@ -1260,9 +1519,9 @@ component = {
       end
     end
 
-    self.is_spawing = true
+    component.is_spawing = true
     local o, s = server.spawnAddonComponent(transform, self.addon_index, self.location_index, self.component_index, parent_id)
-    self.is_spawing = false
+    component.is_spawing = false
 
     if not s then
       console.error(string.format("failed to spawn component#%d.#%d.#%d.", self.addon_index, self.location_index, self.component_index))
@@ -1392,7 +1651,6 @@ ui = {
       position_type = 2
     end
 
-    server.removeMapID(p.id, self.ui_id)
     server.addMapObject(p.id, self.ui_id, position_type, self.marker_type, x, z, 0, 0, vehicle_id, object_id, label, radius, label_hover, self.marker_color[1], self.marker_color[2], self.marker_color[3], self.marker_color[4])
   end,
   unmap = function(self, p)
@@ -1431,6 +1689,18 @@ tile = {
     if not s then return nil end
 
     return transform
+  end,
+}
+
+path = {
+  find = function(start, goal, required_tags, avoided_tags)
+    local paths = {}
+
+    for k, p in ipairs(server.pathfind(start, goal, required_tags, avoided_tags)) do
+      table.insert(paths, matrix.translation(p.x, 0, p.z))
+    end
+
+    return paths
   end,
 }
 
@@ -1770,7 +2040,9 @@ table.take       = function(t, start, length)
 end
 
 
-onCreate        = framework.on_create
-onTick          = framework.on_tick
-onCustomCommand = framework.on_custom_command
+onCreate         = framework.on_create
+onTick           = framework.on_tick
+onCustomCommand  = framework.on_custom_command
+onGroupSpawn     = framework.on_group_spawn
+onVehicleDespawn = framework.on_vehicle_despawn
 framework.on_load()
