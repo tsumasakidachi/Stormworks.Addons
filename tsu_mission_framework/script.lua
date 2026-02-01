@@ -85,7 +85,7 @@ location_catalogue = { {
   type = "sar",
   report = "悪天候により登山客の集団遭難が発生した. このエリアを捜索し行方不明者を全員救出せよ.",
   note = "警察署からの通報",
-  scale = scales.massive,
+  scale = scales.medium,
   case = cases.sar,
   geologic = geologics.mainlands,
   dispersal_area = 1000,
@@ -95,7 +95,7 @@ location_catalogue = { {
   },
   sub_location = {
     patterns = { "^mission:climber_missing_%d+$" },
-    min = 2,
+    min = 1,
     max = 3,
   },
 }, {
@@ -103,7 +103,7 @@ location_catalogue = { {
   type = "sar",
   report = "船内で突然何かが爆発した! もう助からないぞ!",
   note = "乗員からの通報",
-  scale = scales.massive,
+  scale = scales.meduim,
   case = cases.mayday,
   geologic = geologics.waters,
   dispersal_area = 1000,
@@ -385,7 +385,7 @@ mission = {
 
     self.id = id
     self.locations = locations
-    self.is_activate = true
+    self.is_active = false
     self.is_clear = false
     self.is_report = false
     self.elapsed_time = 0
@@ -418,10 +418,12 @@ mission = {
     end
   end,
   tick = function(self, tick)
+    self.is_active = self.is_active or table.aggregate(framework.players, false, function(result, p) return result or mission.contains(self, p.transform) end)
     self.objectives = table.select(table.find_all(g_savedata.objects, function(o) return o.mission_id == self.id and o.objective_type ~= nil end), function(o) return objective.module(o).progress(o) end)
-    self.sorted_objectives = mission.aggregate_objectives(self, self.objectives)
+    self.sorted_objectives, self.required_objectives_count = mission.aggregate_objectives(self, self.objectives)
 
-    if self.is_activate and #self.objectives == 0 then
+    if self.is_active and self.required_objectives_count == 0 then
+      money.transact(self.reward, string.format("reward to cleared mission#%d", self.id))
       mission.clear(self)
     end
 
@@ -429,6 +431,7 @@ mission = {
   end,
   aggregate_objectives = function(self, objectives)
     local sorted_objectives = {}
+    local required_objectives_count = 0
 
     for k, v in pairs(objective_type.catalogue) do
       sorted_objectives[k] = {
@@ -439,9 +442,13 @@ mission = {
 
     for k, o in pairs(objectives) do
       sorted_objectives[o.type].count = sorted_objectives[o.type].count + o.count
+
+      if o.is_require then
+        required_objectives_count = required_objectives_count + 1
+      end
     end
 
-    return sorted_objectives
+    return sorted_objectives, required_objectives_count
   end,
   compute_search_radius = function(self)
     if self.locations[1].no_search_radius then return 0 end
@@ -463,19 +470,27 @@ mission = {
   detail = function(self)
     local text = self.locations[1].note
 
-    if self.required_objectives_count > 0 then
+    if #self.objectives > 0 then
       text = text .. "\n\n[目標]"
 
-      for k, ov in pairs(self.objectives) do
-        text = text .. string.format("\n%d %s", ov.count, ov.text)
+      for k, ov in pairs(self.sorted_objectives) do
+        if ov.count > 0 then
+          text = text .. string.format("\n%d %s", ov.count, ov.text)
+        end
       end
     end
 
-    if self.search_radius > 0 then text = text .. string.format("\n\n[範囲]\n%.1fkm", self.search_radius / 1000) end
+    if self.search_radius > 0 then text = text .. string.format("\n\n[半径]\n%.1fkm", self.search_radius / 1000) end
 
     if self.finish_time > 0 then text = text .. string.format("\n\n[残り時間]\n%d分", math.ceil((self.finish_time - self.elapsed_time) / 3600)) end
 
+    text = text .. string.format("\n\n[対応中]")
+    text = text .. string.format("\n%d人以上必要\n?go %d (小文字) でチェックイン", self.locations[1].scale, self.id)
+
     return text
+  end,
+  add_reward = function(self, amount, title)
+    self.reward = self.reward + amount
   end,
   spawn = function(mission_id, locations)
     for _, l in pairs(locations) do
@@ -1020,10 +1035,27 @@ vehicle = {
 }
 
 
+fire = {
+  init = function(id, type, name, tags, parent_id, mission_id)
+    local self = object.init(id, type, name, tags, parent_id, mission_id)
+
+    self.is_lit = server.getFireData(self.id)
+
+    return self
+  end,
+  tick = function(self, tick)
+    object.tick(self, tick)
+
+    self.is_lit = server.getFireData(self.id)
+  end,
+}
+
+
 object_type = {
   catalogue = {
     vehicle = vehicle,
     character = character,
+    fire = fire,
   },
   inherit = function(self, base)
     for k, v in pairs(base) do
@@ -1064,7 +1096,7 @@ objective = {
     self.how_to_clear = objective.module(self).how_to_clear
     self.is_finish = false
     self.failed = false
-    self.is_activate = false
+    self.is_active = false
 
     console.notify(string.format("%s#%d has established as a %s.", self.type, self.id, self.objective_type))
 
@@ -1083,6 +1115,7 @@ objective = {
 
     if not self.is_finish and objective.module(self).completed(self) then
       server.notify(-1, objective.module(self).label(self), "a objective has achieved.", 4)
+      mission.add_reward(table.find(g_savedata.missions, function(m) return m.id == self.mission_id end), objective.module(self).reward(self))
       self.is_finish = true
       object.module(self).lazy_clear(self, 180)
     end
@@ -1096,7 +1129,7 @@ objective = {
     return {
       type = self.objective_type,
       count = objective.module(self).count(self),
-      requires = objective.module(self).requires(self),
+      is_require = objective.module(self).requires(self),
     }
   end,
   count = function(self)
@@ -1109,7 +1142,7 @@ objective = {
     return true
   end,
   completed = function(self)
-    return self.objective_type == nil
+    return false
   end,
   failed = function(self)
     return false
@@ -1213,7 +1246,7 @@ suspect = {
     suspect.neutralize(self)
     suspect.act(self, tick)
 
-    self.is_activate = self.is_activate or self.command ~= nil and self.role ~= nil
+    self.is_active = self.is_active or self.command ~= nil and self.role ~= nil
 
     objective.tick(self, tick)
 
@@ -1282,10 +1315,40 @@ suspect = {
 }
 
 
+fire_objective = {
+  name = "炎",
+  how_to_clear = "鎮圧",
+  is_match = function(type, name, tags)
+    return type == "fire"
+  end,
+  init = function(self, ot)
+    self = objective.init(self, ot)
+    self.is_extinguish = false
+    self.extinguish_progress = 0
+    self.extinguish_threshold = 3600
+
+    return self
+  end,
+  tick = function(self, tick)
+    self.is_active = self.is_active or self.is_lit
+    self.is_extinguish, self.extinguish_progress = util.progress(self.is_active and not self.is_lit, self.extinguish_progress, self.extinguish_threshold, tick)
+
+    objective.tick(self, tick)
+  end,
+  reward = function(self)
+    return 1000
+  end,
+  completed = function(self)
+    return self.is_extinguish
+  end,
+}
+
+
 objective_type = {
   catalogue = {
     rescuee = rescuee,
     suspect = suspect,
+    fire = fire_objective,
   },
   inherit = function(self, base)
     for k, v in pairs(base) do
@@ -1654,6 +1717,36 @@ player = {
     end
 
     return players
+  end,
+}
+
+
+money = {
+  transact = function(amount, message)
+    local inf = server.getGameSettings().infinite_money
+    if amount == 0 then
+      return true
+    end
+
+    local money = server.getCurrency() + amount
+
+    if not inf and money < 0 then
+      server.notify(-1, "Payment failed.", "There is not enough money in your account.", 2)
+      return false
+    end
+
+    local not_type = 4
+    local title = string.format("Accepted $%d.", amount)
+
+    if amount < 0 then
+      not_type = 2
+      text = string.format("Paid out $%d.", math.abs(amount))
+    end
+
+    server.setCurrency(money)
+    server.notify(-1, title, message, not_type)
+
+    return true
   end,
 }
 
