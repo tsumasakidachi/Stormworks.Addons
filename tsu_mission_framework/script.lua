@@ -8,8 +8,8 @@ g_savedata = {
       tickrate = 0,
       count = 0,
       center = matrix.identity(),
-      dispersal_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 1) * 1000,
-      dispersal_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 6) * 1000,
+      dispersal_min = property.slider("Minimum range in which new missions occur (km)", 0, 10, 1, 2) * 1000,
+      dispersal_max = property.slider("Maximum range in which new missions occur (km)", 1, 100, 1, 8) * 1000,
       history = {},
     },
     rescuee = {
@@ -167,13 +167,13 @@ framework = {
     object_type.build()
     objective_type.build()
 
-    framework.register_command("?mission", "?m", "version", nil, framework.print_version, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
-    framework.register_command("?mission", "?m", "prod", nil, function() g_savedata.mode = "prod" end, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "debug", nil, function() g_savedata.mode = "debug" end, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "list-commands", nil, framework.print_all_commands, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
-    framework.register_command("?mission", "?m", "list-locations", nil, framework.print_all_locations, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end)
-    framework.register_command("?mission", "?m", "update", "[name] [value]", framework.update, function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end)
-    framework.register_command("?mission", "?m", "init", "[pattern] [dispersal_max]", mission.load_pattern,
+    framework.register_command("?mission", "?m", "version", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_version)
+    framework.register_command("?mission", "?m", "prod", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "prod" end)
+    framework.register_command("?mission", "?m", "debug", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "debug" end)
+    framework.register_command("?mission", "?m", "list-commands", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_commands)
+    framework.register_command("?mission", "?m", "list-locations", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_locations)
+    framework.register_command("?mission", "?m", "update", "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
+    framework.register_command("?mission", "?m", "init", "[pattern] [dispersal_max]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, pattern, dispersal_max)
         dispersal_max = tonumber(dispersal_max)
 
@@ -182,17 +182,30 @@ framework = {
         end
 
         return is_admin, pattern, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, dispersal_max
-      end)
-    framework.register_command("?mission", "?m", "clear-all", nil, mission.clear_all, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end)
-    framework.register_command("?mission", "?m", "gather", "[mission id]", function(peer_id, mission_id)
-      local transform = server.getPlayerPos(peer_id)
+      end, mission.load_pattern)
+    framework.register_command("?mission", "?m", "clear-all", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, mission.clear_all)
+    framework.register_command("?mission", "?m", "gather", "[mission id]",
+      function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id) return is_admin, peer_id, tonumber(mission_id) end,
+      function(peer_id, mission_id)
+        local transform = server.getPlayerPos(peer_id)
 
-      for k, o in pairs(g_savedata.objects) do
-        if o.mission_id == mission_id and object.module(o).is_character(o) then
-          server.setObjectPos(o.id, transform)
+        for k, o in pairs(g_savedata.objects) do
+          if o.mission_id == mission_id and o.is_character then
+            server.setObjectPos(o.id, transform)
+          end
         end
-      end
-    end, function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id) return is_admin, peer_id, tonumber(mission_id) end)
+      end)
+    framework.register_command("?vehicle", "?v", "hq", "[id]",
+      function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin, tonumber(vehicle_id) end,
+      function(vehicle_id)
+        if vehicle_id == nil then return end
+
+        local v = table.find(g_savedata.objects, function(o) return o.is_vehicle and o.id == vehicle_id end)
+
+        if v == nil then return end
+
+        v.is_headquarter = true
+      end)
   end,
   on_create = function(is_world_create)
     if is_world_create then
@@ -273,17 +286,20 @@ framework = {
       if k == 1 then cost = group_cost end
 
       v = vehicle.init(v, "vehicle", data.name, tags, group_id, player_steam_id, cost)
-      table.insert(g_savedata.objects, v)
+
+      if v.is_player_unit then
+        table.insert(g_savedata.objects, v)
+      end
     end
   end,
   on_vehicle_despawn = function(vehicle_id, peer_id, x, y, z, group_cost, group_id)
     for k, v in ipairs(g_savedata.objects) do
-      if vehicle.is_vehicle(v) and v.id == vehicle_id then
+      if v.is_vehicle and v.id == vehicle_id then
         object.module(v).clear(v)
       end
     end
   end,
-  register_command = function(subject, shorthand, verb, args, execute, guard)
+  register_command = function(subject, shorthand, verb, args, guard, execute)
     if guard == nil then
       guard = function() end
     end
@@ -469,8 +485,8 @@ mission = {
         local ot = objective_type.find(o.type, o.name, o.tags)
 
         if o.type == "vehicle" then
-          for _, vehicle_id in pairs(o.vehicle_ids) do
-            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, o.object_id, nil, 0, o.parent_id, mission_id)
+          for _, vehicle_id in ipairs(o.vehicle_ids) do
+            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, o.group_id, nil, 0, o.parent_id, mission_id)
             o = objective_type.get(ot).init(o, ot)
             table.insert(g_savedata.objects, o)
           end
@@ -582,8 +598,15 @@ object = {
     self.parent_id = parent_id
     self.mission_id = mission_id
     self.is_clear = false
+    self.is_vehicle = object.is_vehicle(self)
+    self.is_object = object.is_object(self)
+    self.is_character = object.is_character(self)
+    self.is_fire = object.is_fire(self)
+    self.is_zone = object.is_zone(self)
+    self.is_tile = object.is_tile(self)
+    self.is_disaster = object.is_disaster(self)
     self.is_simulate = object.simulating(self)
-    self.transform = object.get_transform(self)
+    self.transform = object.update_transform(self)
     self.elapsed_time = 0
     self.ui_id = server.getMapID()
     self.marker_type = 2
@@ -606,16 +629,16 @@ object = {
     self.clear_time = clear_time
   end,
   despawn = function(self)
-    if object.module(self).is_vehicle(self) then
+    if self.is_vehicle then
       server.despawnVehicle(self.id, true)
-    elseif object.module(self).is_object(self) then
+    elseif self.is_object then
       server.despawnObject(self.id, true)
       object.module(self).clear(self)
     end
   end,
   tick = function(self, tick)
-    self.transform = object.module(self).get_transform(self)
-    self.is_simulate = object.module(self).simulating(self)
+    self.transform = object.update_transform(self)
+    self.is_simulate = object.simulating(self)
     self.elapsed_time = self.elapsed_time + 1
 
     if self.clear_time ~= nil then
@@ -626,10 +649,10 @@ object = {
       end
     end
   end,
-  get_transform = function(self)
-    if object.is_vehicle(self) then
+  update_transform = function(self)
+    if self.is_vehicle then
       return server.getVehiclePos(self.id)
-    elseif object.is_object(self) then
+    elseif self.is_object then
       return server.getObjectPos(self.id)
     elseif self.transform ~= nil then
       return self.transform
@@ -638,9 +661,9 @@ object = {
     end
   end,
   simulating = function(self)
-    if object.is_vehicle(self) then
+    if self.is_vehicle then
       return server.getVehicleSimulating(self.id)
-    elseif object.is_object(self) then
+    elseif self.is_object then
       return server.getObjectSimulating(self.id)
     end
   end,
@@ -656,10 +679,10 @@ object = {
     local id = nil
     local type = nil
 
-    if object.module(self).is_vehicle(self) then
+    if self.is_vehicle then
       id = self.id
       type = "vehicle"
-    elseif object.module(self).is_object(self) then
+    elseif self.is_object then
       id = self.id
       type = "object"
     end
@@ -680,6 +703,9 @@ object = {
   end,
   is_character = function(self)
     return self.type == "character"
+  end,
+  is_fire = function(self)
+    return self.type == "fire"
   end,
   is_object = function(self)
     return self.type == "object" or self.type == "character" or self.type == "flare" or self.type == "fire" or self.type == "loot" or self.type == "button" or self.type == "animal" or self.type == "creature" or self.type == "ice"
@@ -763,7 +789,7 @@ character = {
   mount = function(self)
     if self.is_mount or not self.is_simulate then return end
 
-    local v = table.find(g_savedata.objects, function(o) return object.is_vehicle(o) and o.id == self.mount_id end)
+    local v = table.find(g_savedata.objects, function(o) return o.is_vehicle and o.id == self.mount_id end)
 
     if v == nil then return end
 
@@ -841,7 +867,7 @@ character = {
     end
 
     for k, o in ipairs(g_savedata.objects) do
-      if object.is_vehicle(o) and o.is_player_unit then
+      if o.is_vehicle and o.is_player_unit then
         local distance = matrix.distance(o.transform, self.transform)
 
         if distance < distance_max and distance < distance_min then
@@ -897,9 +923,14 @@ vehicle = {
     self.hoppers = nil
     self.guns = nil
     self.rope_hooks = nil
+    self.is_headquarter = self.tags.headquarter == "true"
 
     if self.is_player_unit then
       server.setAIVehicleTeam(self.id, 1)
+    end
+
+    if self.is_vehicle then
+      console.notify(string.format("%s#%d: %s", self.type, self.id, self.transform))
     end
 
     return self
@@ -911,7 +942,7 @@ vehicle = {
     vehicle.refill(self)
   end,
   assign_seat = function(self, c, seat_name)
-    if not self.is_check_components or not self.is_simulate then return nil end
+    if not self.seats == nil or not self.is_simulate then return nil end
 
     local seat = nil
 
