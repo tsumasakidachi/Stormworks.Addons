@@ -3,6 +3,7 @@ g_savedata = {
   clock = 0,
   missions = {},
   objects = {},
+  player_missions = {},
   subsystems = {
     mission = {
       tickrate = 0,
@@ -75,7 +76,7 @@ geologics = {
 
 scales = {
   small = 2,
-  meduim = 4,
+  medium = 4,
   massive = 8,
 }
 
@@ -103,7 +104,7 @@ location_catalogue = { {
   type = "sar",
   report = "船内で突然何かが爆発した! もう助からないぞ!",
   note = "乗員からの通報",
-  scale = scales.meduim,
+  scale = scales.medium,
   case = cases.mayday,
   geologic = geologics.waters,
   dispersal_area = 1000,
@@ -112,16 +113,50 @@ location_catalogue = { {
     { landscape = "channel" },
   },
   sub_location = {
-    patterns = {},
-    min = 0,
-    max = 0,
+    patterns = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
+    min = 1,
+    max = 3,
+  },
+}, {
+  pattern = "^mission:passenger_fallen_land_%d+$",
+  type = "sar",
+  report = "落下者",
+  note = "",
+  geologic = geologics.waters,
+  zone_tag_groups = {
+    { landscape = "field" },
+    { landscape = "mountain" },
+    { landscape = "forest" }
+  },
+  difficulty = 0,
+}, {
+  pattern = "^mission:passenger_fallen_water_%d+$",
+  type = "sar",
+  report = "落水者",
+  note = "",
+  geologic = geologics.waters,
+  offshore = true,
+  zone_tag_groups = {
+    { landscape = "channel" },
+    { landscape = "shallow" }
+  },
+}, {
+  pattern = "^mission:lifeboat_%d+$",
+  type = "sar",
+  report = "救命ボート",
+  note = "",
+  geologic = geologics.waters,
+  offshore = true,
+  zone_tag_groups = {
+    { landscape = "channel" },
+    { landscape = "shallow" }
   },
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   type = "sar",
   report = "武装した小型船を発見した. 乗員を拘束せよ.",
   note = "哨戒機からの通報",
-  scale = scales.meduim,
+  scale = scales.medium,
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
@@ -131,7 +166,7 @@ location_catalogue = { {
   type = "sar",
   report = "武装した船を発見した. 乗員を拘束せよ.",
   note = "哨戒機からの通報",
-  scale = scales.meduim,
+  scale = scales.medium,
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
@@ -167,13 +202,13 @@ framework = {
     object_type.build()
     objective_type.build()
 
-    framework.register_command("?mission", "?m", "version", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_version)
-    framework.register_command("?mission", "?m", "prod", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "prod" end)
-    framework.register_command("?mission", "?m", "debug", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "debug" end)
-    framework.register_command("?mission", "?m", "list-commands", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_commands)
-    framework.register_command("?mission", "?m", "list-locations", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_locations)
-    framework.register_command("?mission", "?m", "update", "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
-    framework.register_command("?mission", "?m", "init", "[pattern] [dispersal_max]",
+    framework.register_command("?mission", "version", "?v", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_version)
+    framework.register_command("?mission", "prod", nil, nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "prod" end)
+    framework.register_command("?mission", "debug", nil, nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "debug" end)
+    framework.register_command("?mission", "list-commands", "?commands", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_commands)
+    framework.register_command("?mission", "list-locations", "?locations", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_locations)
+    framework.register_command("?mission", "update", nil, "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
+    framework.register_command("?mission", "init", "?init", "[pattern] [dispersal_max]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, pattern, dispersal_max)
         dispersal_max = tonumber(dispersal_max)
 
@@ -183,8 +218,8 @@ framework = {
 
         return is_admin, pattern, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, dispersal_max
       end, mission.load_pattern)
-    framework.register_command("?mission", "?m", "clear-all", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, mission.clear_all)
-    framework.register_command("?mission", "?m", "gather", "[mission id]",
+    framework.register_command("?mission", "clear-all", "?cls", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, mission.clear_all)
+    framework.register_command("?mission", "gather", "?gather", "[mission id]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id) return is_admin, peer_id, tonumber(mission_id) end,
       function(peer_id, mission_id)
         local transform = server.getPlayerPos(peer_id)
@@ -195,10 +230,25 @@ framework = {
           end
         end
       end)
-    framework.register_command("?vehicle", "?v", "hq", "[id]",
+    framework.register_command("?mission", "go", "?go", "[mission id]", function(full_message, peer_id, is_admin, is_auth, subject, verb, mission_id)
+      local mission_id = tonumber(mission_id)
+
+      if mission_id == nil then return false end
+
+      local m = table.find(g_savedata.missions, function(m) return m.id == mission_id end)
+
+      if m == nil then return false end
+
+      local p = table.find(framework.players, function(p) return p.id == peer_id end)
+
+      if p == nil then return false end
+
+      return true, m, p
+    end, mission.checkin)
+    framework.register_command("?vehicle", "set-hq", "?hq", "[id]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin, tonumber(vehicle_id) end,
       function(vehicle_id)
-        if vehicle_id == nil then return end
+        if vehicle_id == nil then return false end
 
         local v = table.find(g_savedata.objects, function(o) return o.is_vehicle and o.id == vehicle_id end)
 
@@ -253,10 +303,16 @@ framework = {
   end,
   on_custom_command = function(...)
     local args = { ... }
-    local command = table.find(framework.commands, function(x) return (x.subject == args[5] or x.shorthand == args[5]) and x.verb == args[6] end)
+    local subject = args[5]
+    local verb = args[6]
+    local command = table.find(framework.commands, function(x) return x.subject == subject and x.verb == verb or x.shorthand == subject end)
 
     if command == nil then
       return
+    end
+
+    if command.shorthand == subject then
+      table.move(args, 5, #args, 6)
     end
 
     framework.invoke_command(command, command.guard(table.unpack(args)))
@@ -299,15 +355,15 @@ framework = {
       end
     end
   end,
-  register_command = function(subject, shorthand, verb, args, guard, execute)
+  register_command = function(subject, verb, shorthand, args, guard, execute)
     if guard == nil then
-      guard = function() end
+      guard = function() return true end
     end
 
     table.insert(framework.commands, {
       subject = subject,
-      shorthand = shorthand,
       verb = verb,
+      shorthand = shorthand,
       args = args,
       execute = execute,
       guard = guard,
@@ -390,7 +446,7 @@ mission = {
     self.is_report = false
     self.elapsed_time = 0
     self.finish_time = 0
-    self.reward = 0
+    self.objective_reward = 0
     self.objectives = {}
     self.sorted_objectives = {}
     self.required_objectives_count = 0
@@ -423,7 +479,7 @@ mission = {
     self.sorted_objectives, self.required_objectives_count = mission.aggregate_objectives(self, self.objectives)
 
     if self.is_active and self.required_objectives_count == 0 then
-      money.transact(self.reward, string.format("reward to cleared mission#%d", self.id))
+      money.transact(mission.reward(self), string.format("reward to cleared mission#%d", self.id))
       mission.clear(self)
     end
 
@@ -485,12 +541,24 @@ mission = {
     if self.finish_time > 0 then text = text .. string.format("\n\n[残り時間]\n%d分", math.ceil((self.finish_time - self.elapsed_time) / 3600)) end
 
     text = text .. string.format("\n\n[対応中]")
-    text = text .. string.format("\n%d人以上必要\n?go %d (小文字) でチェックイン", self.locations[1].scale, self.id)
+
+    for k, p in pairs(table.find_all(framework.players, function(p) return g_savedata.player_missions[p.steam_id] ~= nil and g_savedata.player_missions[p.steam_id] == self.id end)) do
+      text = text .. "\n" .. p.name
+    end
+
+    text = text .. string.format("\n%d人以上が必要\n?go %d (全て小文字) でチェックイン", self.locations[1].scale, self.id)
 
     return text
   end,
+  reward = function(self)
+    return math.ceil(matrix.distance(g_savedata.subsystems.mission.center, self.locations[1].transform) * 2 * 5 + self.objective_reward / 1000) * 1000
+  end,
   add_reward = function(self, amount, title)
-    self.reward = self.reward + amount
+    self.objective_reward = self.objective_reward + amount
+  end,
+  checkin = function(self, p)
+    g_savedata.player_missions[p.steam_id] = self.id
+    server.notify(-1, string.format("%s is enroute to mission#%d", p.name, self.id), nil, 5)
   end,
   spawn = function(mission_id, locations)
     for _, l in pairs(locations) do
@@ -759,7 +827,7 @@ character = {
     self.mount_id = mount_id
     self.is_mount = false
     self.seat = nil
-    self.vehicle_id = 0
+    self.vehicle_id = server.getCharacterVehicle(self.id)
     self.vital = server.getObjectData(self.id)
     self.commands = self.tags.commands
     self.observable_radius = tonumber(tags.invocation_distance)
@@ -777,6 +845,7 @@ character = {
     character.mount(self)
     character.travel(self)
 
+    self.vehicle_id = server.getCharacterVehicle(self.id)
     self.vital = server.getObjectData(self.id)
   end,
   heals = function(self) return self.vital.hp >= 95 end,
@@ -913,6 +982,23 @@ character = {
 
     return nearest_obj, distance_min
   end,
+  signal = function(self)
+    if self.vehicle_id > 0 and self.vital.hp >= 95 then
+      local on_player_unit = table.find(g_savedata.objects, function(o) return o.is_vehicle and o.id == self.vehicle_id and o.is_player_unit end) ~= nil
+
+      if on_player_unit then
+        server.setCharacterItem(self.id, 2, 23, false, 0, 100)
+        self.is_signal = false
+      end
+    elseif not self.is_signal and (self.vehicle_id == 0 or self.vital.hp < 95) then
+      local is_near_player = character.nearest_player(self, 250) ~= nil
+
+      if is_near_player then
+        server.setCharacterItem(self.id, 2, 23, true, 0, 100)
+        self.is_signal = true
+      end
+    end
+  end,
 }
 
 
@@ -923,7 +1009,8 @@ vehicle = {
 
     self.cost = cost
     self.player_steam_id = player_steam_id
-    self.is_player_unit = self.player_steam_id ~= nil or tags.tracker == "unit"
+    self.is_player_unit = self.player_steam_id ~= nil or tags.player_unit == "true" or tags.tracker == "unit"
+    self.is_enemy_unit = self.tags.enemy_unit == "true"
     self.group_id = group_id
     self.is_check_components = false
     self.is_refill = self.tags.refill == "true"
@@ -942,10 +1029,6 @@ vehicle = {
 
     if self.is_player_unit then
       server.setAIVehicleTeam(self.id, 1)
-    end
-
-    if self.is_vehicle then
-      console.notify(string.format("%s#%d: %s", self.type, self.id, self.transform))
     end
 
     return self
@@ -1183,7 +1266,7 @@ rescuee = {
   tick = function(self, tick)
     local is_done = character.heals(self) or self.vital.dead
     local is_sit_headquarter = is_done and character.sits(self, true)
-    local is_stay_hospital = is_done and character.stays(self, { admit_rescuee = "true" })
+    local is_stay_hospital = is_done and character.stays(self, { admit_rescuee = "true" }) or character.stays(self, { landscape = "hosital" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
     self.is_admit_to_hospital, self.admit_to_hospital_progress = util.progress(is_stay_hospital, self.admit_to_hospital_progress, self.admit_to_hospital_threshold, tick)
@@ -1192,6 +1275,7 @@ rescuee = {
       character.update_vital(self, self.vital.hp - 2)
     end
 
+    character.signal(self)
     objective.tick(self, tick)
 
     if self.is_finish and not self.is_disable then
@@ -1245,6 +1329,8 @@ suspect = {
     character.invoke_command(self)
     suspect.neutralize(self)
     suspect.act(self, tick)
+
+    if self.is_neutralize then character.signal(self) end
 
     self.is_active = self.is_active or self.command ~= nil and self.role ~= nil
 
@@ -1540,9 +1626,9 @@ location = {
     end
 
     for type, components in ipairs(ordered_components) do
-      if self.components[type] then
+      if self[type] then
         table.shuffle(components)
-        local threshold = math.floor(#components * math.random(self.components[type].min, self.components[type].max) * 0.01)
+        local threshold = math.floor(#components * math.random(self[type].min, self[type].max) * 0.01)
         local i = #components
 
         while i > threshold do
