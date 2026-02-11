@@ -540,13 +540,19 @@ mission = {
 
     if self.finish_time > 0 then text = text .. string.format("\n\n[残り時間]\n%d分", math.ceil((self.finish_time - self.elapsed_time) / 3600)) end
 
+    local count = 0
     text = text .. string.format("\n\n[対応中]")
 
     for k, p in pairs(table.find_all(framework.players, function(p) return g_savedata.player_missions[p.steam_id] ~= nil and g_savedata.player_missions[p.steam_id] == self.id end)) do
       text = text .. "\n" .. p.name
+      count = count + 1
     end
 
-    text = text .. string.format("\n%d人以上が必要\n?go %d (全て小文字) でチェックイン", self.locations[1].scale, self.id)
+    if count < self.locations[1].scale then
+      text = text .. string.format("\n%d人以上必要", self.locations[1].scale)
+    end
+
+    text = text .. string.format("\n?go %d (全て小文字) でチェックイン", self.id)
 
     return text
   end,
