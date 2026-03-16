@@ -128,7 +128,6 @@ location_catalogue = { {
     { landscape = "mountain" },
     { landscape = "forest" }
   },
-  difficulty = 0,
 }, {
   pattern = "^mission:passenger_fallen_water_%d+$",
   type = "sar",
@@ -151,6 +150,15 @@ location_catalogue = { {
     { landscape = "channel" },
     { landscape = "shallow" }
   },
+}, {
+  pattern = "^mission:wind_turbine_fire_%d+$",
+  type = "sar",
+  report = "洋上風力発電機のエレベーターが故障, タービン室から降りられず閉じこめられている.",
+  note = "パトロールからの通報",
+  scale = scales.small,
+  case = cases.ems,
+  geologic = geologics.waters,
+  dispersal_area = 500,
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   type = "sar",
@@ -189,6 +197,22 @@ fluids = {
   nitrogen = 11,
   hydrogen = 12,
 }
+
+
+weapons = { {
+  id = 35,
+  slot = 2,
+  ammo = 10,
+}, {
+  id = 37,
+  slot = 1,
+  ammo = 45,
+}, {
+  id = 39,
+  slot = 1,
+  ammo = 30,
+} }
+
 
 framework = {
   name = "TSU Mission Framework",
@@ -256,10 +280,23 @@ framework = {
 
         v.is_headquarter = true
       end)
+    framework.register_command("?doctor", "spawn", nil, nil,
+      function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin end,
+      function()
+        doctor.spawn()
+      end)
+    framework.register_command("?police", "spawn", nil, nil,
+      function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin end,
+      function()
+        police.spawn()
+      end)
   end,
   on_create = function(is_world_create)
     if is_world_create then
       g_savedata.subsystems.mission.center = tile.get_start()
+
+      doctor.spawn()
+      police.spawn()
     end
 
     if g_savedata.mode == "debug" then
@@ -393,18 +430,20 @@ framework = {
     console.log(string.format("%d locations found.", #locations), peer_id)
   end,
   update = function(name, value)
-    if name == "range-min" then
+    if name == "dispersal-min" then
       value = tonumber(value)
 
       if value == nil then return end
 
-      g_savedata.subsystems.mission.range_min = value
-    elseif name == "range-max" then
+      g_savedata.subsystems.mission.dispersal_min = value
+    elseif name == "dispersal-max" then
       value = tonumber(value)
 
       if value == nil then return end
 
-      g_savedata.subsystems.mission.range_max = value
+      g_savedata.subsystems.mission.dispersal_max = value
+
+      console.notify("ha?")
     end
   end,
   invoke_command = function(command, can_execute, ...)
@@ -557,7 +596,7 @@ mission = {
     return text
   end,
   reward = function(self)
-    return math.ceil(matrix.distance(g_savedata.subsystems.mission.center, self.locations[1].transform) * 2 * 5 + self.objective_reward / 1000) * 1000
+    return math.ceil(matrix.distance(g_savedata.subsystems.mission.center, self.locations[1].transform) * 4 / 100) * 100 + self.objective_reward
   end,
   add_reward = function(self, amount, title)
     self.objective_reward = self.objective_reward + amount
@@ -897,12 +936,31 @@ character = {
   seat = function(self, vehicle_id, seat)
     server.setSeated(self.id, vehicle_id, seat.pos.x, seat.pos.y, seat.pos.z)
   end,
+  unseat = function(self)
+    server.setObjectPos(self.id, matrix.multiply(self.transform, matrix.translation(0, 0.5, 0)))
+  end,
+  seats_with = function(self, filter)
+    return self.vehicle_id > 0 and table.aggregate(g_savedata.objects, false, function(result, o)
+      return result or filter(o) and o.vehicle_id == self.vehicle_id
+    end)
+  end,
   invoke_command = function(self)
-    if not self.is_simulate or self.command ~= nil and self.role ~= nil then return end
+    if not self.is_simulate or self.command ~= nil then return end
     if self.mount_id ~= nil and self.seat == nil then return end
     if not table.aggregate(framework.players, false, function(result, p) return result or character.observes(self, p.transform) end) then return end
 
-    self.command = table.random(self.commands)
+    self.command = table.aggregate(g_savedata.objects, nil, function(result, o)
+      if o.id ~= self.id and o.mission_id == self.mission_id and o.type == self.type and o.command ~= nil then
+        result = o.command
+      end
+
+      return result
+    end)
+
+    if self.command == nil then
+      self.command = table.random(self.commands)
+    end
+
     self.role = table.find_index(character.roles, function(r) return string.match(string.lower(self.seat.name), r.pattern) ~= nil end)
 
     character.update_vital(self, nil, nil, true)
@@ -989,7 +1047,7 @@ character = {
     return nearest_obj, distance_min
   end,
   signal = function(self)
-    if self.vehicle_id > 0 and self.vital.hp >= 95 then
+    if self.is_signal and self.vehicle_id > 0 and self.vital.hp >= 95 then
       local on_player_unit = table.find(g_savedata.objects, function(o) return o.is_vehicle and o.id == self.vehicle_id and o.is_player_unit end) ~= nil
 
       if on_player_unit then
@@ -1008,6 +1066,72 @@ character = {
 }
 
 
+doctor = {
+  init = function(id, type, name, tags, mount_id, parent_id, mission_id)
+    local self = character.init(id, type, name, tags, mount_id, parent_id, mission_id)
+
+    self.doctor = true
+
+    server.setCharacterTooltip(self.id, name)
+
+    return self
+  end,
+  spawn = function()
+    local zones = zone.load({ spawn_point = "helper" })
+    local z = table.random(zones)
+
+    if z == nil then
+      console.error("There is no spawn zone for the helper.")
+      return
+    end
+
+    for k, o in ipairs(g_savedata.objects) do
+      if o.type == "character" and o.doctor then
+        object.module(o).despawn(o)
+      end
+    end
+
+    local id = server.spawnCharacter(z.transform, 9)
+    local d = doctor.init(id, "character", "Doctor", {})
+
+    table.insert(g_savedata.objects, d)
+  end,
+}
+
+
+police = {
+  init = function(id, type, name, tags, mount_id, parent_id, mission_id)
+    local self = character.init(id, type, name, tags, mount_id, parent_id, mission_id)
+
+    self.police = true
+
+    server.setCharacterTooltip(self.id, name)
+
+    return self
+  end,
+  spawn = function()
+    local zones = zone.load({ spawn_point = "helper" })
+    local z = table.random(zones)
+
+    if z == nil then
+      console.error("There is no spawn zone for the helper.")
+      return
+    end
+
+    for k, o in ipairs(g_savedata.objects) do
+      if o.type == "character" and o.police then
+        object.module(o).despawn(o)
+      end
+    end
+
+    local id = server.spawnCharacter(z.transform, 7)
+    local d = police.init(id, "character", "Police", {})
+
+    table.insert(g_savedata.objects, d)
+  end,
+}
+
+
 vehicle = {
   role_specific_seats = { "^pilot", "^driver", "^designator", "^gunner" },
   init = function(id, type, name, tags, group_id, player_steam_id, cost, parent_id, mission_id)
@@ -1022,16 +1146,17 @@ vehicle = {
     self.is_refill = self.tags.refill == "true"
     self.damages = {}
     self.is_mount = false
-    self.mass = nil
-    self.signs = nil
-    self.seats = nil
-    self.buttons = nil
-    self.tanks = nil
-    self.batteries = nil
-    self.hoppers = nil
-    self.guns = nil
+    self.mass = 0
+    self.signs = {}
+    self.seats = {}
+    self.buttons = {}
+    self.tanks = {}
+    self.batteries = {}
+    self.hoppers = {}
+    self.guns = {}
     self.rope_hooks = nil
     self.is_headquarter = self.tags.headquarter == "true"
+    self.missions = {}
 
     if self.is_player_unit then
       server.setAIVehicleTeam(self.id, 1)
@@ -1043,10 +1168,11 @@ vehicle = {
     object.tick(self, tick)
     -- object.aggregate_damages(self)
     vehicle.check_components(self)
+    vehicle.set_mission_data(self)
     vehicle.refill(self)
   end,
   assign_seat = function(self, c, seat_name)
-    if not self.seats == nil or not self.is_simulate then return nil end
+    if not self.is_check_components or not self.is_simulate then return nil end
 
     local seat = nil
 
@@ -1067,8 +1193,6 @@ vehicle = {
     return seat
   end,
   find_empty_sepcific_seat = function(self)
-    if self.seats == nil then return end
-
     local seat = nil
 
     for rk, r in ipairs(vehicle.role_specific_seats) do
@@ -1083,8 +1207,6 @@ vehicle = {
     return seat
   end,
   find_empty_seat = function(self, seat_name)
-    if self.seats == nil then return end
-
     return table.find(self.seats, function(s) return s.seated_id >= 4294967295 and (seat_name == nil or string.match(string.lower(s.name), seat_name) ~= nil) end)
   end,
   check_components = function(self)
@@ -1101,7 +1223,62 @@ vehicle = {
     self.hoppers = components.components.hoppers
     self.guns = components.components.guns
     self.rope_hooks = components.components.rope_hooks
+
+    if self.is_headquarter then
+      self.attention = table.find(self.buttons, function(b) return string.lower(b.name) == "attention" end)
+
+      for i = 1, 5 do
+        self.missions[i] = {}
+        self.missions[i].id = table.find(self.buttons, function(b) return string.lower(b.name) == string.format("mission_%d_id", i) end)
+        self.missions[i].c = table.find(self.buttons, function(b) return string.lower(b.name) == string.format("mission_%d_code", i) end)
+        self.missions[i].x = table.find(self.buttons, function(b) return string.lower(b.name) == string.format("mission_%d_gpsx", i) end)
+        self.missions[i].y = table.find(self.buttons, function(b) return string.lower(b.name) == string.format("mission_%d_gpsy", i) end)
+        self.missions[i].r = table.find(self.buttons, function(b) return string.lower(b.name) == string.format("mission_%d_radius", i) end)
+      end
+    end
+
     self.is_check_components = true
+  end,
+  set_mission_data = function(self)
+    if not self.is_headquarter then return end
+
+    for i = 1, 5 do
+      local id = 0
+      local x = 0
+      local y = 0
+      local r = 0
+      local c = 0
+
+      if g_savedata.missions[i] ~= nil then
+        local _x, _y, _z = matrix.position(g_savedata.missions[i].search_center)
+        id = g_savedata.missions[i].id
+        x = _x
+        y = _z
+        r = g_savedata.missions[i].search_radius
+        -- c = g_savedata.missions[i].case.id
+        c = 0
+      end
+
+      if self.missions[i].id ~= nil then vehicle.set_keypad(self, self.missions[i].id, id) end
+      if self.missions[i].c ~= nil then vehicle.set_keypad(self, self.missions[i].c, c) end
+      if self.missions[i].x ~= nil then vehicle.set_keypad(self, self.missions[i].x, x) end
+      if self.missions[i].y ~= nil then vehicle.set_keypad(self, self.missions[i].y, y) end
+      if self.missions[i].r ~= nil then vehicle.set_keypad(self, self.missions[i].r, r) end
+    end
+  end,
+  set_button = function(self, button, value)
+    local data, s = server.getVehicleButton(self.id, button.pos.x, button.pos.y, button.pos.z)
+
+    if s and ((value or data.on) and (not value or not data.on)) then
+      vehicle.press_button(self, button)
+    end
+  end,
+  press_button = function(self, button)
+    -- server.pressVehicleButton(vehicle_id, 0, 0, 0)
+    server.pressVehicleButton(self.id, button.name)
+  end,
+  set_keypad = function(self, keypad, value)
+    server.setVehicleKeypad(self.id, keypad.pos.x, keypad.pos.y, keypad.pos.z, value)
   end,
   refill = function(self)
     if not self.is_refill or not self.is_check_components or not self.is_simulate then return end
@@ -1271,7 +1448,7 @@ rescuee = {
   end,
   tick = function(self, tick)
     local is_done = character.heals(self) or self.vital.dead
-    local is_sit_headquarter = is_done and character.sits(self, true)
+    local is_sit_headquarter = is_done and self.vehicle_id > 0 and character.seats_with(self, function(o) return o.type == "character" and o.doctor end)
     local is_stay_hospital = is_done and character.stays(self, { admit_rescuee = "true" }) or character.stays(self, { landscape = "hosital" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
@@ -1319,14 +1496,18 @@ suspect = {
     self.fix_target_progress = 0
     self.fix_target_threshold = 900
 
+    local weapon = table.random(weapons)
+
+    server.setCharacterItem(self.id, weapon.slot, weapon.id, false, weapon.ammo, 0)
     server.setAICharacterTeam(self.id, 2)
     server.setAICharacterTargetTeam(self.id, 1, true)
     server.setCharacterTooltip(self.id, self.name)
+
     return self
   end,
   tick = function(self, tick)
     local is_done = character.heals(self) or self.vital.dead
-    local is_sit_headquarter = is_done and character.sits(self, true)
+    local is_sit_headquarter = is_done and self.vehicle_id > 0 and character.seats_with(self, function(o) return o.type == "character" and o.police end)
     local is_stay_police_station = is_done and character.stays(self, { admit_suspect = "true" })
 
     self.is_admit_to_headquarter, self.admit_to_headquarter_progress = util.progress(is_sit_headquarter, self.admit_to_headquarter_progress, self.admit_to_headquarter_threshold, tick)
@@ -1355,7 +1536,7 @@ suspect = {
   end,
   failed = function(self) return self.vital.dead end,
   neutralize = function(self)
-    if self.is_neutralize or not (self.vital.incapacitated or self.vital.dead) then return end
+    if self.is_neutralize or not self.is_active or not (self.vital.incapacitated or self.vital.dead or self.role ~= nil and self.vehicle_id == 0) then return end
 
     character.terminate(self)
     server.setAICharacterTargetTeam(self.id, 1, false)
@@ -1401,6 +1582,14 @@ suspect = {
         character.attack(self, target_id, target_type)
         self.can_change_target = false
         self.fix_target_progress = 0
+      end
+    elseif self.role == nil and self.command ~= nil then
+      local p = character.nearest_player(self, 200)
+
+      if p ~= nil and self.vehicle_id > 0 then
+        character.unseat(self)
+      elseif p == nil and self.vehicle_id == 0 then
+        character.seat(self, self.mount_id, self.seat)
       end
     end
   end,
@@ -1542,25 +1731,31 @@ location = {
         goto continue
       end
 
-      local zones = {}
+      if l.tile == "" then
+        local zones = {}
 
-      for _, zone_tags in pairs(l.zone_tag_groups) do
-        for _, z in pairs(zone.load(zone_tags, filter_zone)) do
-          table.insert(zones, z)
+        for _, zone_tags in pairs(l.zone_tag_groups) do
+          for _, z in pairs(zone.load(zone_tags, filter_zone)) do
+            table.insert(zones, z)
+          end
         end
+
+        local is_available_offshore_tile = tile.get_offshore(center, range_min, range_max) ~= nil
+
+        if #zones == 0 and not (l.offshore and is_available_offshore_tile) then goto continue end
+
+        if locations_zones[l.addon_index] == nil then
+          locations_zones[l.addon_index] = {}
+        end
+
+        locations_zones[l.addon_index][l.location_index] = zones
+      else
+        local transform, s = server.getTileTransform(center, l.tile, range_max)
+
+        if not s then goto continue end
       end
-
-      local is_available_offshore_tile = tile.get_offshore(center, range_min, range_max) ~= nil
-
-      if #zones == 0 and not (l.offshore and is_available_offshore_tile) then goto continue end
 
       table.insert(locations, l)
-
-      if locations_zones[l.addon_index] == nil then
-        locations_zones[l.addon_index] = {}
-      end
-
-      locations_zones[l.addon_index][l.location_index] = zones
 
       ::continue::
     end
@@ -1574,7 +1769,13 @@ location = {
     locations = table.find_all(locations, function(l, k) return l.name == location_name end)
 
     for i = #locations, 1, -1 do
-      location.locate(locations[i], center, range_min, range_max, locations_zones[locations[i].addon_index][locations[i].location_index], locations)
+      local zones = {}
+
+      if locations_zones[locations[i].addon_index] ~= nil and locations_zones[locations[i].addon_index][locations[i].location_index] ~= nil then
+        zones = locations_zones[locations[i].addon_index][locations[i].location_index]
+      end
+
+      location.locate(locations[i], center, range_min, range_max, zones, locations)
 
       if locations[i].transform == nil then
         console.error(string.format("location %s has nil transform.", locations[i].name))
@@ -1592,23 +1793,27 @@ location = {
     return locations
   end,
   locate = function(self, center, range_min, range_max, zones, locations)
-    local landscapes = table.distinct(table.select(zones, function(z) return z.tags.landscape end))
+    if self.tile == "" then
+      local landscapes = table.distinct(table.select(zones, function(z) return z.tags.landscape end))
 
-    if self.offshore then
-      table.insert(landscapes, "offshore")
-    end
+      if self.offshore then
+        table.insert(landscapes, "offshore")
+      end
 
-    local landscape = table.random(landscapes)
+      local landscape = table.random(landscapes)
 
-    if landscape == "offshore" then
-      self.transform = tile.get_offshore(center, range_min, range_max)
-      self.transform = matrix.multiply(self.transform, matrix.translation(math.random() * 1000 - 500, 0, math.random() * 1000 - 500))
+      if landscape == "offshore" then
+        self.transform = tile.get_offshore(center, range_min, range_max)
+        self.transform = matrix.multiply(self.transform, matrix.translation(math.random() * 1000 - 500, 0, math.random() * 1000 - 500))
+      else
+        zones = table.find_all(zones, function(z)
+          return z.tags.landscape == landscape and table.all(locations, function(l) return l.transform == nil or not zone.is_in(z, l.transform, 0, 100) end)
+        end)
+        local z = table.random(zones)
+        self.transform = z.transform
+      end
     else
-      zones = table.find_all(zones, function(z)
-        return z.tags.landscape == landscape and table.all(locations, function(l) return l.transform == nil or not zone.is_in(z, l.transform, 0, 100) end)
-      end)
-      local z = table.random(zones)
-      self.transform = z.transform
+      self.transform = server.getTileTransform(center, self.tile, range_max)
     end
 
     if self.transform == nil then
