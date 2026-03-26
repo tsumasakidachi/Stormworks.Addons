@@ -169,6 +169,11 @@ location_catalogue = { {
   geologic = geologics.waters,
   offshore = true,
   dispersal_area = 2000,
+  sub_location = {
+    patterns = { "^mission:piracy_boat_%d+$" },
+    min = 1,
+    max = 3,
+  },
 }, {
   pattern = "^mission:piracy_gunboat_%d+$",
   type = "sar",
@@ -1673,7 +1678,7 @@ location = {
     l.note = setting.note
     l.case = setting.case
     l.geologic = setting.geologics
-    l.dispersal_area = setting.dispersal_area
+    l.dispersal_area = setting.dispersal_area or 0
     l.zone_tag_groups = setting.zone_tag_groups or {}
     l.sub_location = setting.sub_location or {
       patterns = {},
