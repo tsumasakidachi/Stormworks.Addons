@@ -27,6 +27,15 @@ g_savedata = {
 }
 
 
+mission_type = {
+  catalogue = {
+    sarod = {}, -- search and rescue or destroy
+    disaster = {},
+    transport = {},
+  },
+}
+
+
 cases = {
   ems = {
     id = 1,
@@ -89,7 +98,7 @@ location_catalogue = { {
   scale = scales.medium,
   case = cases.sar,
   geologic = geologics.mainlands,
-  dispersal_area = 1000,
+  dispersal_radius = 1000,
   zone_tag_groups = {
     { landscape = "forest" },
     { landscape = "mountain" },
@@ -107,7 +116,7 @@ location_catalogue = { {
   scale = scales.medium,
   case = cases.mayday,
   geologic = geologics.waters,
-  dispersal_area = 1000,
+  dispersal_radius = 1000,
   offshore = true,
   zone_tag_groups = {
     { landscape = "channel" },
@@ -158,7 +167,7 @@ location_catalogue = { {
   scale = scales.small,
   case = cases.ems,
   geologic = geologics.waters,
-  dispersal_area = 500,
+  dispersal_radius = 500,
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   type = "sar",
@@ -168,7 +177,8 @@ location_catalogue = { {
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
-  dispersal_area = 2000,
+  dispersal_radius = 500,
+  search_radius = 2000,
   sub_location = {
     patterns = { "^mission:piracy_boat_%d+$" },
     min = 1,
@@ -183,7 +193,23 @@ location_catalogue = { {
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
-  dispersal_area = 2000,
+  dispersal_radius = 500,
+  search_radius = 2000,
+  sub_location = {
+    patterns = { "^mission:piracy_boat_%d+$" },
+    min = 1,
+    max = 3,
+  },
+}, {
+  pattern = "^mission:piracy_boat_watch_%d+$",
+  type = "sar",
+  report = "武装した小型船が沖合を航行している. 見つからないように追跡, 動向を監視せよ.",
+  note = "哨戒機からの通報",
+  scale = scales.small,
+  case = cases.securite,
+  geologic = geologics.waters,
+  offshore = true,
+  search_radius = 2000,
 } }
 
 
@@ -285,12 +311,12 @@ framework = {
 
         v.is_headquarter = true
       end)
-    framework.register_command("?doctor", "spawn", nil, nil,
+    framework.register_command("?doctor", "respawn", nil, nil,
       function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin end,
       function()
         doctor.spawn()
       end)
-    framework.register_command("?police", "spawn", nil, nil,
+    framework.register_command("?police", "respawn", nil, nil,
       function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin end,
       function()
         police.spawn()
@@ -471,14 +497,6 @@ framework = {
 }
 
 
-mission_type = {
-  catalogue = {
-    sarod = {}, -- search and rescue or destroy
-    disaster = {},
-    transport = {},
-  },
-}
-
 mission = {
   init = function(id, locations)
     local self = {}
@@ -551,9 +569,7 @@ mission = {
     return sorted_objectives, required_objectives_count
   end,
   compute_search_radius = function(self)
-    if self.locations[1].no_search_radius then return 0 end
-
-    local search_radius = self.locations[1].dispersal_area
+    local search_radius = self.locations[1].search_radius
 
     for k, o in pairs(g_savedata.objects) do
       if o.mission_id == self.id then
@@ -660,11 +676,11 @@ mission = {
     local sub_locations_count = math.random(locations[1].sub_location.min, locations[1].sub_location.max)
 
     for i = 1, sub_locations_count do
-      for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].dispersal_area, function(l)
+      for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].dispersal_radius, function(l)
           return table.aggregate(locations[1].sub_location.patterns, false, function(result, x) return result or string.match(l.name, x) end)
         end,
         function(z)
-          return zone.is_in(z, locations[1].transform, 0, locations[1].dispersal_area) and
+          return zone.is_in(z, locations[1].transform, 0, locations[1].dispersal_radius) and
               not zone.is_contained_objects(z) and
               not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
         end)) do
@@ -700,7 +716,7 @@ mission = {
       end)
   end,
   contains = function(self, transform)
-    return matrix.distance(self.locations[1].transform, transform) <= self.locations[1].dispersal_area
+    return matrix.distance(self.locations[1].transform, transform) <= self.locations[1].dispersal_radius
   end,
 }
 
@@ -886,6 +902,7 @@ character = {
     self.target_transform = nil
     self.target_id = nil
     self.target_type = nil
+    self.destination = self.tags.destination
 
     return self
   end,
@@ -933,13 +950,14 @@ character = {
 
     character.seat(self, v.id, seat)
 
-    self.seat = seat
     self.is_mount = true
 
     console.notify(string.format("%s#%d has mounted on %s#%d.", self.type, self.id, v.type, v.id))
   end,
   seat = function(self, vehicle_id, seat)
     server.setSeated(self.id, vehicle_id, seat.pos.x, seat.pos.y, seat.pos.z)
+    self.seat = seat
+    self.role = table.find_index(character.roles, function(r) return string.match(string.lower(self.seat.name), r.pattern) ~= nil end)
   end,
   unseat = function(self)
     server.setObjectPos(self.id, matrix.multiply(self.transform, matrix.translation(0, 0.5, 0)))
@@ -951,8 +969,9 @@ character = {
   end,
   invoke_command = function(self)
     if not self.is_simulate or self.command ~= nil then return end
-    if self.mount_id ~= nil and self.seat == nil then return end
-    if not table.aggregate(framework.players, false, function(result, p) return result or character.observes(self, p.transform) end) then return end
+    if #self.commands == 0 then return end
+    -- if self.mount_id ~= nil and self.seat == nil then return end
+    if self.observable_radius == nil or not table.aggregate(framework.players, false, function(result, p) return result or character.observes(self, self.observable_radius, p.transform) end) then return end
 
     self.command = table.aggregate(g_savedata.objects, nil, function(result, o)
       if o.id ~= self.id and o.mission_id == self.mission_id and o.type == self.type and o.command ~= nil then
@@ -966,13 +985,11 @@ character = {
       self.command = table.random(self.commands)
     end
 
-    self.role = table.find_index(character.roles, function(r) return string.match(string.lower(self.seat.name), r.pattern) ~= nil end)
-
     character.update_vital(self, nil, nil, true)
     console.notify(string.format("%s#%d has invoke %s command and roled for %s", self.type, self.id, self.command, self.role))
   end,
-  observes = function(self, transform)
-    return self.is_simulate and matrix.distance(self.transform, transform) <= self.observable_radius
+  observes = function(self, radius, transform)
+    return self.is_simulate and matrix.distance(self.transform, transform) <= radius
   end,
   travel = function(self)
     if not self.is_simulate then return end
@@ -1003,6 +1020,7 @@ character = {
     self.paths = {}
     self.target_transform = nil
     server.setAIState(self.id, 0)
+    character.update_vital(self, nil, nil, false)
   end,
   route = function(self, goal, required_tags, avoided_tags)
     for k, t in ipairs(path.find(self.transform, goal, required_tags, avoided_tags)) do
@@ -1260,8 +1278,7 @@ vehicle = {
         x = _x
         y = _z
         r = g_savedata.missions[i].search_radius
-        -- c = g_savedata.missions[i].case.id
-        c = 0
+        c = g_savedata.missions[i].locations[1].case.id
       end
 
       if self.missions[i].id ~= nil then vehicle.set_keypad(self, self.missions[i].id, id) end
@@ -1467,7 +1484,8 @@ rescuee = {
     objective.tick(self, tick)
 
     if self.is_finish and not self.is_disable then
-      character.update_vital(self, self.vital.hp, false, false)
+      local is_interactable = self.vehicle_id > 0
+      character.update_vital(self, nil, is_interactable, nil)
       self.is_disable = true
     end
   end,
@@ -1529,7 +1547,8 @@ suspect = {
     objective.tick(self, tick)
 
     if self.is_finish and not self.is_disable then
-      character.update_vital(self, self.vital.hp, false, false)
+      local is_interactable = self.vehicle_id > 0
+      character.update_vital(self, nil, is_interactable, nil)
       self.is_disable = true
     end
   end,
@@ -1678,7 +1697,8 @@ location = {
     l.note = setting.note
     l.case = setting.case
     l.geologic = setting.geologics
-    l.dispersal_area = setting.dispersal_area or 0
+    l.dispersal_radius = setting.dispersal_radius or 0
+    l.search_radius = setting.search_radius or l.dispersal_radius
     l.zone_tag_groups = setting.zone_tag_groups or {}
     l.sub_location = setting.sub_location or {
       patterns = {},
@@ -1690,7 +1710,6 @@ location = {
     l.offshore = setting.offshore or false
     l.transform = nil
     l.spawned = false
-    l.no_search_radius = setting.no_search_radius or false
 
     return l
   end,
