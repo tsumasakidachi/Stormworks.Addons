@@ -98,7 +98,7 @@ location_catalogue = { {
   scale = scales.medium,
   case = cases.sar,
   geologic = geologics.mainlands,
-  dispersal_radius = 1000,
+  search_radius = 1000,
   zone_tag_groups = {
     { landscape = "forest" },
     { landscape = "mountain" },
@@ -107,6 +107,7 @@ location_catalogue = { {
     patterns = { "^mission:climber_missing_%d+$" },
     min = 1,
     max = 3,
+    dispersal_radius = 1000,
   },
 }, {
   pattern = "^mission:freighter_fire_%d+$",
@@ -116,7 +117,6 @@ location_catalogue = { {
   scale = scales.medium,
   case = cases.mayday,
   geologic = geologics.waters,
-  dispersal_radius = 1000,
   offshore = true,
   zone_tag_groups = {
     { landscape = "channel" },
@@ -125,6 +125,7 @@ location_catalogue = { {
     patterns = { "^mission:passenger_fallen_water_%d+$", "^mission:lifeboat_%d+$" },
     min = 1,
     max = 3,
+    dispersal_radius = 1000,
   },
 }, {
   pattern = "^mission:passenger_fallen_land_%d+$",
@@ -167,7 +168,6 @@ location_catalogue = { {
   scale = scales.small,
   case = cases.ems,
   geologic = geologics.waters,
-  dispersal_radius = 500,
 }, {
   pattern = "^mission:piracy_boat_%d+$",
   type = "sar",
@@ -177,39 +177,54 @@ location_catalogue = { {
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
-  dispersal_radius = 500,
   search_radius = 2000,
   sub_location = {
     patterns = { "^mission:piracy_boat_%d+$" },
     min = 1,
-    max = 3,
+    max = 2,
+    dispersal_radius = 500,
   },
 }, {
   pattern = "^mission:piracy_gunboat_%d+$",
   type = "sar",
   report = "武装した船を発見した. 乗員を拘束せよ.",
   note = "哨戒機からの通報",
-  scale = scales.medium,
+  scale = scales.massive,
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
-  dispersal_radius = 500,
   search_radius = 2000,
   sub_location = {
     patterns = { "^mission:piracy_boat_%d+$" },
-    min = 1,
+    min = 2,
     max = 3,
+    dispersal_radius = 500,
   },
 }, {
   pattern = "^mission:piracy_boat_watch_%d+$",
   type = "sar",
-  report = "武装した小型船が沖合を航行している. 見つからないように追跡, 動向を監視せよ.",
+  report = "武装した小型船が沖合を航行している. 見つからないように追跡, 動向を監視せよ. なお当該船舶は時間経過と共にエリア外へ出る場合がある.",
   note = "哨戒機からの通報",
   scale = scales.small,
   case = cases.securite,
   geologic = geologics.waters,
   offshore = true,
   search_radius = 2000,
+  next_location = {
+    patterns = { "^mission:pirate_hideout_%d+$" },
+    dispersal_radius = 20000,
+  },
+}, {
+  pattern = "^mission:pirate_hideout_%d+$",
+  type = "sar",
+  report = "海賊のアジトと思われる島を発見.",
+  note = "哨戒機からの通報",
+  scale = scales.small,
+  case = cases.securite,
+  geologic = geologics.waters,
+  offshore = true,
+  search_radius = 500,
+  flag_required_for_spawn = "is_priate_hideout_found",
 } }
 
 
@@ -245,6 +260,14 @@ weapons = { {
 } }
 
 
+destination_points = {
+  port = {
+    landscape = "port",
+
+  }
+}
+
+
 framework = {
   name = "TSU Mission Framework",
   version = "1.0.0",
@@ -260,9 +283,9 @@ framework = {
     framework.register_command("?mission", "version", "?v", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_version)
     framework.register_command("?mission", "prod", nil, nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "prod" end)
     framework.register_command("?mission", "debug", nil, nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin end, function() g_savedata.mode = "debug" end)
-    framework.register_command("?mission", "list-commands", "?commands", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_commands)
-    framework.register_command("?mission", "list-locations", "?locations", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_locations)
-    framework.register_command("?mission", "update", nil, "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
+    framework.register_command("?mission", "commands", "?commands", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_commands)
+    framework.register_command("?mission", "locations", "?locations", nil, function(full_message, peer_id, is_admin, is_auth, subject, verb) return is_admin, peer_id end, framework.print_all_locations)
+    framework.register_command("?mission", "setting", nil, "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
     framework.register_command("?mission", "init", "?init", "[pattern] [dispersal_max]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, pattern, dispersal_max)
         dispersal_max = tonumber(dispersal_max)
@@ -388,9 +411,7 @@ framework = {
   on_player_join = function(steam_id, name, peer_id, is_admin, is_auth)
     steam_id = tostring(steam_id)
     framework.map(table.find_all(framework.players, function(p) return p.steam_id == steam_id end))
-
-    local character_id = server.getPlayerCharacterID(peer_id)
-    server.setAICharacterTeam(character_id, 1)
+    server.setAICharacterTeam((server.getPlayerCharacterID(peer_id)), 1)
   end,
   on_group_spawn = function(group_id, peer_id, x, y, z, group_cost)
     if component.is_spawing then return end
@@ -473,8 +494,6 @@ framework = {
       if value == nil then return end
 
       g_savedata.subsystems.mission.dispersal_max = value
-
-      console.notify("ha?")
     end
   end,
   invoke_command = function(command, can_execute, ...)
@@ -536,11 +555,11 @@ mission = {
     end
   end,
   tick = function(self, tick)
-    self.is_active = self.is_active or table.aggregate(framework.players, false, function(result, p) return result or mission.contains(self, p.transform) end)
+    -- self.is_active = self.is_active or table.aggregate(framework.players, false, function(result, p) return result or mission.contains(self, p.transform) end)
     self.objectives = table.select(table.find_all(g_savedata.objects, function(o) return o.mission_id == self.id and o.objective_type ~= nil end), function(o) return objective.module(o).progress(o) end)
     self.sorted_objectives, self.required_objectives_count = mission.aggregate_objectives(self, self.objectives)
 
-    if self.is_active and self.required_objectives_count == 0 then
+    if self.required_objectives_count == 0 then
       money.transact(mission.reward(self), string.format("reward to cleared mission#%d", self.id))
       mission.clear(self)
     end
@@ -673,18 +692,20 @@ mission = {
 
     if #locations == 0 then return end
 
-    local sub_locations_count = math.random(locations[1].sub_location.min, locations[1].sub_location.max)
+    if locations[1].sub_location ~= nil then
+      local sub_locations_count = math.random(locations[1].sub_location.min, locations[1].sub_location.max)
 
-    for i = 1, sub_locations_count do
-      for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].dispersal_radius, function(l)
-          return table.aggregate(locations[1].sub_location.patterns, false, function(result, x) return result or string.match(l.name, x) end)
-        end,
-        function(z)
-          return zone.is_in(z, locations[1].transform, 0, locations[1].dispersal_radius) and
-              not zone.is_contained_objects(z) and
-              not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
-        end)) do
-        table.insert(locations, v)
+      for i = 1, sub_locations_count do
+        for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].sub_location.dispersal_radius, function(l)
+            return table.aggregate(locations[1].sub_location.patterns, false, function(result, x) return result or string.match(l.name, x) end)
+          end,
+          function(z)
+            return zone.is_in(z, locations[1].transform, 0, locations[1].sub_location.dispersal_radius) and
+                not zone.is_contained_objects(z) and
+                not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
+          end)) do
+          table.insert(locations, v)
+        end
       end
     end
 
@@ -716,7 +737,7 @@ mission = {
       end)
   end,
   contains = function(self, transform)
-    return matrix.distance(self.locations[1].transform, transform) <= self.locations[1].dispersal_radius
+    return matrix.distance(self.search_center, transform) <= self.search_radius
   end,
 }
 
@@ -873,19 +894,16 @@ object = {
 
 character = {
   roles = {
-    pilot_ship = {
-      pattern = "^pilot%sship",
-      states = {
-        drive = 1,
-        attack = 1,
-      },
+    ship_pilot = "^pilot%sship",
+    gunner = "^gunner",
+  },
+  ai_states = {
+    drive = {
+      ship_pilot = 1,
     },
-    gunner = {
-      pattern = "^gunner",
-      states = {
-        drive = 0,
-        attack = 1,
-      },
+    attack = {
+      gunner = 1,
+      designator = 1,
     },
   },
   init = function(id, type, name, tags, mount_id, parent_id, mission_id)
@@ -902,7 +920,12 @@ character = {
     self.target_transform = nil
     self.target_id = nil
     self.target_type = nil
-    self.destination = self.tags.destination
+
+    if self.tags.destination ~= nil then
+      self.destination = table.random(zone.load({ destination_point = self.tags.destination }))
+    end
+
+    self.destination_routed = false
 
     return self
   end,
@@ -911,6 +934,11 @@ character = {
 
     character.mount(self)
     character.travel(self)
+
+    if self.is_simulate and self.destination ~= nil and not self.destination_routed and self.role == "ship_pilot" then
+      character.route(self, self.destination.transform, "ocean_path")
+      self.destination_routed = true
+    end
 
     self.vehicle_id = server.getCharacterVehicle(self.id)
     self.vital = server.getObjectData(self.id)
@@ -948,16 +976,28 @@ character = {
 
     if seat == nil then return end
 
-    character.seat(self, v.id, seat)
+    character.seat(self, v, seat)
 
     self.is_mount = true
 
     console.notify(string.format("%s#%d has mounted on %s#%d.", self.type, self.id, v.type, v.id))
   end,
-  seat = function(self, vehicle_id, seat)
-    server.setSeated(self.id, vehicle_id, seat.pos.x, seat.pos.y, seat.pos.z)
+  seat = function(self, v, seat)
     self.seat = seat
-    self.role = table.find_index(character.roles, function(r) return string.match(string.lower(self.seat.name), r.pattern) ~= nil end)
+
+    server.setSeated(self.id, v.id, seat.pos.x, seat.pos.y, seat.pos.z)
+
+    local seat_name = string.lower(self.seat.name)
+
+    if seat_name == "pilot" and v.vehicle_type == "ship" then
+      self.role = "ship_pilot"
+    elseif seat_name == "gunner" then
+      self.role = "gunner"
+    elseif seat_name == "designator" then
+      self.role = "designator"
+    end
+
+    console.notify(string.format("%s#%d has seated on %s", self.type, self.id, self.seat.name))
   end,
   unseat = function(self)
     server.setObjectPos(self.id, matrix.multiply(self.transform, matrix.translation(0, 0.5, 0)))
@@ -986,7 +1026,7 @@ character = {
     end
 
     character.update_vital(self, nil, nil, true)
-    console.notify(string.format("%s#%d has invoke %s command and roled for %s", self.type, self.id, self.command, self.role))
+    console.notify(string.format("%s#%d has invoke %s command", self.type, self.id, self.command))
   end,
   observes = function(self, radius, transform)
     return self.is_simulate and matrix.distance(self.transform, transform) <= radius
@@ -1002,18 +1042,21 @@ character = {
   drive = function(self, target_transform)
     self.target_transform = target_transform
     local x, y, z = matrix.position(self.target_transform)
+    character.update_vital(self, nil, nil, true)
+    server.setAIState(self.id, character.ai_states.drive[self.role])
     server.setAITarget(self.id, self.target_transform)
-    server.setAIState(self.id, character.roles[self.role].states.drive)
-    console.notify(string.format("%s#%s has traveled to %.0f, %.0f, %.0f, %.0fm", self.type, self.id, x, y, z, matrix.distance(self.transform, self.target_transform)))
+    console.notify(string.format("%s#%s drive to %.0f, %.0f, %.0f, %.0fm", self.type, self.id, x, y, z, matrix.distance(self.transform, self.target_transform)))
   end,
   attack = function(self, target_id, target_type)
+    character.update_vital(self, nil, nil, true)
+
     if target_type == "vehicle" then
       server.setAITargetVehicle(self.id, target_id)
     elseif target_type == "character" then
       server.setAITargetCharacter(self.id, target_id)
     end
 
-    server.setAIState(self.id, character.roles[self.role].states.attack)
+    server.setAIState(self.id, character.ai_states.attack[self.role])
     console.notify(string.format("%s#%s has attacked to %s#%d", self.type, self.id, target_type, target_id))
   end,
   terminate = function(self)
@@ -1023,11 +1066,16 @@ character = {
     character.update_vital(self, nil, nil, false)
   end,
   route = function(self, goal, required_tags, avoided_tags)
+    character.clear_route(self)
+
     for k, t in ipairs(path.find(self.transform, goal, required_tags, avoided_tags)) do
       table.insert(self.paths, t)
     end
 
     table.insert(self.paths, goal)
+  end,
+  clear_route = function(self)
+    self.paths = {}
   end,
   nearest_unit = function(self, distance_max)
     local nearest_obj = nil
@@ -1160,6 +1208,7 @@ vehicle = {
   init = function(id, type, name, tags, group_id, player_steam_id, cost, parent_id, mission_id)
     local self = object.init(id, type, name, tags, parent_id, mission_id)
 
+    self.vehicle_type = self.tags.vehicle_type
     self.cost = cost
     self.player_steam_id = player_steam_id
     self.is_player_unit = self.player_steam_id ~= nil or tags.player_unit == "true" or tags.tracker == "unit"
@@ -1560,7 +1609,7 @@ suspect = {
   end,
   failed = function(self) return self.vital.dead end,
   neutralize = function(self)
-    if self.is_neutralize or not self.is_active or not (self.vital.incapacitated or self.vital.dead or self.role ~= nil and self.vehicle_id == 0) then return end
+    if self.is_neutralize or not (self.vital.incapacitated or self.vital.dead or self.is_active and self.role ~= nil and self.vehicle_id == 0) then return end
 
     character.terminate(self)
     server.setAICharacterTargetTeam(self.id, 1, false)
@@ -1570,7 +1619,7 @@ suspect = {
   act = function(self, tick)
     if self.is_neutralize then return end
 
-    if self.role == "pilot_ship" and self.command == "attack" then
+    if self.role == "ship_pilot" and self.command == "attack" then
       self.can_change_target, self.fix_target_progress = util.progress(not self.can_change_target, self.fix_target_progress, self.fix_target_threshold, tick)
 
       if not self.can_change_target then return end
@@ -1578,9 +1627,11 @@ suspect = {
       local u, ud = character.nearest_unit(self, self.observable_radius)
 
       if u ~= nil then
+        character.clear_route(self)
         character.drive(self, u.transform)
       end
-    elseif self.role == "pilot_ship" and self.command == "escape" and #self.paths == 0 then
+    elseif self.role == "ship_pilot" and self.command == "escape" and #self.paths == 0 then
+      character.clear_route(self)
       character.route(self, tile.get_offshore(self.transform, 2000, 4000), "ocean_path")
     elseif self.role == "gunner" and self.command == "attack" then
       self.can_change_target, self.fix_target_progress = util.progress(not self.can_change_target, self.fix_target_progress, self.fix_target_threshold, tick)
@@ -1613,7 +1664,8 @@ suspect = {
       if p ~= nil and self.vehicle_id > 0 then
         character.unseat(self)
       elseif p == nil and self.vehicle_id == 0 then
-        character.seat(self, self.mount_id, self.seat)
+        local v = table.find(g_savedata.objects, function(x) return x.id == self.mount_id end)
+        character.seat(self, v, self.seat)
       end
     end
   end,
@@ -1697,14 +1749,19 @@ location = {
     l.note = setting.note
     l.case = setting.case
     l.geologic = setting.geologics
-    l.dispersal_radius = setting.dispersal_radius or 0
-    l.search_radius = setting.search_radius or l.dispersal_radius
+    l.search_radius = setting.search_radius or 0
     l.zone_tag_groups = setting.zone_tag_groups or {}
-    l.sub_location = setting.sub_location or {
-      patterns = {},
-      min = 0,
-      max = 0,
-    }
+    l.sub_location = nil
+
+    if setting.sub_location ~= nil then
+      l.sub_location = {
+        patterns = setting.sub_location.patterns or {},
+        min = setting.sub_location.min or 0,
+        max = setting.sub_location.max or 0,
+        dispersal_radius = setting.sub_location.dispersal_radius or 0
+      }
+    end
+
     l.components = setting.components or {}
     l.is_historic = setting.is_historic or true
     l.offshore = setting.offshore or false
@@ -2490,4 +2547,5 @@ onTick           = framework.on_tick
 onCustomCommand  = framework.on_custom_command
 onGroupSpawn     = framework.on_group_spawn
 onVehicleDespawn = framework.on_vehicle_despawn
+onPlayerJoin     = framework.on_player_join
 framework.on_load()
