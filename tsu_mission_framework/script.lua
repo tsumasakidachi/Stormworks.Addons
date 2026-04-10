@@ -24,6 +24,7 @@ g_savedata = {
       count = 0,
     },
   },
+  flags = {},
 }
 
 
@@ -210,12 +211,12 @@ location_catalogue = { {
   geologic = geologics.waters,
   offshore = true,
   search_radius = 2000,
-  next_location = {
-    patterns = { "^mission:pirate_hideout_%d+$" },
-    dispersal_radius = 20000,
+  sub_mission = {
+    patterns = { "^mission:piracy_hideout_%d+$" },
+    dispersal_radius = 50000,
   },
 }, {
-  pattern = "^mission:pirate_hideout_%d+$",
+  pattern = "^mission:piracy_hideout_%d+$",
   type = "sar",
   report = "海賊のアジトと思われる島を発見.",
   note = "哨戒機からの通報",
@@ -224,7 +225,7 @@ location_catalogue = { {
   geologic = geologics.waters,
   offshore = true,
   search_radius = 500,
-  flag_required_for_spawn = "is_priate_hideout_found",
+  flag_required_for_spawn = "detects_priate_hideout",
 } }
 
 
@@ -288,6 +289,10 @@ framework = {
     framework.register_command("?mission", "setting", nil, "[name] [value]", function(full_message, peer_id, is_admin, is_auth, subject, verb, name, value) return is_admin, name, value end, framework.update)
     framework.register_command("?mission", "init", "?init", "[pattern] [dispersal_max]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, pattern, dispersal_max)
+        if pattern ~= nil then
+          pattern = "^" .. pattern .. "$"
+        end
+
         dispersal_max = tonumber(dispersal_max)
 
         if dispersal_max == nil then
@@ -302,7 +307,7 @@ framework = {
       function(peer_id, mission_id)
         local transform = server.getPlayerPos(peer_id)
 
-        for k, o in pairs(g_savedata.objects) do
+        for k, o in ipairs(g_savedata.objects) do
           if o.mission_id == mission_id and o.is_character then
             server.setObjectPos(o.id, transform)
           end
@@ -351,7 +356,13 @@ framework = {
 
       doctor.spawn()
       police.spawn()
+
+      for _, z in ipairs(zone.load({}, function(z) return z.detective_point ~= nil end)) do
+        table.insert(g_savedata.objects, z)
+      end
     end
+
+    g_savedata.flags = {}
 
     if g_savedata.mode == "debug" then
       framework.print_version()
@@ -459,7 +470,7 @@ framework = {
     })
   end,
   print_all_commands = function(peer_id)
-    for _, command in pairs(framework.commands) do
+    for _, command in ipairs(framework.commands) do
       local text = string.format("%s %s", command.subject, command.verb)
 
       if command.args ~= nil then
@@ -473,9 +484,7 @@ framework = {
     console.log(string.format("%s %s", framework.name, framework.version), peer_id)
   end,
   print_all_locations = function(peer_id)
-    local locations = location.load()
-
-    for k, l in pairs(locations) do
+    for k, l in ipairs(location.load()) do
       console.log(l.name, peer_id)
     end
 
@@ -509,7 +518,7 @@ framework = {
     end
   end,
   map = function(players)
-    for k, o in pairs(g_savedata.objects) do
+    for k, o in ipairs(g_savedata.objects) do
       object.module(o).map(o, players)
     end
   end,
@@ -524,7 +533,7 @@ mission = {
     self.locations = locations
     self.is_active = false
     self.is_clear = false
-    self.is_report = false
+    self.reported = false
     self.elapsed_time = 0
     self.finish_time = 0
     self.objective_reward = 0
@@ -535,10 +544,9 @@ mission = {
     self.marker_type = 8
     self.marker_color = { 255, 255, 0, 255 }
     self.search_center = matrix.multiply(self.locations[1].transform, matrix.translation(math.random() * 500, 0, math.random() * 500))
-    self.search_radius = mission.compute_search_radius(self)
+    self.search_radius = nil
 
     console.notify(string.format("mission#%d has occurred.", self.id))
-    server.notify(-1, mission.label(self), "a mission has occured.", 0)
 
     return self
   end,
@@ -547,7 +555,6 @@ mission = {
 
     self.is_clear = true
     server.notify(-1, mission.label(self), "a mission has cleared.", 4)
-    console.notify(string.format("mission#%d has cleared.", self.id))
   end,
   clear_all = function()
     for i = #g_savedata.missions, 1, -1 do
@@ -555,12 +562,21 @@ mission = {
     end
   end,
   tick = function(self, tick)
-    -- self.is_active = self.is_active or table.aggregate(framework.players, false, function(result, p) return result or mission.contains(self, p.transform) end)
+    mission.spawn(self)
+
+    self.is_active = self.is_active or table.aggregate(framework.players, false, function(result, p) return result or mission.contains(self, p.transform) end) or
+        table.aggregate(g_savedata.objects, false, function(result, v) return result or v.is_vehicle and v.is_player_unit and mission.contains(self, v.transform) end)
     self.objectives = table.select(table.find_all(g_savedata.objects, function(o) return o.mission_id == self.id and o.objective_type ~= nil end), function(o) return objective.module(o).progress(o) end)
     self.sorted_objectives, self.required_objectives_count = mission.aggregate_objectives(self, self.objectives)
 
-    if self.required_objectives_count == 0 then
-      money.transact(mission.reward(self), string.format("reward to cleared mission#%d", self.id))
+    if not self.reported and #self.objectives > 0 then
+      server.notify(-1, mission.label(self), "a mission has occured.", 0)
+      self.reported = true
+    end
+
+    if self.is_active and self.required_objectives_count == 0 then
+      money.transact(mission.reward(self), string.format("reward to cleared mission#%d.", self.id))
+      console.notify(string.format("mission#%d has cleared.", self.id))
       mission.clear(self)
     end
 
@@ -577,7 +593,7 @@ mission = {
       }
     end
 
-    for k, o in pairs(objectives) do
+    for k, o in ipairs(objectives) do
       sorted_objectives[o.type].count = sorted_objectives[o.type].count + o.count
 
       if o.is_require then
@@ -590,7 +606,7 @@ mission = {
   compute_search_radius = function(self)
     local search_radius = self.locations[1].search_radius
 
-    for k, o in pairs(g_savedata.objects) do
+    for k, o in ipairs(g_savedata.objects) do
       if o.mission_id == self.id then
         local object_distance = matrix.distance(o.transform, self.search_center)
         search_radius = math.max(search_radius, object_distance)
@@ -622,7 +638,7 @@ mission = {
     local count = 0
     text = text .. string.format("\n\n[対応中]")
 
-    for k, p in pairs(table.find_all(framework.players, function(p) return g_savedata.player_missions[p.steam_id] ~= nil and g_savedata.player_missions[p.steam_id] == self.id end)) do
+    for k, p in ipairs(table.find_all(framework.players, function(p) return g_savedata.player_missions[p.steam_id] ~= nil and g_savedata.player_missions[p.steam_id] == self.id end)) do
       text = text .. "\n" .. p.name
       count = count + 1
     end
@@ -645,45 +661,57 @@ mission = {
     g_savedata.player_missions[p.steam_id] = self.id
     server.notify(-1, string.format("%s is enroute to mission#%d", p.name, self.id), nil, 5)
   end,
-  spawn = function(mission_id, locations)
-    for _, l in pairs(locations) do
-      local objects = location.spawn(l)
+  spawn = function(self)
+    local count = 0
 
-      for _, o in pairs(objects) do
-        local ot = objective_type.find(o.type, o.name, o.tags)
+    for _, l in ipairs(self.locations) do
+      if not l.spawned and (l.flag_required_for_spawn == nil or g_savedata.flags[l.flag_required_for_spawn]) then
+        local objects = location.spawn(l)
 
-        if o.type == "vehicle" then
-          for _, vehicle_id in ipairs(o.vehicle_ids) do
-            o = vehicle.init(vehicle_id, o.type, o.name, o.tags, o.group_id, nil, 0, o.parent_id, mission_id)
+        for _, o in ipairs(objects) do
+          local ot = objective_type.find(o.type, o.name, o.tags)
+
+          if o.type == "vehicle" then
+            for _, vehicle_id in ipairs(o.vehicle_ids) do
+              o = vehicle.init(vehicle_id, o.type, o.name, o.tags, o.group_id, nil, 0, o.parent_id, self.id)
+              o = objective_type.get(ot).init(o, ot)
+              table.insert(g_savedata.objects, o)
+            end
+          elseif o.type == "character" then
+            o = character.init(o.id, o.type, o.name, o.tags, o.mount_id, o.parent_id, self.id)
+            o = objective_type.get(ot).init(o, ot)
+            table.insert(g_savedata.objects, o)
+          else
+            o = object.module(o).init(o.id, o.type, o.name, o.tags, o.parent_id, self.id)
             o = objective_type.get(ot).init(o, ot)
             table.insert(g_savedata.objects, o)
           end
-        elseif o.type == "character" then
-          o = character.init(o.id, o.type, o.name, o.tags, o.mount_id, o.parent_id, mission_id)
-          o = objective_type.get(ot).init(o, ot)
-          table.insert(g_savedata.objects, o)
-        else
-          o = object.module(o).init(o.id, o.type, o.name, o.tags, o.parent_id, mission_id)
-          o = objective_type.get(ot).init(o, ot)
-          table.insert(g_savedata.objects, o)
         end
+
+        count = count + #objects
       end
+    end
+
+    if count > 0 then
+      self.search_radius = mission.compute_search_radius(self)
     end
   end,
   despawn = function(self)
-    for k, o in pairs(g_savedata.objects) do
+    for k, o in ipairs(g_savedata.objects) do
       if o.mission_id == self.id then
         object.module(o).despawn(o)
       end
     end
   end,
   map = function(self, players)
-    for k, p in pairs(players) do
-      ui.map(self, p, self.search_center, self.search_radius, mission.label(self), mission.detail(self))
+    if self.search_center ~= nil and self.search_radius ~= nil then
+      for k, p in ipairs(players) do
+        ui.map(self, p, self.search_center, self.search_radius, mission.label(self), mission.detail(self))
+      end
     end
   end,
   unmap = function(self, players)
-    for k, p in pairs(players) do
+    for k, p in ipairs(players) do
       ui.unmap(self, p)
     end
   end,
@@ -696,7 +724,7 @@ mission = {
       local sub_locations_count = math.random(locations[1].sub_location.min, locations[1].sub_location.max)
 
       for i = 1, sub_locations_count do
-        for k, v in pairs(location.construct(locations[1].transform, 0, locations[1].sub_location.dispersal_radius, function(l)
+        for k, v in ipairs(location.construct(locations[1].transform, 0, locations[1].sub_location.dispersal_radius, function(l)
             return table.aggregate(locations[1].sub_location.patterns, false, function(result, x) return result or string.match(l.name, x) end)
           end,
           function(z)
@@ -710,7 +738,6 @@ mission = {
     end
 
     local mission_id = g_savedata.subsystems.mission.count + 1
-    mission.spawn(mission_id, locations)
     local m = mission.init(mission_id, locations)
 
     if m == nil then return nil end
@@ -718,13 +745,11 @@ mission = {
     table.insert(g_savedata.missions, m)
     history.record(locations[1])
     g_savedata.subsystems.mission.count = m.id
-    -- server.setPlayerPos(0, m.locations[1].transform)
+    mission.load_sub_missions(m)
   end,
   load_random = function(geologic, scale, case, center, range_min, range_max) end,
   load_pattern = function(pattern, center, range_min, range_max)
     if pattern == nil then return end
-
-    pattern = "^" .. pattern .. "$"
 
     mission.load(center, range_min, range_max,
       function(l)
@@ -736,8 +761,17 @@ mission = {
             not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
       end)
   end,
+  load_sub_missions = function(self)
+    for _, l in ipairs(self.locations) do
+      if l.sub_mission ~= nil then
+        for _, pattern in ipairs(l.sub_mission.patterns) do
+          mission.load_pattern(pattern, l.transform, 0, l.sub_mission.dispersal_radius)
+        end
+      end
+    end
+  end,
   contains = function(self, transform)
-    return matrix.distance(self.search_center, transform) <= self.search_radius
+    return self.search_radius ~= nil and matrix.distance(self.search_center, transform) <= self.search_radius
   end,
 }
 
@@ -787,7 +821,7 @@ object = {
 
     self.marker_color = { 128, 128, 128, 255 }
 
-    console.notify(string.format("%s#%d has initialized.", self.type, self.id))
+    if not self.is_zone then console.notify(string.format("%s#%d has initialized.", self.type, self.id)) end
 
     return self
   end,
@@ -857,14 +891,14 @@ object = {
       type = "object"
     end
 
-    for k, p in pairs(players) do
+    for k, p in ipairs(players) do
       if g_savedata.mode == "debug" and p.admin then
         ui.map(self, p, self.transform, 0, object.label(self), object.detail(self), type, id)
       end
     end
   end,
   unmap = function(self, players)
-    for k, p in pairs(players) do
+    for k, p in ipairs(players) do
       ui.unmap(self, p)
     end
   end,
@@ -1388,11 +1422,82 @@ fire = {
 }
 
 
+zone = {
+  init = function(id, type, name, tags, parent_id, mission_id, transform, size, parent_relative_transform)
+    local self = object.init(id, type, name, tags, parent_id, mission_id)
+
+    self.transform = transform
+    self.size = size
+    self.parent_vehicle_id = parent_id
+    self.parent_relative_transform = parent_relative_transform
+    self.detective_point = self.tags.detective_point
+    self.detective_radius = tonumber(self.tags.detective_radius)
+    self.flag = self.tags.flag
+
+    return self
+  end,
+  tick = function(self, tick)
+    zone.detect(self)
+  end,
+  detect = function(self)
+    if g_savedata.flags[self.flag] then return end
+
+    local u, ud = character.nearest_unit(self, self.detective_radius)
+    local p, pd = character.nearest_player(self, self.detective_radius)
+
+    if u == nil and p == nil then return end
+
+    g_savedata.flags[self.flag] = true
+
+    local x, y, z = matrix.position(self.transform)
+
+    console.notify(string.format("%s is found at %.0f, %.0f, %.0f.", self.detective_point, x, y, z))
+  end,
+  load = function(tags, filter)
+    local zones = {}
+
+    if filter == nil then
+      filter = function(z) return true end
+    end
+
+    for id, z in ipairs(server.getZones(tag.serialize(tags))) do
+      z = zone.init(id, "zone", z.name, tag.deserialize(z.tags), z.parent_vehicle_id, nil, z.transform, z.size, z.parent_relative_transform)
+
+      if filter(z) then
+        table.insert(zones, z)
+      end
+    end
+
+    return zones
+  end,
+  is_in = function(self, transform, range_min, renage_max)
+    local distance = matrix.distance(self.transform, transform)
+    return distance >= range_min and distance <= renage_max
+  end,
+  is_occupied = function(self)
+    return false
+  end,
+  contains = function(self, transform)
+    return server.isInTransformArea(transform, self.transform, self.size.x, self.size.y, self.size.z)
+  end,
+  is_contained_objects = function(self)
+    local enclosed = false
+
+    for k, o in ipairs(g_savedata.objects) do
+      enclosed = enclosed or zone.is_in(self, o.transform, 0, 100)
+    end
+
+    return enclosed
+  end,
+}
+
+
 object_type = {
   catalogue = {
     vehicle = vehicle,
     character = character,
     fire = fire,
+    zone = zone,
   },
   inherit = function(self, base)
     for k, v in pairs(base) do
@@ -1762,11 +1867,21 @@ location = {
       }
     end
 
+    l.sub_mission = nil
+
+    if setting.sub_mission ~= nil then
+      l.sub_mission = {
+        patterns = setting.sub_mission.patterns or {},
+        dispersal_radius = setting.sub_mission.dispersal_radius or 0
+      }
+    end
+
     l.components = setting.components or {}
     l.is_historic = setting.is_historic or true
     l.offshore = setting.offshore or false
     l.transform = nil
     l.spawned = false
+    l.flag_required_for_spawn = setting.flag_required_for_spawn
 
     return l
   end,
@@ -1807,7 +1922,7 @@ location = {
     local locations = {}
     local locations_zones = {}
 
-    for k, l in pairs(location.load(filter_location)) do
+    for k, l in ipairs(location.load(filter_location)) do
       if l == nil then
         goto continue
       end
@@ -1815,8 +1930,8 @@ location = {
       if l.tile == "" then
         local zones = {}
 
-        for _, zone_tags in pairs(l.zone_tag_groups) do
-          for _, z in pairs(zone.load(zone_tags, filter_zone)) do
+        for _, zone_tags in ipairs(l.zone_tag_groups) do
+          for _, z in ipairs(zone.load(zone_tags, filter_zone)) do
             table.insert(zones, z)
           end
         end
@@ -1905,7 +2020,7 @@ location = {
     local objects = {}
     local ordered_components = { {}, {}, {}, {} }
 
-    for k, c in pairs(component.load(self)) do
+    for k, c in ipairs(component.load(self)) do
       if c.type == "vehicle" then
         table.insert(ordered_components[1], c)
       elseif c.type == "character" then
@@ -1929,7 +2044,7 @@ location = {
         end
       end
 
-      for k, c in pairs(components) do
+      for k, c in ipairs(components) do
         local o = component.spawn(c, self.transform, objects)
 
         table.insert(objects, o)
@@ -2021,51 +2136,6 @@ component = {
 }
 
 
-zone = {
-  init = function(z)
-    z.tags = tag.deserialize(z.tags)
-
-    return z
-  end,
-  load = function(tags, filter)
-    local zones = {}
-
-    if filter == nil then
-      filter = function(z) return true end
-    end
-
-    for _, z in pairs(server.getZones(tag.serialize(tags))) do
-      z = zone.init(z)
-
-      if filter(z) then
-        table.insert(zones, z)
-      end
-    end
-
-    return zones
-  end,
-  is_in = function(self, transform, range_min, renage_max)
-    local distance = matrix.distance(self.transform, transform)
-    return distance >= range_min and distance <= renage_max
-  end,
-  is_occupied = function(self)
-    return false
-  end,
-  contains = function(self, transform)
-    return server.isInTransformArea(transform, self.transform, self.size.x, self.size.y, self.size.z)
-  end,
-  is_contained_objects = function(self)
-    local enclosed = false
-
-    for k, o in pairs(g_savedata.objects) do
-      enclosed = enclosed or zone.is_in(self, o.transform, 0, 100)
-    end
-
-    return enclosed
-  end,
-}
-
-
 player = {
   init = function(p)
     if p.id == 0 and p.name == "Server" then
@@ -2086,7 +2156,7 @@ player = {
   load = function()
     local players = {}
 
-    for _, p in pairs(server.getPlayers()) do
+    for _, p in ipairs(server.getPlayers()) do
       local p = player.init(p)
 
       if p ~= nil then
