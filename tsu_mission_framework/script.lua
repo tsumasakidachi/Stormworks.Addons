@@ -148,7 +148,7 @@ location_catalogue = { {
   offshore = true,
   zone_tag_groups = {
     { landscape = "channel" },
-    { landscape = "shallow" }
+    { landscape = "shallow" },
   },
 }, {
   pattern = "^mission:lifeboat_%d+$",
@@ -159,7 +159,7 @@ location_catalogue = { {
   offshore = true,
   zone_tag_groups = {
     { landscape = "channel" },
-    { landscape = "shallow" }
+    { landscape = "shallow" },
   },
 }, {
   pattern = "^mission:wind_turbine_fire_%d+$",
@@ -222,10 +222,45 @@ location_catalogue = { {
   note = "哨戒機からの通報",
   scale = scales.small,
   case = cases.securite,
-  geologic = geologics.waters,
+  geologic = geologics.islands,
   offshore = true,
-  search_radius = 500,
+  search_radius = 1000,
   flag_required_for_spawn = "detects_priate_hideout",
+  sub_location = {
+    patterns = { "^mission:piracy_infantry_%d+$", "^mission:piracy_static_%d+$", "^mission:piracy_gunboat_%d+$", "^mission:piracy_boat_%d+$" },
+    min = 7,
+    max = 11,
+    dispersal_radius = 1000,
+  },
+}, {
+  pattern = "^mission:piracy_infantry_%d+$",
+  type = "sar",
+  report = "海賊の歩兵",
+  note = "",
+  zone_tag_groups = {
+    { landscape = "island" },
+    { landscape = "road" },
+    { landscape = "forest" },
+    { landscape = "hill" },
+    { landscape = "field" },
+    { landscape = "beach" },
+  },
+}, {
+  pattern = "^mission:piracy_static_%d+$",
+  type = "sar",
+  report = "海賊のスタティック",
+  note = "",
+  zone_tag_groups = {
+    { spawn_point = "static" },
+  },
+}, {
+  pattern = "^mission:piracy_technical_%d+$",
+  type = "sar",
+  report = "海賊のテクニカル",
+  note = "",
+  zone_tag_groups = {
+    { spawn_point = "technical" },
+  },
 } }
 
 
@@ -328,6 +363,19 @@ framework = {
 
       return true, m, p
     end, mission.checkin)
+    framework.register_command("?zone", "map", nil, nil,
+      function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin end,
+      function()
+        if g_savedata.ui_id == nil then g_savedata.ui_id = server.getMapID() end
+
+        server.removeMapID(-1, g_savedata.ui_id)
+
+        for k, zn in ipairs(zone.load({})) do
+          local x, y, z = matrix.position(zn.transform)
+
+          server.addMapLabel(-1, g_savedata.ui_id, 1, zn.name, x, z)
+        end
+      end)
     framework.register_command("?vehicle", "set-hq", "?hq", "[id]",
       function(full_message, peer_id, is_admin, is_auth, subject, verb, vehicle_id) return is_admin, tonumber(vehicle_id) end,
       function(vehicle_id)
@@ -484,7 +532,9 @@ framework = {
     console.log(string.format("%s %s", framework.name, framework.version), peer_id)
   end,
   print_all_locations = function(peer_id)
-    for k, l in ipairs(location.load()) do
+    local locations = location.load()
+
+    for k, l in ipairs(locations) do
       console.log(l.name, peer_id)
     end
 
@@ -729,8 +779,7 @@ mission = {
           end,
           function(z)
             return zone.is_in(z, locations[1].transform, 0, locations[1].sub_location.dispersal_radius) and
-                not zone.is_contained_objects(z) and
-                not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
+                not zone.is_contained_objects(z, 10)
           end)) do
           table.insert(locations, v)
         end
@@ -756,8 +805,8 @@ mission = {
         return string.match(l.name, pattern) ~= nil
       end,
       function(z)
-        return zone.is_in(z, g_savedata.subsystems.mission.center, g_savedata.subsystems.mission.dispersal_min, g_savedata.subsystems.mission.dispersal_max) and
-            not zone.is_contained_objects(z) and
+        return zone.is_in(z, center, range_min, range_max) and
+            not zone.is_contained_objects(z, 10) and
             not table.any(g_savedata.missions, function(m) return mission.contains(m, z.transform) end)
       end)
   end,
@@ -1019,6 +1068,7 @@ character = {
   seat = function(self, v, seat)
     self.seat = seat
 
+    console.notify(string.format("%s#%d seat.", self.type, self.id))
     server.setSeated(self.id, v.id, seat.pos.x, seat.pos.y, seat.pos.z)
 
     local seat_name = string.lower(self.seat.name)
@@ -1031,7 +1081,7 @@ character = {
       self.role = "designator"
     end
 
-    console.notify(string.format("%s#%d has seated on %s", self.type, self.id, self.seat.name))
+    console.notify(string.format("%s#%d has seated on %s.", self.type, self.id, self.seat.name))
   end,
   unseat = function(self)
     server.setObjectPos(self.id, matrix.multiply(self.transform, matrix.translation(0, 0.5, 0)))
@@ -1424,6 +1474,8 @@ fire = {
 
 zone = {
   init = function(id, type, name, tags, parent_id, mission_id, transform, size, parent_relative_transform)
+    if string.nil_or_empty(name) and tags.landscape ~= nil then name = tags.landscape end
+
     local self = object.init(id, type, name, tags, parent_id, mission_id)
 
     self.transform = transform
@@ -1460,13 +1512,20 @@ zone = {
       filter = function(z) return true end
     end
 
+    local count_tag = 0
+    local count_filter = 0
+
     for id, z in ipairs(server.getZones(tag.serialize(tags))) do
       z = zone.init(id, "zone", z.name, tag.deserialize(z.tags), z.parent_vehicle_id, nil, z.transform, z.size, z.parent_relative_transform)
+      count_tag = count_tag + 1
 
       if filter(z) then
         table.insert(zones, z)
+        count_filter = count_filter + 1
       end
     end
+
+    console.notify(string.format("%d/%d zones matched.", count_filter, count_tag))
 
     return zones
   end,
@@ -1480,11 +1539,11 @@ zone = {
   contains = function(self, transform)
     return server.isInTransformArea(transform, self.transform, self.size.x, self.size.y, self.size.z)
   end,
-  is_contained_objects = function(self)
+  is_contained_objects = function(self, distance)
     local enclosed = false
 
     for k, o in ipairs(g_savedata.objects) do
-      enclosed = enclosed or zone.is_in(self, o.transform, 0, 100)
+      enclosed = enclosed or zone.is_in(self, o.transform, 0, distance)
     end
 
     return enclosed
@@ -1539,6 +1598,7 @@ objective = {
     self.is_finish = false
     self.failed = false
     self.is_active = false
+    self.lazy_clear_time = 180
 
     console.notify(string.format("%s#%d has established as a %s.", self.type, self.id, self.objective_type))
 
@@ -1552,14 +1612,14 @@ objective = {
     if not self.is_finish and objective.module(self).failed(self) then
       server.notify(-1, objective.module(self).label(self), "a objective has failed.", 2)
       self.is_finish = true
-      object.module(self).lazy_clear(self, 180)
+      object.module(self).lazy_clear(self, self.lazy_clear_time)
     end
 
     if not self.is_finish and objective.module(self).completed(self) then
       server.notify(-1, objective.module(self).label(self), "a objective has achieved.", 4)
       mission.add_reward(table.find(g_savedata.missions, function(m) return m.id == self.mission_id end), objective.module(self).reward(self))
       self.is_finish = true
-      object.module(self).lazy_clear(self, 180)
+      object.module(self).lazy_clear(self, self.lazy_clear_time)
     end
   end,
   label = function(self)
@@ -1806,11 +1866,48 @@ fire_objective = {
 }
 
 
+wreckage = {
+  name = "残骸",
+  how_to_clear = "HQに輸送または完全に破壊",
+  is_match = function(type, name, tags)
+    return type == "vehicle" and tags.tracker == "wreckage"
+  end,
+  init = function(self, ot)
+    self = objective.init(self, ot)
+    self.lazy_clear_time = 7200
+    self.is_disable = false
+    self.is_in_yard = false
+    self.is_in_yard_progress = 0
+    self.is_in_yard_threshold = 180
+
+    server.setVehicleTooltip(self.id, self.name)
+    return self
+  end,
+  tick = function(self, tick)
+    local is_in_yard = table.any(zone.load({ collect_wreckage = "true" }), function(z)
+      return zone.contains(z, self.transform)
+    end)
+
+    self.is_is_in_yard, self.is_in_yard_progress = util.progress(is_in_yard, self.is_in_yard_progress, self.is_in_yard_threshold, tick)
+
+    objective.tick(self, tick)
+  end,
+  reward = function(self)
+    return 5000
+  end,
+  completed = function(self)
+    return self.is_is_in_yard
+  end,
+  failed = function(self) return false end,
+}
+
+
 objective_type = {
   catalogue = {
     rescuee = rescuee,
     suspect = suspect,
     fire = fire_objective,
+    wreckage = wreckage,
   },
   inherit = function(self, base)
     for k, v in pairs(base) do
@@ -1936,9 +2033,9 @@ location = {
           end
         end
 
-        local is_available_offshore_tile = tile.get_offshore(center, range_min, range_max) ~= nil
-
-        if #zones == 0 and not (l.offshore and is_available_offshore_tile) then goto continue end
+        if #zones == 0 and not (l.offshore and tile.get_offshore(center, range_min, range_max) ~= nil) then
+          goto continue
+        end
 
         if locations_zones[l.addon_index] == nil then
           locations_zones[l.addon_index] = {}
@@ -1948,7 +2045,9 @@ location = {
       else
         local transform, s = server.getTileTransform(center, l.tile, range_max)
 
-        if not s then goto continue end
+        if not s then
+          goto continue
+        end
       end
 
       table.insert(locations, l)
@@ -1957,7 +2056,7 @@ location = {
     end
 
     if #locations == 0 then
-      console.error(string.format("location not found."))
+      return {}
     end
 
     local location_name = table.random(table.distinct(table.select(locations, function(l) return l.name end)))
