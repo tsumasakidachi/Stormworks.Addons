@@ -39,7 +39,7 @@
 						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="60" cargo_zone_import_cargo_type="interaction=scrap_yard,collect_accessory=true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="60" cargo_zone_import_cargo_type="interaction=scrap_yard,collect_wreckage=true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="0.475292" 01="-0.000045" 02="-0.879828" 10="-0.003296" 11="0.999993" 12="-0.001831" 20="0.879822" 21="0.003771" 22="0.475288" 30="133.337616" 31="0.458284" 32="-413.37793"/>
 						<spawn_bounds>
 							<min x="-79.571876" y="-15.225325" z="-78.349671"/>
@@ -56,7 +56,7 @@
 						<spawn_local_offset x="-2.625" y="-0.875" z="4.5"/>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="98" cargo_zone_import_cargo_type="landscape=supply_spawn_waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="98" cargo_zone_import_cargo_type="spawn_point=water_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.513686" 02="0.857978" 20="-0.857978" 22="-0.513686" 30="98.533974" 31="0.052649" 32="-282.991211"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
@@ -64,7 +64,7 @@
 						</spawn_bounds>
 						<graph_links/>
 					</c>
-					<c component_type="10" id="99" cargo_zone_import_cargo_type="landscape=supply_spawn_waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+					<c component_type="10" id="99" cargo_zone_import_cargo_type="spawn_point=water_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
 						<spawn_transform 00="-0.524296" 02="0.851536" 20="-0.851536" 22="-0.524296" 30="88.294235" 31="-0.020445" 32="-265.683899"/>
 						<spawn_bounds>
 							<min x="-5" y="-5" z="-5"/>
