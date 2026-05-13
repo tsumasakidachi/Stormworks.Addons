@@ -72,6 +72,7 @@ function onCustomCommand(full_message, peer_id, is_admin, is_auth, command, ...)
         local object_id = server.getPlayerCharacterID(peer_id)
 
         server.killCharacter(object_id)
+        server.announce("[UTILITY]", string.format("%s jiketsu (verb).", player.name))
     elseif command == "?liv" and is_admin then -- list vehicles
         for i = 1, #g_savedata.vehicles do
             server.announce("liv", vehicle_spec_table(g_savedata.vehicles[i]), peer_id)

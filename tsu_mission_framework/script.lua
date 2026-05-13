@@ -204,7 +204,7 @@ location_catalogue = { {
 }, {
   pattern = "^mission:piracy_boat_watch_%d+$",
   type = "sar",
-  report = "武装した小型船が沖合を航行している. 見つからないように追跡, 動向を監視せよ. なお当該船舶は時間経過と共にエリア外へ出る場合がある.",
+  report = "不審な小型船が沖合を航行している. 見つからないように追跡, 動向を監視せよ. なお当該船舶は時間経過と共にエリア外へ出る場合がある.",
   note = "哨戒機からの通報",
   scale = scales.small,
   case = cases.securite,
@@ -500,6 +500,13 @@ framework = {
     for k, v in ipairs(g_savedata.objects) do
       if v.is_vehicle and v.id == vehicle_id then
         object.module(v).clear(v)
+      end
+    end
+  end,
+  on_vehicle_damaged = function(vehicle_id, damage_amount, voxel_x, voxel_y, voxel_z, body_index)
+    for k, v in ipairs(g_savedata.objects) do
+      if v.is_vehicle and v.id == vehicle_id then
+        object.module(v).damaged(v, damage_amount, voxel_x, voxel_y, voxel_z, body_index)
       end
     end
   end,
@@ -1094,7 +1101,7 @@ character = {
   invoke_command = function(self)
     if not self.is_simulate or self.command ~= nil then return end
     if #self.commands == 0 then return end
-    -- if self.mount_id ~= nil and self.seat == nil then return end
+    if not (self.seat == nil or self.mount_id ~= nil) then return end
     if self.observable_radius == nil or not table.aggregate(framework.players, false, function(result, p) return result or character.observes(self, self.observable_radius, p.transform) end) then return end
 
     self.command = table.aggregate(g_savedata.objects, nil, function(result, o)
@@ -1453,6 +1460,9 @@ vehicle = {
       server.setVehicleBattery(self.id, b.pos.x, b.pos.y, b.pos.z, 1)
     end
   end,
+  damaged = function(self, amount, voxel_x, voxel_y, voxel_z, body_index)
+    table.insert(self.damages, amount)
+  end,
 }
 
 
@@ -1524,8 +1534,6 @@ zone = {
         count_filter = count_filter + 1
       end
     end
-
-    console.notify(string.format("%d/%d zones matched.", count_filter, count_tag))
 
     return zones
   end,
@@ -2622,7 +2630,9 @@ table.random     = function(t)
     return nil
   end
 
-  return t[math.random(1, #t)]
+  local keys = table.keys(t)
+
+  return t[keys[math.random(1, #keys)]]
 end
 
 table.select     = function(t, selector)
@@ -2716,5 +2726,6 @@ onTick           = framework.on_tick
 onCustomCommand  = framework.on_custom_command
 onGroupSpawn     = framework.on_group_spawn
 onVehicleDespawn = framework.on_vehicle_despawn
+onVehicleDamaged = framework.on_vehicle_damaged
 onPlayerJoin     = framework.on_player_join
 framework.on_load()
