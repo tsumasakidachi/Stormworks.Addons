@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_facility_locations_sawyer_south_office" file_store="4" name="TSU Facilitiy Locations Sawyer South Office">
+	<locations location_id_counter="5" component_id_counter="115">
+		<locations>
+			<l id="1" tile="data/tiles/mega_island_15_2.xml" name="facility:hq_sawyer_south" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="49" vehicle_parent_id="104" cargo_zone_import_cargo_type="admit_rescuee=true,admit_suspect=true,hospital,police_station" display_name="Sawyer Coastguard South Harbor Office" show_zone_on_map="true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.483093" 02="-0.875569" 20="0.875569" 22="0.483093" 30="203.74765" 31="7.662331" 32="-345.151123"/>
+						<spawn_bounds>
+							<min x="-9.878993" y="-2.087271" z="-3.948279"/>
+							<max x="9.878993" y="2.087271" z="3.948279"/>
+						</spawn_bounds>
+						<vehicle_parent_transform 00="0.999999" 02="-0.000521" 20="0.000521" 22="0.999999" 30="5.342102" 31="-4.667675" 32="-6.501276"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="58" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_58.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="0.485536" 02="-0.874217" 20="0.874217" 22="0.485536" 30="90.825409" 31="1.626413" 32="-439.242279"/>
+						<spawn_bounds>
+							<min x="-7.125" y="-0.125" z="-7.625"/>
+							<max x="6.375" y="0.625" z="11.625"/>
+						</spawn_bounds>
+						<spawn_local_offset x="0.375" y="-0.25" z="-2"/>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="103" vehicle_parent_id="104" cargo_zone_import_cargo_type="spawn_point=specialist" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.876255" 02="0.481849" 20="-0.481849" 22="0.876255" 30="208.72493" 31="8.110378" 32="-347.132843"/>
+						<spawn_bounds>
+							<min x="-1.64376" y="-1.358569" z="-1.773285"/>
+							<max x="1.64376" y="1.358569" z="1.773285"/>
+						</spawn_bounds>
+						<vehicle_parent_transform 00="0.001941" 02="0.999998" 20="-0.999998" 22="0.001941" 30="9.483521" 31="-4.219627" 32="-3.102854"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="104" name="role=headquarter,cost=1000" display_name="SAWYER COASTGUARD SOUTH HARBOUR OFFICE" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_104.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true" vehicle_is_modded="true">
+						<spawn_transform 00="0.483549" 02="-0.875318" 20="0.875318" 22="0.483549" 30="206.855148" 31="12.330005" 32="-337.33136"/>
+						<spawn_bounds>
+							<min x="-13.875" y="-4.625" z="-16.125"/>
+							<max x="19.125" y="9.375" z="7.125"/>
+						</spawn_bounds>
+						<spawn_local_offset x="-2.625" y="-2.375" z="4.5"/>
+						<graph_links/>
+					</c>
+					<c component_type="3" id="114" name="refills=true,refill_sources=tile;money" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_114.xml" vehicle_file_store="4" vehicle_is_static="true" vehicle_is_invulnerable="true">
+						<spawn_transform 00="-0.487241" 02="0.873268" 20="-0.873268" 22="-0.487241" 30="215.361099" 31="5.586405" 32="-395.27243"/>
+						<spawn_bounds>
+							<min x="-4.375" y="-0.875" z="-0.375"/>
+							<max x="4.625" y="2.375" z="0.875"/>
+						</spawn_bounds>
+						<spawn_local_offset x="-0.125" y="-0.75" z="-0.25"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_15_2.xml" name="SAWYER 15_2" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="105" cargo_zone_import_cargo_type="collect_wreckage=true" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.488597" 02="-0.87251" 20="0.87251" 22="0.488597" 30="149.117508" 31="0.036728" 32="-428.862915"/>
+						<spawn_bounds>
+							<min x="-102.14841" y="-43.354398" z="-160.63731"/>
+							<max x="102.14841" y="43.354398" z="160.63731"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="106" cargo_zone_import_cargo_type="spawn_point=waters_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.841984" 02="0.539503" 20="-0.539503" 22="-0.841984" 30="-70.445465" 31="1.055343" 32="-280.897278"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="107" cargo_zone_import_cargo_type="spawn_point=waters_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.829758" 02="0.558124" 20="-0.558124" 22="-0.829758" 30="-129.659576" 31="-0.257112" 32="-241.581482"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="108" cargo_zone_import_cargo_type="spawn_point=lands_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.46778" 02="-0.883845" 20="0.883845" 22="0.46778" 30="264.338348" 31="6.559858" 32="-447.086548"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="109" cargo_zone_import_cargo_type="spawn_point=lands_supply" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.46553" 02="-0.885032" 20="0.885032" 22="0.46553" 30="284.194336" 31="6.467372" 32="-436.60611"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

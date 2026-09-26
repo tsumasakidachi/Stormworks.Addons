@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_cargo_zones_sawyer" file_store="4" name="TSU Cargo Zones Sawyer">
+	<locations location_id_counter="6" component_id_counter="119">
+		<locations>
+			<l id="1" tile="data/tiles/mega_island_9_8.xml" name="SAWYER 9_8" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="7" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="Sawyer North Harboor Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.999819" 02="-0.019012" 20="0.019012" 22="0.999819" 30="283.582825" 31="6.94459" 32="296.207672"/>
+						<spawn_bounds>
+							<min x="-84.993273" y="-5" z="-36.357447"/>
+							<max x="84.993273" y="5" z="36.357447"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="32" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999654" 02="0.026319" 20="-0.026319" 22="-0.999654" 30="378.146057" 31="6.941892" 32="303.220795"/>
+						<spawn_bounds>
+							<min x="-3.603841" y="-5" z="-14.625753"/>
+							<max x="3.603841" y="5" z="14.625753"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="33" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999719" 02="0.023723" 20="-0.023723" 22="-0.999719" 30="385.927795" 31="6.834438" 32="302.966797"/>
+						<spawn_bounds>
+							<min x="-3.547646" y="-5" z="-14.495898"/>
+							<max x="3.547646" y="5" z="14.495898"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="34" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999684" 02="0.025144" 20="-0.025144" 22="-0.999684" 30="393.750916" 31="6.852803" 32="302.609009"/>
+						<spawn_bounds>
+							<min x="-3.558509" y="-5" z="-14.374833"/>
+							<max x="3.558509" y="5" z="14.374833"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="35" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999603" 02="0.028181" 20="-0.028181" 22="-0.999603" 30="401.683075" 31="6.898955" 32="302.359467"/>
+						<spawn_bounds>
+							<min x="-3.633169" y="-4.934776" z="-14.286289"/>
+							<max x="3.633169" y="4.934776" z="14.286289"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="36" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999599" 02="0.028307" 20="-0.028307" 22="-0.999599" 30="409.416229" 31="6.894649" 32="302.073364"/>
+						<spawn_bounds>
+							<min x="-3.688172" y="-5" z="-14.301335"/>
+							<max x="3.688172" y="5" z="14.301335"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="88" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.999775" 02="-0.021229" 20="0.021229" 22="0.999775" 30="297.088104" 31="6.956505" 32="308.645844"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="90" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999602" 02="0.028212" 20="-0.028212" 22="-0.999602" 30="317.518982" 31="6.988543" 32="297.652802"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="91" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.999628" 02="-0.027275" 20="0.027275" 22="0.999628" 30="317.90448" 31="7.018574" 32="308.079834"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="96" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999773" 02="0.021301" 20="-0.021301" 22="-0.999773" 30="296.907562" 31="6.955989" 32="298.088654"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="2" tile="data/tiles/mega_island_2_6.xml" name="SAWYER 2_6" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="13" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="Harrison Airfield Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.710768" 02="0.703427" 20="-0.703427" 22="0.710768" 30="57.815052" 31="16.350941" 32="-50.057899"/>
+						<spawn_bounds>
+							<min x="-100.420452" y="-10.937787" z="-103.529394"/>
+							<max x="100.420452" y="10.937787" z="103.529394"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="37" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.708981" 02="0.705228" 20="-0.705228" 22="0.708981" 30="92.801888" 31="12.540209" 32="-136.499222"/>
+						<spawn_bounds>
+							<min x="-2.952813" y="-5" z="-11.855351"/>
+							<max x="2.952813" y="5" z="11.855351"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="38" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.704202" 02="0.71" 20="-0.71" 22="0.704202" 30="88.177437" 31="12.574892" 32="-141.544601"/>
+						<spawn_bounds>
+							<min x="-2.946276" y="-5" z="-11.982446"/>
+							<max x="2.946276" y="5" z="11.982446"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="99" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.710239" 02="-0.70396" 20="0.70396" 22="0.710239" 30="35.74617" 31="12.600155" 32="-151.285568"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="100" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.710422" 02="-0.703776" 20="0.703776" 22="0.710422" 30="21.752335" 31="12.588037" 32="-137.22522"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="3" tile="data/tiles/mega_island_5_2.xml" name="SAWYER 5_2" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="39" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.012435" 02="-0.999923" 20="0.999923" 22="0.012435" 30="416.172974" 31="6.419334" 32="461.261108"/>
+						<spawn_bounds>
+							<min x="-2.679006" y="-5" z="-10.509292"/>
+							<max x="2.679006" y="5" z="10.509292"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="40" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.009631" 02="-0.999954" 20="0.999954" 22="0.009631" 30="416.205627" 31="6.432167" 32="454.900391"/>
+						<spawn_bounds>
+							<min x="-2.732741" y="-5" z="-10.526309"/>
+							<max x="2.732741" y="5" z="10.526309"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="41" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.011059" 02="-0.999939" 20="0.999939" 22="0.011059" 30="416.270874" 31="6.448601" 32="448.403961"/>
+						<spawn_bounds>
+							<min x="-2.692299" y="-5" z="-10.487913"/>
+							<max x="2.692299" y="5" z="10.487913"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="42" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.009888" 02="-0.999951" 20="0.999951" 22="0.009888" 30="416.319122" 31="6.454554" 32="441.895935"/>
+						<spawn_bounds>
+							<min x="-2.74864" y="-5" z="-10.458627"/>
+							<max x="2.74864" y="5" z="10.458627"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="43" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.018194" 02="-0.999835" 20="0.999835" 22="0.018194" 30="416.317719" 31="6.429735" 32="435.230255"/>
+						<spawn_bounds>
+							<min x="-2.736038" y="-5" z="-10.517031"/>
+							<max x="2.736038" y="5" z="10.517031"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="44" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="Packard Sawmil Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="447.56665" 31="5.896418" 32="419.508179"/>
+						<spawn_bounds>
+							<min x="-53.156322" y="-10.231147" z="-82.697446"/>
+							<max x="53.156322" y="10.231147" z="82.697446"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="101" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 02="-0.00045" 20="0.00045" 30="456.825653" 31="6.506052" 32="389.132416"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="102" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999994" 02="-0.003505" 20="0.003505" 22="-0.999994" 30="456.802155" 31="6.483254" 32="378.974976"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="103" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.999992" 02="0.004087" 20="-0.004087" 22="0.999992" 30="436.51712" 31="6.435079" 32="389.109436"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="104" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.999992" 02="-0.003995" 20="0.003995" 22="-0.999992" 30="436.469055" 31="6.489472" 32="378.905579"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/mega_island_15_2.xml" name="SAWYER 15_2" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="25" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="Sawyer South Harbour Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.485454" 02="0.874262" 20="-0.874262" 22="-0.485454" 30="229.186554" 31="14.261722" 32="-361.926117"/>
+						<spawn_bounds>
+							<min x="-77.559101" y="-13.034087" z="-24.385788"/>
+							<max x="77.559101" y="13.034087" z="24.385788"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="45" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.491066" 02="-0.871122" 20="0.871122" 22="0.491066" 30="267.272705" 31="6.707871" 32="-451.670319"/>
+						<spawn_bounds>
+							<min x="-2.664628" y="-5" z="-10.476634"/>
+							<max x="2.664628" y="5" z="10.476634"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="46" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.485602" 02="-0.87418" 20="0.87418" 22="0.485602" 30="264.411072" 31="6.720272" 32="-446.399017"/>
+						<spawn_bounds>
+							<min x="-2.656943" y="-5" z="-10.55143"/>
+							<max x="2.656943" y="5" z="10.55143"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="47" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.480236" 02="-0.877139" 20="0.877139" 22="0.480236" 30="261.595581" 31="6.760054" 32="-441.168396"/>
+						<spawn_bounds>
+							<min x="-2.554705" y="-5" z="-10.661042"/>
+							<max x="2.554705" y="5" z="10.661042"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="48" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.480441" 02="-0.877027" 20="0.877027" 22="0.480441" 30="258.955444" 31="6.708319" 32="-436.219788"/>
+						<spawn_bounds>
+							<min x="-2.531661" y="-5.045188" z="-10.604139"/>
+							<max x="2.531661" y="5.045188" z="10.604139"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="105" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.489881" 02="0.871789" 20="-0.871789" 22="-0.489881" 30="247.465088" 31="11.637028" 32="-403.647949"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="106" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.489625" 02="0.871933" 20="-0.871933" 22="-0.489625" 30="236.957764" 31="11.637028" 32="-385.191223"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="107" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.489501" 02="-0.872003" 20="0.872003" 22="0.489501" 30="246.396286" 31="11.637033" 32="-379.855042"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="108" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.481543" 02="-0.876422" 20="0.876422" 22="0.481543" 30="256.708984" 31="11.637033" 32="-398.49054"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="5" tile="data/tiles/mega_island_12_6.xml" name="SAWYER 12_6" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="31" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="ONeill Airfield Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.708218" 02="0.705994" 20="-0.705994" 22="-0.708218" 30="66.909378" 31="8.699066" 32="62.303757"/>
+						<spawn_bounds>
+							<min x="-99.860181" y="-15.158695" z="-89.45936"/>
+							<max x="99.860181" y="15.158695" z="89.45936"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="50" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.707499" 02="0.706715" 20="-0.706715" 22="-0.707499" 30="143.13179" 31="8.762383" 32="87.307083"/>
+						<spawn_bounds>
+							<min x="-2.558895" y="-5" z="-9.770272"/>
+							<max x="2.558895" y="5" z="9.770272"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="51" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.709112" 02="0.705096" 20="-0.705096" 22="-0.709112" 30="147.402725" 31="8.755367" 32="83.086525"/>
+						<spawn_bounds>
+							<min x="-2.601332" y="-5" z="-9.762713"/>
+							<max x="2.601332" y="5" z="9.762713"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="110" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.706889" 02="0.707325" 20="-0.707325" 22="0.706889" 30="162.635712" 31="8.83184" 32="41.479095"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="111" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.7037" 02="0.710497" 20="-0.710497" 22="0.7037" 30="148.456421" 31="8.850855" 32="27.208942"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="6" tile="data/tiles/mega_island_15_3.xml" name="SAWYER 15_3" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="52" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.440414" 02="0.897795" 20="-0.897795" 22="0.440414" 30="-83.860832" 31="13.158524" 32="-276.995056"/>
+						<spawn_bounds>
+							<min x="-2.052853" y="-5" z="-9.334394"/>
+							<max x="2.052853" y="5" z="9.334394"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="53" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.447036" 02="0.894516" 20="-0.894516" 22="0.447036" 30="-81.683975" 31="13.14669" 32="-272.480255"/>
+						<spawn_bounds>
+							<min x="-2.038367" y="-5" z="-9.363395"/>
+							<max x="2.038367" y="5" z="9.363395"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="54" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.446331" 02="0.894868" 20="-0.894868" 22="0.446331" 30="-79.534851" 31="13.150691" 32="-268.204102"/>
+						<spawn_bounds>
+							<min x="-2.047581" y="-5" z="-9.315706"/>
+							<max x="2.047581" y="5" z="9.315706"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="55" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.44224" 02="0.896897" 20="-0.896897" 22="0.44224" 30="-77.260262" 31="13.170886" 32="-263.812225"/>
+						<spawn_bounds>
+							<min x="-2.074251" y="-5" z="-9.3621"/>
+							<max x="2.074251" y="5" z="9.3621"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="56" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=trailer,cargo_category=port" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.447671" 02="0.894198" 20="-0.894198" 22="0.447671" 30="-75.164871" 31="13.157574" 32="-259.478577"/>
+						<spawn_bounds>
+							<min x="-2.034972" y="-5" z="-9.318311"/>
+							<max x="2.034972" y="5" z="9.318311"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="57" cargo_zone_import_cargo_type="region=sawyer,destination_point=cargo,cargo_category=all" display_name="Sawyer South Station Cargo Terminal" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.446341" 02="0.894863" 20="-0.894863" 22="0.446341" 30="-45.392689" 31="13.26522" 32="-122.79612"/>
+						<spawn_bounds>
+							<min x="-149.801034" y="-5" z="-42.864118"/>
+							<max x="149.801034" y="5" z="42.864118"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="112" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.44977" 02="-0.893144" 20="0.893144" 22="-0.44977" 30="12.671754" 31="13.138034" 32="-41.375233"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="113" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.453887" 02="-0.891059" 20="0.891059" 22="-0.453887" 30="3.470006" 31="13.157256" 32="-59.140442"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="114" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.459197" 02="-0.888335" 20="0.888335" 22="-0.459197" 30="-5.728876" 31="13.130212" 32="-76.774788"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="115" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.459551" 02="-0.888152" 20="0.888152" 22="-0.459551" 30="-15.427879" 31="13.173794" 32="-95.450951"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="116" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.442068" 02="0.896982" 20="-0.896982" 22="0.442068" 30="-1.434047" 31="13.244535" 32="-34.748169"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="117" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.448219" 02="0.893924" 20="-0.893924" 22="0.448219" 30="-10.353887" 31="13.234385" 32="-52.004314"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="118" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.443511" 02="0.896269" 20="-0.896269" 22="0.443511" 30="-19.663176" 31="13.285433" 32="-69.56411"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="119" cargo_zone_import_cargo_type="region=sawyer,spawn_point=cargo,cargo_loads=container;container_20;container_40,cargo_category=all" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.449507" 02="0.893277" 20="-0.893277" 22="0.449507" 30="-29.432175" 31="13.155235" 32="-88.380142"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+

@@ -1,0 +1,1834 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_mission_zones_islands" file_store="4" name="TSU Mission Zones Islands">
+	<locations location_id_counter="47" component_id_counter="249">
+		<locations>
+			<l id="1" tile="data/tiles/island_15.xml" name="クリエイティブ拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="1" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-202.992294" 31="9.659649" 32="95.6119"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="2" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-240.824448" 31="9.659649" 32="0.120564"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>0
+					</c>
+					<c component_type="10" id="3" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-229.967209" 31="9.659649" 32="127.829384"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="2" tile="data/tiles/island_24.xml" name="滑走路基地" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="4" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-20.079512" 31="10.011811" 32="-1.025717"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="3" tile="data/tiles/island_27_airbase.xml" name="空港" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="5" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-13.060775" 31="28.504456" 32="-130.657822"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="6" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-12.76263" 31="28.504456" 32="-79.502411"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="7" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-11.983638" 31="28.504456" 32="18.49696"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="8" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-13.966292" 31="28.504456" 32="-31.083656"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="4" tile="data/tiles/island_34_military.xml" name="軍事基地" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="9" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.538422" 02="0.842676" 20="-0.842676" 22="0.538422" 30="146.394821" 31="27.111389" 32="101.080688"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="10" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.85514" 02="0.518397" 20="-0.518397" 22="-0.85514" 30="-63.696903" 31="27.111389" 32="13.399812"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="123" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.913222" 02="-0.407463" 20="0.407463" 22="0.913222" 30="59.676746" 31="27.111389" 32="-224.014191"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="244" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.841066" 02="0.540932" 20="-0.540932" 22="0.841066" 30="-75.860298" 31="3.955019" 32="312.305969"/>
+						<spawn_bounds>
+							<min x="-24.671573" y="-10.419371" z="-56.328807"/>
+							<max x="24.671573" y="10.419371" z="56.328807"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="245" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.847209" 02="-0.53126" 20="0.53126" 22="0.847209" 30="54.297535" 31="29.294981" 32="180.664062"/>
+						<spawn_bounds>
+							<min x="-44.248992" y="-26.468064" z="-48.30163"/>
+							<max x="44.248992" y="26.468064" z="48.30163"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="6" tile="data/tiles/island_43_multiplayer_base.xml" name="マルチ島拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="13" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.70295" 02="-0.71124" 20="0.71124" 22="-0.70295" 30="-74.187149" 31="18.856232" 32="77.824356"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="14" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.727641" 02="-0.685958" 20="0.685958" 22="-0.727641" 30="-29.140879" 31="18.856232" 32="127.082687"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="15" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.72779" 02="-0.6858" 20="0.6858" 22="-0.72779" 30="-123.144875" 31="18.856232" 32="32.504807"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="226" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="409.213104" 31="12.35" 32="-151.413849"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="7" tile="data/tiles/test_tile.xml" name="ヘリコプター拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="16" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-6.57113" 31="11.90002" 32="8.227479"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="8" tile="data/tiles/island11.xml" name="病院" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="17" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="125.756676" 31="18.411301" 32="72.185936"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="242" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.806353" 02="-0.591435" 20="0.591435" 22="0.806353" 30="145.807312" 31="0.174084" 32="-17.381996"/>
+						<spawn_bounds>
+							<min x="-38.07493" y="-10.291901" z="-40.444842"/>
+							<max x="38.07493" y="10.291901" z="40.444842"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="9" tile="data/tiles/island_17.xml" name="研究所" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="18" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.698708" 02="0.715407" 20="-0.715407" 22="0.698708" 30="-40.860935" 31="21.367989" 32="77.166153"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="241" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.943425" 02="0.331587" 20="-0.331587" 22="0.943425" 30="37.80957" 31="2.870918" 32="-90.930115"/>
+						<spawn_bounds>
+							<min x="-23.696058" y="-8.407316" z="-37.447251"/>
+							<max x="23.696058" y="8.407316" z="37.447251"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="10" tile="data/tiles/island_13.xml" name="警察署" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="19" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-28.551813" 31="21.504622" 32="65.669441"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="243" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="110.836311" 31="3.672729" 32="-48.719692"/>
+						<spawn_bounds>
+							<min x="-31.494542" y="-12.014464" z="-29.229714"/>
+							<max x="31.494542" y="12.014464" z="29.229714"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="12" tile="data/tiles/island_35_seafort.xml" name="海洋砦" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="20" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-42.349564" 31="17.81885" 32="-20.379692"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="57" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-46.914684" 31="22.818851" 32="40.310516"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="58" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-45.138859" 31="19.58172" 32="-3.76214"/>
+						<spawn_bounds>
+							<min x="-5" y="-1.900702" z="-5"/>
+							<max x="5" y="1.900702" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="59" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-55.49651" 31="17.81885" 32="29.673409"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="60" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-22.404581" 31="17.81885" 32="23.456837"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="61" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.856421" 02="0.516278" 20="-0.516278" 22="0.856421" 30="-38.117641" 31="19.858086" 32="24.201395"/>
+						<spawn_bounds>
+							<min x="-5" y="-1.960202" z="-5"/>
+							<max x="5" y="1.960202" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="67" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-43.607365" 31="9.599464" 32="23.552578"/>
+						<spawn_bounds>
+							<min x="-5" y="-1.861396" z="-5"/>
+							<max x="5" y="1.861396" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="240" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-92.613159" 31="2.447584" 32="-28.48665"/>
+						<spawn_bounds>
+							<min x="-18.994808" y="-9.929134" z="-37.095588"/>
+							<max x="18.994808" y="9.929134" z="37.095588"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="14" tile="data/tiles/seabed_cave_system.xml" name="海底洞窟" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="21" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.349204" 02="0.937047" 20="-0.937047" 22="0.349204" 30="-65.213501" 31="-0.773738" 32="19.308392"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="22" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.163916" 02="-0.986474" 20="0.986474" 22="0.163916" 30="-29.916048" 31="-0.003839" 32="-58.538483"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="23" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.465371" 02="0.885116" 20="-0.885116" 22="-0.465371" 30="17.178225" 31="-0.039679" 32="74.977081"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="24" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.980842" 02="0.194806" 20="-0.194806" 22="-0.980842" 30="52.771542" 31="-0.40293" 32="-32.069515"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="25" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="44.145714" 31="-78.586876" 32="120.591316"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="26" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-22.453253" 31="-86.71312" 32="61.999096"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="27" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-128.786087" 31="-84.795906" 32="0.780392"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="28" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-129.802444" 31="-84.759972" 32="89.921486"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="29" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-0.481216" 31="-94.422562" 32="93.964935"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="30" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="7.557921" 31="-92.601753" 32="-13.799937"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="31" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="77.512497" 31="-84.482491" 32="7.187815"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="32" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="88.534798" 31="-86.133247" 32="-58.655128"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="55" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="50.902107" 31="-0.207534" 32="10.974848"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="56" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-80.546364" 31="-0.062609" 32="-31.114964"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="17" tile="data/tiles/island_2.xml" name="無人島1" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="62" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-51.117111" 31="36.196819" 32="-35.570114"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="63" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.799992" 02="0.60001" 20="-0.60001" 22="0.799992" 30="21.265375" 31="7.140781" 32="-47.658054"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="64" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-1.4686" 31="6.665143" 32="19.408337"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="65" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="61.645252" 31="23.510269" 32="-12.196752"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="66" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.921587" 02="-0.388171" 20="0.388171" 22="0.921587" 30="-72.536118" 31="6.374997" 32="-57.993473"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="18" tile="data/tiles/island_22.xml" name="無人島6" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="68" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-38.678043" 31="12.963757" 32="18.402626"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="69" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-4.803383" 31="9.322948" 32="18.906679"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="70" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="30.827917" 31="15.003157" 32="-15.975414"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="71" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="13.831898" 31="6.426572" 32="-46.191639"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="72" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-27.879095" 31="5" 32="-18.339703"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="73" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="0.383871" 31="15.123023" 32="-15.416523"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="111" cargo_zone_import_cargo_type="id_111,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-307.548157" 31="0.003012" 32="-389.992157"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="112" cargo_zone_import_cargo_type="id_112,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-6.749903" 31="-0.109151" 32="-390.601685"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="113" cargo_zone_import_cargo_type="id_113,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="294.73291" 31="4.999988" 32="-387.129303"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="114" cargo_zone_import_cargo_type="id_114,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="312.362732" 31="-0.159562" 32="-177.848312"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="115" cargo_zone_import_cargo_type="id_115,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="361.658783" 31="-0.097206" 32="194.449585"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="116" cargo_zone_import_cargo_type="id_116,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="40.006783" 31="0.043285" 32="378.345367"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="117" cargo_zone_import_cargo_type="id_117,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-369.964966" 31="-0.056588" 32="394.809448"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="118" cargo_zone_import_cargo_type="id_118,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-437.733368" 31="-0.035018" 32="97.471695"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="119" cargo_zone_import_cargo_type="id_119,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-261.66864" 31="-0.020487" 32="-204.187057"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="120" cargo_zone_import_cargo_type="id_120,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="1.933214" 31="0.003198" 32="-168.76413"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="121" cargo_zone_import_cargo_type="id_121,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="196.569824" 31="-0.061462" 32="27.227337"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="122" cargo_zone_import_cargo_type="id_122,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-172.323242" 31="0.03624" 32="94.733368"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="19" tile="data/tiles/island_4.xml" name="無人島2" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="74" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-152.299072" 31="10.932038" 32="134.767059"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="75" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-93.026802" 31="36.255905" 32="13.889092"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="76" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-124.945358" 31="4.999997" 32="-1.460293"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="77" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-95.335831" 31="36.322525" 32="109.057648"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="78" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-3.289241" 31="33.68742" 32="129.74144"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="79" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-64.022217" 31="40.43428" 32="182.93576"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="80" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="76.446136" 31="9.63881" 32="266.231384"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="81" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="96.797104" 31="26.73418" 32="120.828568"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="82" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="67.725464" 31="5" 32="5.321774"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="83" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="127.630608" 31="5.984896" 32="-42.270634"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="84" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="161.971603" 31="30.480694" 32="-125.641159"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="85" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="180.4095" 31="5.000001" 32="-169.084167"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="86" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="69.564339" 31="4.999993" 32="-113.313789"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="87" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-46.35334" 31="4.999996" 32="-40.876404"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="88" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-21.165478" 31="4.999997" 32="287.974182"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="21" tile="data/tiles/island_28_windfarm.xml" name="風力発電所" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="89" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-144.605225" 31="51.356167" 32="-1.098336"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="90" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-185.648285" 31="18.711103" 32="-170.319809"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="91" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-3.885167" 31="17.835876" 32="-103.907234"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="92" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-34.695251" 31="7.062654" 32="-192.896378"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="93" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-146.596252" 31="4.999998" 32="-268.509888"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="94" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="73.254456" 31="15.658558" 32="-208.316956"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="95" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="114.922348" 31="7.43013" 32="2.332552"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="96" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-20.147278" 31="18.196468" 32="256.179993"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="97" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="122.311813" 31="5.000002" 32="254.928146"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="98" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="216.221069" 31="5.000001" 32="-128.882629"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="161" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.595683" 02="0.80322" 20="-0.80322" 22="-0.595683" 30="-43.446545" 31="0.066034" 32="-409.532104"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="162" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-329.913116" 31="-0.0359" 32="-373.544373"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="163" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.588276" 02="0.80866" 20="-0.80866" 22="0.588276" 30="291.233521" 31="0.003087" 32="-369.379181"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="164" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.587858" 02="-0.808964" 20="0.808964" 22="-0.587858" 30="416.270569" 31="-0.074405" 32="18.82412"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="165" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.375834" 02="0.926687" 20="-0.926687" 22="-0.375834" 30="391.668915" 31="0.012274" 32="292.012573"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="166" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.904187" 02="-0.427136" 20="0.427136" 22="0.904187" 30="-238.013916" 31="0.005745" 32="426.021454"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="167" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.742255" 02="-0.670118" 20="0.670118" 22="0.742255" 30="-426.296295" 31="-0.004325" 32="97.730446"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="191" cargo_zone_import_cargo_type="landscape=wind_turbine" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.734001" 02="-0.679149" 20="0.679149" 22="0.734001" 30="-74.787163" 31="50.91243" 32="-21.862432"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="192" cargo_zone_import_cargo_type="landscape=wind_turbine" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="52.297104" 31="17.784597" 32="-127.245491"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="193" cargo_zone_import_cargo_type="landscape=wind_turbine" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.930815" 02="0.365489" 20="-0.365489" 22="-0.930815" 30="-128.044708" 31="19.690493" 32="-177.642944"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="233" cargo_zone_import_cargo_type="landscape=house" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="134.630112" 31="13.4388" 32="-200.797913"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="237" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.711862" 02="-0.70232" 20="0.70232" 22="0.711862" 30="207.699173" 31="5.112415" 32="52.017967"/>
+						<spawn_bounds>
+							<min x="-71.999203" y="-19.012732" z="-93.150018"/>
+							<max x="71.999203" y="19.012732" z="93.150018"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="238" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="124.626953" 31="15.664884" 32="-199.704361"/>
+						<spawn_bounds>
+							<min x="-16.536314" y="-11.651262" z="-16.255117"/>
+							<max x="16.536314" y="11.651262" z="16.255117"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="22" tile="data/tiles/island_29_playerbase_submarine.xml" name="カスタム潜水艇拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="99" cargo_zone_import_cargo_type="id_99,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-324.036713" 31="0.043095" 32="-91.864845"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="100" cargo_zone_import_cargo_type="id_100,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-256.137024" 31="-0.172249" 32="134.62326"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="101" cargo_zone_import_cargo_type="id_101,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-143.083359" 31="-0.189218" 32="-131.796585"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="102" cargo_zone_import_cargo_type="id_102,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-251.402084" 31="0.045193" 32="-321.502228"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="103" cargo_zone_import_cargo_type="id_103,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="116.620857" 31="-0.092091" 32="-340.345886"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="104" cargo_zone_import_cargo_type="id_104,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-73.714569" 31="-0.182853" 32="-457.508179"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="105" cargo_zone_import_cargo_type="id_105,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="343.55896" 31="-0.009816" 32="-359.504761"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="106" cargo_zone_import_cargo_type="id_106,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="423.008514" 31="-0.158211" 32="-88.75222"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="107" cargo_zone_import_cargo_type="id_107,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="263.188995" 31="-0.108078" 32="100.419319"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="108" cargo_zone_import_cargo_type="id_108,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="385.657837" 31="0.123763" 32="336.980621"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="109" cargo_zone_import_cargo_type="id_109,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="103.569893" 31="0.027386" 32="349.037323"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="110" cargo_zone_import_cargo_type="id_110,landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-392.430542" 31="-0.159022" 32="365.511719"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="25" tile="data/tiles/seabed_island_14.xml" name="海底の岩礁1" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="124" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.454787" 02="-0.8906" 20="0.8906" 22="0.454787" 30="20.478115" 31="-0.015313" 32="-177.388229"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="125" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.976737" 02="-0.21444" 20="0.21444" 22="-0.976737" 30="89.103149" 31="0.005426" 32="-10.687347"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="126" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.722488" 02="-0.691384" 20="0.691384" 22="0.722488" 30="2.405648" 31="0.049845" 32="-1.743273"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="127" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.003007" 02="-0.999995" 20="0.999995" 22="-0.003007" 30="97.623924" 31="-0.01411" 32="110.8284"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="128" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.440635" 02="0.897686" 20="-0.897686" 22="-0.440635" 30="-114.702385" 31="-0.039585" 32="-64.825745"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="129" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="41.390205" 31="-74.626968" 32="21.955254"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="130" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-12.287174" 31="-85.438492" 32="57.962833"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="131" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="9.600902" 31="-74.432182" 32="5.08483"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="26" tile="data/tiles/seabed_shipwreck_02.xml" name="難破船2" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="132" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="33.295353" 31="-82.02272" 32="-5.402238"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="133" cargo_zone_import_cargo_type="landscape=underwater" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="2.840365" 31="-82.408844" 32="0.297676"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="134" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.378024" 02="0.925796" 20="-0.925796" 22="0.378024" 30="-98.861366" 31="-0.022806" 32="-34.522285"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="135" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.856053" 02="-0.516887" 20="0.516887" 22="0.856053" 30="19.55979" 31="-0.201913" 32="-107.163132"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="136" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.7971" 02="0.603847" 20="-0.603847" 22="-0.7971" 30="55.62505" 31="-0.056278" 32="6.460994"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="137" cargo_zone_import_cargo_type="landscape=diving_spot" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.069999" 02="-0.997547" 20="0.997547" 22="-0.069999" 30="-12.473343" 31="-0.051308" 32="140.433655"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="27" tile="data/tiles/oil_rig_medium.xml" name="中型石油採掘所" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="138" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-48.546021" 31="0.033286" 32="-120.316261"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="140" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-146.466629" 31="0.318431" 32="101.221283"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="145" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="34.868832" 31="-0.019636" 32="-303.129028"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="150" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-65.073738" 31="-0.014746" 32="373.480652"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="151" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="64.208931" 31="0.046728" 32="250.70726"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="152" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="376.123474" 31="-0.019944" 32="14.701099"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="153" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="236.339279" 31="0.063196" 32="-141.711136"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="156" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-387.896118" 31="0.012385" 32="-271.481476"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="157" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-412.961945" 31="-0.005062" 32="215.392075"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="158" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-310.227875" 31="-0.031417" 32="420.561646"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="159" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="324.13797" 31="0.024179" 32="385.252045"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="160" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="415.006836" 31="0.001648" 32="-396.626801"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="222" cargo_zone_import_cargo_type="landscape=heliport" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-13.289971" 31="18.658379" 32="5.312664"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="231" cargo_zone_import_cargo_type="landscape=house" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="9.144468" 31="19.070963" 32="13.482085"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="232" cargo_zone_import_cargo_type="landscape=house" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="11.524898" 31="24.63271" 32="13.939754"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="239" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="2.162539" 31="3.361964" 32="2.093743"/>
+						<spawn_bounds>
+							<min x="-12.559908" y="-8.180464" z="-16.824427"/>
+							<max x="12.559908" y="8.180464" z="16.824427"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="246" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-17.147076" 31="24.006744" 32="20.47575"/>
+						<spawn_bounds>
+							<min x="-7.680591" y="-6.433087" z="-8.135481"/>
+							<max x="7.680591" y="6.433087" z="8.135481"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="28" tile="data/tiles/island_16.xml" name="遺跡２" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="168" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-55.15963" 31="15.468857" 32="-6.146492"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="169" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-42.615429" 31="15.956846" 32="40.751854"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="170" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-4.771835" 31="18.886978" 32="54.371437"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="171" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="2.333053" 31="6.00369" 32="11.78941"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="172" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="35.111614" 31="24.192801" 32="45.535633"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="173" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="17.764179" 31="0.007282" 32="106.949249"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="174" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="72.872589" 31="-0.031256" 32="73.23365"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="175" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="95.777985" 31="0.030721" 32="-16.7887"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="176" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="61.179386" 31="36.641098" 32="-25.954176"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="177" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.918994" 02="-0.394272" 20="0.394272" 22="0.918994" 30="47.409546" 31="0.273748" 32="-65.205147"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="178" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.715379" 02="0.698736" 20="-0.698736" 22="0.715379" 30="-204.790573" 31="0.098187" 32="-108.944916"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="179" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.946224" 02="0.323513" 20="-0.323513" 22="-0.946224" 30="-335.543365" 31="-0.072735" 32="129.97084"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="180" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.669846" 02="-0.7425" 20="0.7425" 22="0.669846" 30="-409.207245" 31="-0.024313" 32="365.551605"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="181" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.404881" 02="0.914369" 20="-0.914369" 22="0.404881" 30="-154.67894" 31="0.074776" 32="414.247314"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="182" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.616029" 02="-0.787723" 20="0.787723" 22="0.616029" 30="76.802933" 31="-0.055212" 32="268.375305"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="183" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.889165" 02="0.457587" 20="-0.457587" 22="-0.889165" 30="365.052124" 31="0.212521" 32="245.565063"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="184" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.10035" 02="0.994952" 20="-0.994952" 22="-0.10035" 30="431.390289" 31="0.125254" 32="78.456413"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="185" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.600672" 02="-0.799496" 20="0.799496" 22="-0.600672" 30="236.856567" 31="-0.012743" 32="-41.401741"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="186" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.72312" 02="0.690722" 20="-0.690722" 22="-0.72312" 30="396.91571" 31="0.053946" 32="-326.151001"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="187" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.214337" 02="-0.97676" 20="0.97676" 22="-0.214337" 30="203.291718" 31="-0.051151" 32="-412.52359"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="188" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.868319" 02="0.496005" 20="-0.496005" 22="-0.868319" 30="9.87175" 31="-0.146412" 32="-270.195068"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="189" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.940286" 02="-0.340386" 20="0.340386" 22="-0.940286" 30="-262.697876" 31="-0.14968" 32="-373.480927"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="190" cargo_zone_import_cargo_type="landscape=shallow" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.783961" 02="-0.62081" 20="0.62081" 22="0.783961" 30="-378.791931" 31="-0.005901" 32="-281.266541"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="29" tile="data/tiles/island_26_fishing.xml" name="漁村" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="194" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="3 Fishing Village, Isle of Fishers" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="34.06039" 31="4.283278" 32="-33.323132"/>
+						<spawn_bounds>
+							<min x="-6.09591" y="-1.735107" z="-2.270085"/>
+							<max x="6.09591" y="1.735107" z="2.270085"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="195" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="2 Fishing Village, Isle of Fishers" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="18.584497" 31="4.314328" 32="-33.452179"/>
+						<spawn_bounds>
+							<min x="-5.873221" y="-1.388301" z="-2.562475"/>
+							<max x="5.873221" y="1.388301" z="2.562475"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="196" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="1 Fishing Village, Isle of Fishers" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.946847" 02="0.321686" 20="-0.321686" 22="0.946847" 30="1.090596" 31="4.355789" 32="-36.678677"/>
+						<spawn_bounds>
+							<min x="-6.046801" y="-1.770607" z="-2.475743"/>
+							<max x="6.046801" y="1.770607" z="2.475743"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="207" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-40.735016" 31="6.403761" 32="-78.097466"/>
+						<spawn_bounds>
+							<min x="-9.867765" y="-9.612547" z="-14.758901"/>
+							<max x="9.867765" y="9.612547" z="14.758901"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="234" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="38.95158" 31="8.27581" 32="-50.359825"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="236" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="56.28793" 31="2.656012" 32="-110.819992"/>
+						<spawn_bounds>
+							<min x="-50.191996" y="-17.208224" z="-57.793332"/>
+							<max x="50.191996" y="17.208224" z="57.793332"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="30" tile="data/tiles/island_33_tile_11.xml" name="本土の崖" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="31" tile="data/tiles/island_33_tile_12.xml" name="本土の村" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="197" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="3 Donkk, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.935692" 02="-0.352818" 20="0.352818" 22="0.935692" 30="-50.637352" 31="10.127921" 32="-81.182602"/>
+						<spawn_bounds>
+							<min x="-5.975675" y="-1.559473" z="-2.547478"/>
+							<max x="5.975675" y="1.559473" z="2.547478"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="198" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="2 Donkk, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.945731" 02="-0.32495" 20="0.32495" 22="0.945731" 30="-16.653181" 31="9.898808" 32="-87.867203"/>
+						<spawn_bounds>
+							<min x="-5.756813" y="-1.473453" z="-2.486717"/>
+							<max x="5.756813" y="1.473453" z="2.486717"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="199" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="1 Donkk, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.947182" 02="-0.320696" 20="0.320696" 22="0.947182" 30="-0.374842" 31="10.110416" 32="-93.605339"/>
+						<spawn_bounds>
+							<min x="-6.017182" y="-1.682858" z="-2.704416"/>
+							<max x="6.017182" y="1.682858" z="2.704416"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="225" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-52.39492" 31="7.041166" 32="-25.334724"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="32" tile="data/tiles/island_33_tile_21.xml" name="本土の道路" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="33" tile="data/tiles/island_33_tile_22.xml" name="本土の採掘場" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="34" tile="data/tiles/island_33_tile_23.xml" name="本土の砂浜" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="35" tile="data/tiles/island_33_tile_31.xml" name="本土の崖2" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="36" tile="data/tiles/island_33_tile_32.xml" name="スパイケークターミナル" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="200" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="1 Spycake, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.905425" 02="0.424507" 20="-0.424507" 22="-0.905425" 30="9.942408" 31="38.224804" 32="357.518982"/>
+						<spawn_bounds>
+							<min x="-6.062524" y="-1.968809" z="-2.497556"/>
+							<max x="6.062524" y="1.968809" z="2.497556"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="201" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="2 Spycake, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.912737" 02="0.408547" 20="-0.408547" 22="-0.912737" 30="-5.98668" 31="37.968723" 32="364.737854"/>
+						<spawn_bounds>
+							<min x="-5.837072" y="-1.672106" z="-2.502715"/>
+							<max x="5.837072" y="1.672106" z="2.502715"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="227" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.937574" 02="-0.347786" 20="0.347786" 22="-0.937574" 30="187.986038" 31="10.167488" 32="168.746902"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="37" tile="data/tiles/island_33_tile_33.xml" name="本土滑走路" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="202" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="1 Dreimor, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.173669" 02="-0.984804" 20="0.984804" 22="-0.173669" 30="-410.813812" 31="12.936207" 32="343.239105"/>
+						<spawn_bounds>
+							<min x="-4.024298" y="-1.689952" z="-2.297241"/>
+							<max x="4.024298" y="1.689952" z="2.297241"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="203" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="3 Dreimor, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.159716" 02="-0.987163" 20="0.987163" 22="-0.159716" 30="-392.234009" 31="12.855536" 32="387.509979"/>
+						<spawn_bounds>
+							<min x="-3.69101" y="-1.60067" z="-2.389156"/>
+							<max x="3.69101" y="1.60067" z="2.389156"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="204" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="2 Dreimor, Isle of Donkk" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.174164" 02="0.984717" 20="-0.984717" 22="0.174164" 30="-379.829224" 31="12.849031" 32="357.806488"/>
+						<spawn_bounds>
+							<min x="-4.014115" y="-1.607899" z="-2.448281"/>
+							<max x="4.014115" y="1.607899" z="2.448281"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="223" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.476315" 02="-0.879274" 20="0.879274" 22="0.476315" 30="-121.1381" 31="12.728876" 32="303.776581"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="224" cargo_zone_import_cargo_type="landscape=airfield" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-167.310059" 31="12.807013" 32="235.947571"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="38" tile="data/tiles/island_33_tile_13.xml" name="本土の半島" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="39" tile="data/tiles/island_33_tile_03.xml" name="本土のトンネル" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="40" tile="data/tiles/island_33_tile_04.xml" name="本土の分岐点" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="41" tile="data/tiles/island_33_tile_05.xml" name="キー諸島のコテージ" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="206" cargo_zone_import_cargo_type="landscape=house,interaction=deliver" display_name="1 Cotage, Key Islands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.600301" 02="-0.799774" 20="0.799774" 22="-0.600301" 30="-241.234039" 31="11.685679" 32="53.982368"/>
+						<spawn_bounds>
+							<min x="-5.693941" y="-1.994349" z="-3.62076"/>
+							<max x="5.693941" y="1.994349" z="3.62076"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="42" tile="data/tiles/island_33_tile_06.xml" name="キー諸島の化学工場" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="43" tile="data/tiles/island_33_tile_07.xml" name="キー諸島の灯台" is_env_mod="true" env_mod_spawn_num="1">
+				<components/>
+			</l>
+			<l id="44" tile="data/tiles/island_33_tile_end.xml" name="カモドターミナル" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="228" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.906665" 02="-0.421851" 20="0.421851" 22="-0.906665" 30="-69.031082" 31="10.360572" 32="-7.858612"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="45" tile="data/tiles/island_29_playerbase_submarine.xml" name="カスタム潜水艇拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="209" cargo_zone_import_cargo_type="landscape=island,destination_point=pirate_boat,detective_point=pirate_hideout,detective_radius=1000,flag=detects_priate_hideout" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.998887" 02="0.047172" 20="-0.047172" 22="0.998887" 30="31.238644" 31="0.040412" 32="13.950809"/>
+						<spawn_bounds>
+							<min x="-137.048871" y="-17.503898" z="-166.692828"/>
+							<max x="137.048871" y="17.503898" z="166.692828"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="211" cargo_zone_import_cargo_type="spawn_point=static" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.138803" 02="0.99032" 20="-0.99032" 22="0.138803" 30="2.885266" 31="18.845089" 32="14.969955"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="213" cargo_zone_import_cargo_type="spawn_point=static" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.466261" 02="0.884647" 20="-0.884647" 22="-0.466261" 30="-2.059329" 31="12.889305" 32="-64.407593"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="214" cargo_zone_import_cargo_type="spawn_point=static" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.697232" 02="-0.716846" 20="0.716846" 22="0.697232" 30="52.671444" 31="22.899347" 32="80.621704"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="215" cargo_zone_import_cargo_type="spawn_point=static" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.585065" 02="0.810986" 20="-0.810986" 22="0.585065" 30="17.430372" 31="5.50289" 32="-13.776537"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="216" cargo_zone_import_cargo_type="spawn_point=static" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.726057" 02="0.687634" 20="-0.687634" 22="0.726057" 30="22.118816" 31="4.516568" 32="-5.893054"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="217" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.616936" 01="-0.002093" 02="0.78701" 11="0.999996" 12="0.002659" 20="-0.787013" 21="-0.001641" 22="0.616934" 30="10.74922" 31="17.054083" 32="-34.999504"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="218" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="36.738598" 31="23.826752" 32="13.366666"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="219" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.206264" 02="0.978496" 20="-0.978496" 22="-0.206264" 30="-15.473465" 31="9.711831" 32="57.450954"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="220" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="10.778905" 31="6.469251" 32="14.790677"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="221" cargo_zone_import_cargo_type="landscape=island" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="30.697338" 31="5.294147" 32="-13.69015"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="46" tile="data/tiles/island_25.xml" name="港拠点" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="229" cargo_zone_import_cargo_type="landscape=wharf" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="-0.004189" 02="0.999991" 20="-0.999991" 22="-0.004189" 30="87.542107" 31="10.2435" 32="-66.969223"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="230" cargo_zone_import_cargo_type="landscape=house" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="87.216393" 31="7.585903" 32="-38.887264"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="235" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="45.288719" 31="0.312672" 32="-95.570099"/>
+						<spawn_bounds>
+							<min x="-32.532178" y="-13.505296" z="-31.395731"/>
+							<max x="32.532178" y="13.505296" z="31.395731"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="247" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="45.886616" 31="8.258893" 32="-46.68589"/>
+						<spawn_bounds>
+							<min x="-15.616073" y="-10.584979" z="-16.777151"/>
+							<max x="15.616073" y="10.584979" z="16.777151"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="47" tile="data/tiles/island_36_oil_refinery.xml" name="石油精製所" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="248" cargo_zone_import_cargo_type="supply_point=waters" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-29.91873" 31="2.415657" 32="-64.086914"/>
+						<spawn_bounds>
+							<min x="-10.27519" y="-12.021263" z="-42.952022"/>
+							<max x="10.27519" y="12.021263" z="42.952022"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+					<c component_type="10" id="249" cargo_zone_import_cargo_type="supply_point=lands" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 00="0.668214" 02="-0.743969" 20="0.743969" 22="0.668214" 30="20.223139" 31="22.696079" 32="-27.781681"/>
+						<spawn_bounds>
+							<min x="-15.624553" y="-6.788047" z="-13.083397"/>
+							<max x="15.624553" y="6.788047" z="13.083397"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
