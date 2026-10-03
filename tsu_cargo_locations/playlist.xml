@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist folder_path="data/missions/tsu_cargo_locations" file_store="4" name="TSU Cargo Locations">
+	<locations location_id_counter="7" component_id_counter="33">
+		<locations>
+			<l id="6" name="cargo:pallet_fuel_1" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="32" name="role=cargo,cargo_type=pallet,cargo_content=fuel" display_name="Fuel Tank Pallet" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_32.xml" vehicle_file_store="4">
+						<spawn_transform 30="0.010112" 31="1.402174" 32="0.003771"/>
+						<spawn_bounds>
+							<min x="-1.375" y="-0.375" z="-1.625"/>
+							<max x="1.375" y="1.625" z="1.625"/>
+						</spawn_bounds>
+						<spawn_local_offset y="-0.625"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+			<l id="7" name="cargo:trailer_empty_1" env_mod_spawn_num="1">
+				<components>
+					<c component_type="3" id="33" name="objective=cargo" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_name="data/missions_working/vehicle_33.xml" vehicle_file_store="4" vehicle_is_modded="true" vehicle_is_component_modded="true">
+						<spawn_transform 30="0.004306" 31="1.419708" 32="-0.004909"/>
+						<spawn_bounds>
+							<min x="-1.625" y="-1.125" z="-11.875"/>
+							<max x="1.625" y="0.875" z="1.375"/>
+						</spawn_bounds>
+						<spawn_local_offset y="0.125" z="5.25"/>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
