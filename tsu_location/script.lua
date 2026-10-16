@@ -1498,7 +1498,11 @@ tile = {
 
 
 tag = {
-  serialize = function(tags)
+  serialize = function(tags, separator)
+    if separator == nil then
+      separator = ","
+    end
+    
     local texts = {}
 
     for key, value in pairs(tags) do
@@ -1520,7 +1524,7 @@ tag = {
       table.insert(texts, t)
     end
 
-    return table.concat(texts, ",")
+    return table.concat(texts, separator)
   end,
   deserialize = function(tags)
     local deserialized_tags = {}
